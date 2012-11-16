@@ -5,6 +5,8 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 import java.io.*;
 import java.security.*;
+import java.util.ArrayList;
+
 import javax.swing.*;
 import javax.swing.event.*;
 
@@ -31,10 +33,10 @@ public class MainApp {
         pathToClassFolder = (MainApp.class.getProtectionDomain()
                 .getCodeSource().getLocation().getPath());
 
-//         datas = new DataManager(10);
-//         datas.addNode("Google", "Smith", "Snowboarding", "dlskafj", "");
-//         datas.addNode("John", "Doe", "Rowing", "pass", "");
-//         datas.addNode("paypal", "winthoutid@hotmail.fr", "", "pass", "");
+         
+         datas.addNode("Google", "Smith", "Snowboarding", "dlskafj", "");
+         datas.addNode("John", "Doe", "Rowing", "pass", "");
+         datas.addNode("paypal", "winthoutid@hotmail.fr", "", "pass", "");
 
         // creates a cipher object for cryption/decryption and loads the
         // serialized datas

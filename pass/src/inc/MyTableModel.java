@@ -1,16 +1,21 @@
 package inc;
 import java.awt.*;
+import java.io.Serializable;
+
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
 
-public class MyTableModel extends AbstractTableModel{
+public class MyTableModel extends AbstractTableModel implements Serializable {
 
+
+	private static final long serialVersionUID = -9197706602911166047L;
+	
 	private String[] columnNames;
 	private Object[][] data;
 
-	
+
 	public MyTableModel(String[] columnNames, Object[][] data){
 		
 		super();		
@@ -19,6 +24,7 @@ public class MyTableModel extends AbstractTableModel{
 	}
 	
 
+	
 	public String[] getColumnNames() {
 		return columnNames;
 	}
