@@ -1,4 +1,4 @@
-package inc;
+package dialogs;
 
 import java.util.Set;
 
@@ -22,7 +22,7 @@ public class frameModal extends JDialog {
     
     
     public static void main(String[]args){
-	
+
         // initializes the main Frame
         JFrame window = new JFrame("accounts and passwords");
         //sets the listener to save data on quit

@@ -1,4 +1,4 @@
-package inc;
+package dialogs;
 
 import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
@@ -41,6 +41,7 @@ public class SimpleDialog extends JDialog {
 	public SimpleDialog(JFrame parent) {
 		super(parent, "informations", true);
 		this.setPreferredSize(new Dimension(200, 300));
+		this.setLocationRelativeTo(parent);
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		//adds listener to window's close button
 		this.addWindowListener(new WindowAdapter() {
@@ -154,7 +155,7 @@ public class SimpleDialog extends JDialog {
         	
 		this.pass = new String(this.passTF.getPassword());
 		this.salt = new String(this.saltTF.getPassword());
-		System.out.println(pass + salt);
+		
 		if (this.pass.length() < 5) {
 			this.passTF.requestFocus();
 			return;

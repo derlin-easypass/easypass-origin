@@ -35,7 +35,7 @@ public class Crypto {
                     "PBKDF2WithHmacSHA1",
                     "AES/CBC/PKCS5Padding",
                     "AES",
-                     65536, 128,
+                     65536, 256,
                     "my_pass",
                     "my_salt"
                     );
@@ -264,6 +264,7 @@ public class Crypto {
         
            this.cipher.init(Cipher.ENCRYPT_MODE, this.secret);
     }  
+     
     
     
     public void initCipherForDecryption(byte[] iv) throws InvalidAlgorithmParameterException, InvalidKeyException { 

@@ -21,7 +21,7 @@ public class frameModal extends JDialog {
     private String[] availableSessions;
     
     
-    public static void main(String[]args){
+    public static void main(String[]args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException{
 	
         // initializes the main Frame
         JFrame window = new JFrame("accounts and passwords");
@@ -279,9 +279,14 @@ public class frameModal extends JDialog {
     
     /**
      * Creates new form frame
+     * @throws UnsupportedLookAndFeelException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
+     * @throws ClassNotFoundException 
      */
-    public frameModal(JFrame parent, String title, String[] availableSessions) {
+    public frameModal(JFrame parent, String title, String[] availableSessions) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
         super(parent, title, true);
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         this.availableSessions = availableSessions;
         initComponents();
     }

@@ -7,6 +7,10 @@ import java.security.*;
 import javax.crypto.BadPaddingException;
 import javax.swing.*;
 import javax.swing.event.*;
+
+import dialogs.SessionAndPassFrame;
+import dialogs.SimpleDialog;
+
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -17,13 +21,13 @@ public class MainApp {
 
     private static Crypto cipher; 				// for encryption/decryption
     private static String pathToClassFolder;
-    private static String serializeFile = "datas.ser";
-    private static String ivFile = "iv.ser";
+    private static String serializeFile = "datas.data_ser";
+    private static String ivFile = "iv.iv_ser";
     private static String logFile = "easypass.log";
     
     private static JFrame window; 				//main frame
-    private static int winHeight = 400; 		// dimensions of the main frame
-    private static int winWidth = 800;
+    private static int winHeight = 300; 		// dimensions of the main frame
+    private static int winWidth = 400;
     
     private static JPanel mainContainer; 		//main container (BorderLayout)
 
@@ -39,7 +43,7 @@ public class MainApp {
     	"notes"
     }; // the headers for the jtable
 
-    @SuppressWarnings("unchecked")
+
 	public static void main(String[] args) {
 
     	
@@ -49,18 +53,17 @@ public class MainApp {
         window.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setWindowClosingListener(window);
         //sets position, size, etc
-        window.setSize(winWidth, winHeight);
-        window.setPreferredSize(new Dimension(winWidth, winHeight));
+        window.setSize(new Dimension(winWidth, winHeight));       
         Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
         int winY = (screensize.height - winHeight) / 2;
         int winX = (screensize.width - winWidth) / 2;
         window.setLocation(winX, winY);
         
-        
+
         // get the path to the current .class folder
         pathToClassFolder = (MainApp.class.getProtectionDomain()
-                .getCodeSource().getLocation().getPath());
-
+                .getCodeSource().getLocation().getPath()) + "/sessions";
+        
          
 //        ArrayList<Object[]> data = new ArrayList<Object[]>();
 //        Object[] o1 = {"Google", "Smith", "Snowboarding", "dlskafj", ""};
@@ -72,59 +75,9 @@ public class MainApp {
 //        data.add(o3);
 //		  model = new PassTableModel(columnNames, data);
         
-        
-        // asks for pass with a dialog and loads the serialized datas
-        //if the pass is wrong, ask again. If the user cancels, quits the application
-        SimpleDialog modal = new SimpleDialog(window);  
-        
-        while(true){
-        	
-        	modal.setVisible(true);
-
-        	if(modal.getStatus() == false){ //checks if user clicked cancel or closed
-        		System.exit(0);
-        	}
-        	//get pass and salt
-        	String pass = modal.getPass();
-            String salt = modal.getSalt();
-        	
-	        try {
-	
-	//            cipher = new Crypto("PBKDF2WithHmacSHA1", "AES/CBC/PKCS5Padding",
-	//                    "AES", 65536, 128, "my_pass", "my_salt");
-	        	
-	        	//creates cipher
-	        	 cipher = new Crypto("PBKDF2WithHmacSHA1", "AES/CBC/PKCS5Padding",
-	                     "AES", 65536, 128, pass, salt);
-	        	//loads the data and gives it to a new jtable model instance
-	            model = new PassTableModel(columnNames,          		
-	            		(ArrayList<Object[]>) cipher.deserializeObject(
-	            				pathToClassFolder + "\\" + serializeFile,
-	                    Functionalities.readIv(pathToClassFolder + "\\" + ivFile)
-	                    )           
-	            );
-	            
-	            System.out.println("deserialization ok");
-	            break;
-	
-	        } catch (BadPaddingException e) {
-	        	//if the pass was wrong, loop again
-	            System.out.println("wrong parameters : could not retrieve iv and datas");
-	            Functionalities.writeLog(
-	        			"info: " + new Date().toString() + " " + e.getMessage(), 
-	        			pathToClassFolder + "\\" + logFile
-	        	);
-	            continue;
-	        } catch (Exception e) {
-	        	//writes the exception to the log file and quit
-	        	System.out.println("unplanned exception");
-	        	Functionalities.writeLog(
-	        			"severe: " + new Date().toString() + " " + e.getMessage(), 
-	        			pathToClassFolder + "\\" + logFile
-	        	);
-	        	System.exit(0);
-	        }
-        }
+         
+//        handleCredentialsAndLoadSession();
+        test();
 
         // creates the main container
         mainContainer = new JPanel(new BorderLayout());
@@ -143,23 +96,27 @@ public class MainApp {
         }//end try
         
         // sets the size of the JTable and hide "id" column
-        table.setPreferredScrollableViewportSize(new Dimension((winWidth - 40), winHeight));
+        //table.setPreferredScrollableViewportSize(new Dimension((winWidth - 40), winHeight));
         table.setAutoCreateRowSorter(true);
-        // table.setFillsViewportHeight(true);
+        table.setFillsViewportHeight(true);
         table.setRowHeight(20);
 
 
         // add scrollpane and JTable to the window
-       scrollPane = new JScrollPane(table,
+        scrollPane = new JScrollPane(table,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(winWidth, winHeight - 50));
         mainContainer.add(scrollPane, BorderLayout.CENTER);
-        scrollPane.setMaximumSize(new Dimension(200, 400));
-        scrollPane.setMinimumSize(new Dimension(200, 200));
+//        scrollPane.setMaximumSize(new Dimension(200, 400));
+//        scrollPane.setMinimumSize(new Dimension(200, 200));
         window.getContentPane().add(mainContainer);
         
         //updates the GUI and show the window
         mainContainer.updateUI();
+        window.pack();
+        window.setMinimumSize(new Dimension(winWidth, winHeight));
+        window.setJMenuBar( getMenu() );
         window.setVisible(true);
 
     }//end main
@@ -185,9 +142,9 @@ public class MainApp {
 				if (answer == JOptionPane.YES_OPTION) { // serializes and quits
 					try {
 						byte[] iv = cipher.serializeObject(pathToClassFolder
-								+ "\\datas.ser", model.getData());
+								+ "\\" + serializeFile, (ArrayList<Object[]>)model.getData());
 						Functionalities.saveIv(iv, pathToClassFolder
-								+ "\\iv.ser");
+								+ "\\" + ivFile);
 						System.out.println("datas serialized");
 					} catch (Exception e) {
 						System.out
@@ -204,6 +161,95 @@ public class MainApp {
 		});
     }//end setWindowClosing
 
+    
+    /**
+     * asks the user to choose the session to load and get his credentials.
+     * The method then creates the cipher, deserializes the data
+     * and creates a TableModel.
+     * 
+     * If an error occurs :
+     * - either the problem comes from the credentials, so it prompts the user to enter them again
+     * - or the problem is somewhere else and the program exits (after logging the cause of the exception)
+     */
+	@SuppressWarnings("unchecked")
+	public static void handleCredentialsAndLoadSession() {
+		
+		SessionAndPassFrame modal = null;
+		try {
+			
+			modal = new SessionAndPassFrame(
+					window,
+					Functionalities.getAvailableSessions(pathToClassFolder, ".*\\.data_ser$")
+										
+			);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		while (true) {
+
+			// asks for pass with a dialog and loads the serialized datas
+			// if the pass is wrong, ask again. If the user cancels, quits the
+			// application
+			
+			
+			modal.setVisible(true);
+
+			if (modal.getStatus() == false) { // checks if user clicked cancel
+												// or closed
+				System.exit(0);
+			}
+			// get pass and salt
+			String pass = modal.getPass(); //"my_pass"; // 
+			String salt = modal.getSalt(); //"my_salt"; // 
+			String session = modal.getSession();
+			serializeFile = session + ".data_ser";
+			ivFile = session + ".iv_ser";
+			
+
+			try {
+				
+				if(!Functionalities.sessionExists(pathToClassFolder, session)){
+					model = new PassTableModel(columnNames);
+					System.out.println("no file");
+					cipher = new Crypto("PBKDF2WithHmacSHA1",
+							"AES/CBC/PKCS5Padding", "AES", 65536, 128, pass, salt);
+					return;
+				}
+
+
+				// creates cipher
+				cipher = new Crypto("PBKDF2WithHmacSHA1",
+						"AES/CBC/PKCS5Padding", "AES", 65536, 128, pass, salt);
+
+				// loads the data and gives it to a new jtable model instance
+				model = new PassTableModel(columnNames,
+						(ArrayList<Object[]>) cipher.deserializeObject(
+								pathToClassFolder + "\\" + serializeFile,
+								Functionalities.readIv(pathToClassFolder + "\\"
+										+ ivFile)));
+
+				System.out.println("deserialization ok");
+				break;
+
+			} catch (BadPaddingException e) {
+				// if the pass was wrong, loops again
+				System.out
+						.println("wrong parameters : could not retrieve iv and datas");
+				Functionalities.writeLog("info: " + e.toString(), pathToClassFolder + "\\" + logFile);
+				continue;
+			} catch (Exception e) {
+				// otherwise, writes the exception to the log file and quit
+				System.out.println("unplanned exception");
+				e.printStackTrace();
+				Functionalities.writeLog("severe: " + e.toString(), pathToClassFolder + "\\"
+						+ logFile);
+				System.exit(0);
+			}
+		}//end while
+	}//end handleCredentials
     
 
     /**
@@ -275,6 +321,157 @@ public class MainApp {
     
     
     
+    
+    /**
+     * asks the user to choose the session to load and get his credentials.
+     * The method then creates the cipher, deserializes the data
+     * and creates a TableModel.
+     * 
+     * If an error occurs :
+     * - either the problem comes from the credentials, so it prompts the user to enter them again
+     * - or the problem is somewhere else and the program exits (after logging the cause of the exception)
+     */
+    @SuppressWarnings("unchecked")
+    public static void test() {
+        
+        SessionAndPassFrame modal = null;
+        SessionManager sm = new SessionManager("C:\\passProtect\\pass");
+        try {
+            
+            modal = new SessionAndPassFrame(
+                    window,
+                    sm.availableSessions()
+                                        
+            );
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+        
+        while (true) {
+
+            // asks for pass with a dialog and loads the serialized datas
+            // if the pass is wrong, ask again. If the user cancels, quits the
+            // application
+            
+            
+            modal.setVisible(true);
+
+            if (modal.getStatus() == false) { // checks if user clicked cancel
+                                                // or closed
+                System.exit(0);
+            }
+            // get pass and salt
+            String pass = modal.getPass(); //"my_pass"; // 
+            String salt = modal.getSalt(); //"my_salt"; // 
+            String session = modal.getSession();
+           
+
+            try {
+                
+                if(!sm.sessionExists( session )){
+                    model = new PassTableModel(columnNames);
+                    sm.createSession( session, pass, salt );
+                    System.out.println("no file");
+                    cipher = new Crypto("PBKDF2WithHmacSHA1",
+                            "AES/CBC/PKCS5Padding", "AES", 65536, 128, pass, salt);
+                    return;
+                }
+
+
+                // creates cipher
+                ArrayList<Object[]> data = (ArrayList<Object[]>)sm.openSession( session, pass, salt );
+
+                // loads the data and gives it to a new jtable model instance
+                model = new PassTableModel(columnNames,
+                        data);
+
+                System.out.println("deserialization ok");
+                break;
+
+            } catch (Exceptions.WrongCredentialsException e) {
+                // if the pass was wrong, loops again
+                System.out
+                        .println("wrong parameters : could not retrieve iv and datas");
+                Functionalities.writeLog("info: " + e.toString(), pathToClassFolder + "\\" + logFile);
+                continue;
+            } catch (Exception e) {
+                // otherwise, writes the exception to the log file and quit
+                System.out.println("unplanned exception");
+                e.printStackTrace();
+                Functionalities.writeLog("severe: " + e.toString(), pathToClassFolder + "\\"
+                        + logFile);
+                System.exit(0);
+            }
+        }//end while
+    }//end handleCredentials
+    
+    
+    public static JMenuBar getMenu() {
+        
+        // Where the GUI is created:
+        JMenuBar menuBar;
+        JMenu menu, submenu;
+        JMenuItem menuItem;
+        JRadioButtonMenuItem rbMenuItem;
+        JCheckBoxMenuItem cbMenuItem;
+        
+        // Create the menu bar.
+        menuBar = new JMenuBar();
+        
+        // Build the first menu.
+        menu = new JMenu( "options" );
+        menu.setMnemonic( KeyEvent.VK_A );
+        menu.getAccessibleContext().setAccessibleDescription(
+                "The only menu in this program that has menu items" );
+        menuBar.add( menu );
+        
+        // a group of JMenuItems
+        menuItem = new JMenuItem( "save", KeyEvent.VK_T );
+        menuItem.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
+                ActionEvent.CTRL_MASK ) );
+        menuItem.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+               System.out.println("save");
+            }
+        } );
+        menu.add( menuItem );
+        
+//        menuItem = new JMenuItem( "Both text and icon", new ImageIcon(
+//                "images/middle.gif" ) );
+//        menuItem.setMnemonic( KeyEvent.VK_B );
+//        menu.add( menuItem );
+//        
+//        menuItem = new JMenuItem( new ImageIcon( "images/middle.gif" ) );
+//        menuItem.setMnemonic( KeyEvent.VK_D );
+//        menu.add( menuItem );
+        
+        // a group of check box menu items
+        
+        // a submenu
+        menu.addSeparator();
+        submenu = new JMenu( "A submenu" );
+        submenu.setMnemonic( KeyEvent.VK_S );
+        
+        menuItem = new JMenuItem( "An item in the submenu" );
+        menuItem.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_2,
+                ActionEvent.ALT_MASK ) );
+        submenu.add( menuItem );
+        
+        menuItem = new JMenuItem( "Another item" );
+        submenu.add( menuItem );
+        menu.add( submenu );
+        
+        // Build second menu in the menu bar.
+        menu = new JMenu( "Another Menu" );
+        menu.setMnemonic( KeyEvent.VK_N );
+        menu.getAccessibleContext().setAccessibleDescription(
+                "This menu does nothing" );
+        menuBar.add( menu );
+        
+        return menuBar;
+    }
 //  window.addComponentListener(new ComponentAdapter() {
 //
 //      @Override
