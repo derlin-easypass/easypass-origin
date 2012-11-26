@@ -4,9 +4,6 @@
  */
 package dialogs;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -206,19 +203,34 @@ public class SessionAndPassFrame extends javax.swing.JDialog {
     }                                            
 
     private void newSessionButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                 
-        String s = (String) JOptionPane.showInputDialog(
+        String newSession = (String) JOptionPane.showInputDialog(
                 this,
                 "New session name : ",
                 ""
                 );
         //the (?i) makes everything on the right case-insensitive
-        if(s != null && s.matches("^(?i)[a-z][a-z1-9\\._-]{4,}$")){
-            this.sessionCombo.addItem(s);
+        if(newSession != null && newSession.matches("^(?i)[a-z][a-z1-9\\._-]{2,}$")){
+            
+            //if this session name doesn't already exist, show error message and return
+            for(int i = 0; i < this.sessionCombo.getItemCount(); i++){
+                if(newSession.equals(this.sessionCombo.getItemAt( i ))){
+                    JOptionPane.showMessageDialog(this, 
+                            "This session name is already in use ",
+                            "error",
+                            JOptionPane.WARNING_MESSAGE
+                            );
+                    return;
+                }//end if
+            }//end for
+            
+            //add new session
+            this.sessionCombo.addItem(newSession);
             this.sessionCombo.setSelectedIndex(this.sessionCombo.getItemCount() - 1);
+            
         }else{
             JOptionPane.showMessageDialog(this, 
-                    "A session name must start with a letter \n and "
-                    + "contain only letters and digits. \nDelimiters accepted : _.-",
+                    "A session name must have min. 3 characters and start with a letter \n "
+                    + "Accepted : letters, digits. \nDelimiters : _.-",
                     "error",
                     JOptionPane.WARNING_MESSAGE
                     );
