@@ -14,8 +14,11 @@ import dialogs.SimpleDialog;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import models.*;
+import models.Exceptions.CryptoException;
+import models.Exceptions.WrongCredentialsException;
 
 
 public class MainApp {
@@ -81,8 +84,26 @@ public class MainApp {
         
          
 //        handleCredentialsAndLoadSession();
-        test();
+        //test();
+        
+        
+        //debug
+        SessionManager sm = new SessionManager("C:\\passProtect\\pass");
+        try{
+            ArrayList<Object[]> data = (ArrayList<Object[]>)sm.openSession( "test", "test", "test" );
+            model = new PassTableModel(columnNames,
+                    data);
+            
+        }catch( CryptoException e1 ){
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }catch( WrongCredentialsException e1 ){
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
 
+        
+        
         // creates the main container
         mainContainer = new JPanel(new BorderLayout());
         mainContainer.add(getUpperMenu(), BorderLayout.NORTH);
@@ -119,27 +140,27 @@ public class MainApp {
         sorter = new TableRowSorter<PassTableModel>(model);
         table.setRowSorter(sorter);
         //Create a separate form for filterText and statusText
-        JPanel form = new JPanel(new SpringLayout());
-        JLabel l1 = new JLabel("Filter Text:", SwingConstants.TRAILING);
+        JPanel form = new JPanel();
+        JLabel l1 = new JLabel("Filter Text:");
         form.add(l1);
-        filterText = new JTextField();
+        filterText = new JTextField(50);
         //Whenever filterText changes, invoke newFilter.
         filterText.getDocument().addDocumentListener(
                 new DocumentListener() {
                     public void changedUpdate(DocumentEvent e) {
-                        newFilter();
+                        filter();
                     }
                     public void insertUpdate(DocumentEvent e) {
-                        newFilter();
+                        filter();
                     }
                     public void removeUpdate(DocumentEvent e) {
-                        newFilter();
+                        filter();
                     }
                 });
         l1.setLabelFor(filterText);
         form.add( l1 );
         form.add(filterText);
-        form.setSize( new Dimension(50, 100) );
+        //form.setSize( new Dimension(50, 100) );
         System.out.println(form.getSize( ).height + " width " + form.getSize().width);
         mainContainer.add( form, BorderLayout.SOUTH );
         
@@ -159,17 +180,28 @@ public class MainApp {
 /**
  * Update the row filter regular expression from the expression in
  * the text box.
- */
-  private static void newFilter() {
-    RowFilter<PassTableModel, Object> rf = null;
-    //If current expression doesn't parse, don't update.
-    try {
-        rf = RowFilter.regexFilter(filterText.getText(), 0);
-    } catch (java.util.regex.PatternSyntaxException e) {
-        return;
-    }
-    sorter.setRowFilter(rf);
-}
+ */ 
+  public static void filter(){
+      RowFilter<PassTableModel, Object> rf = null;
+      ArrayList<RowFilter<Object,Object>> rfs = 
+                  new ArrayList<RowFilter<Object,Object>>();
+
+      try {
+          String text = filterText.getText();
+          String[] textArray = text.split(" ");
+
+          for (int i = 0; i < textArray.length; i++) {
+              rfs.add(RowFilter.regexFilter("(?i)" + textArray[i], 0, 1, 2, 3, 4));
+          }
+
+          rf = RowFilter.andFilter(rfs);
+
+      } catch (java.util.regex.PatternSyntaxException e) {
+              return;
+      }
+
+      sorter.setRowFilter(rf);
+  }
     
     /**
      * This method is called when the user want to quit the application.
@@ -251,11 +283,13 @@ public class MainApp {
 				System.exit(0);
 			}
 			// get pass and salt
-			String pass = modal.getPass(); //"my_pass"; // 
-			String salt = modal.getSalt(); //"my_salt"; // 
-			String session = modal.getSession();
-			serializeFile = session + ".data_ser";
-			ivFile = session + ".iv_ser";
+//			String pass = modal.getPass(); 
+//			String salt = modal.getSalt(); 
+//			String session = modal.getSession();
+			
+			String pass = "test"; 
+            String salt = "test";
+            String session = "test";
 			
 
 			try {
@@ -412,8 +446,8 @@ public class MainApp {
                 System.exit(0);
             }
             // get pass and salt
-            String pass = modal.getPass(); //"my_pass"; // 
-            String salt = modal.getSalt(); //"my_salt"; // 
+            String pass = modal.getPass();  
+            String salt = modal.getSalt();  
             String session = modal.getSession();
            
 
