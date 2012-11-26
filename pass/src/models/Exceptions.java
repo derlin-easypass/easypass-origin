@@ -23,7 +23,7 @@ public class Exceptions {
         public CryptoException(String message) { super( message ); }
     }
     
-    public static class NotInitializedException extends Exception {
+    public static class NotInitializedException extends RuntimeException {
         public NotInitializedException() { super(); }
         public NotInitializedException(String message) { super( message ); }
     }

@@ -49,7 +49,7 @@ public class SessionManager {
             IvNotFoundException, WrongCredentialsException, InvalidKeyException, InvalidAlgorithmParameterException {
         JsonManager jm = new JsonManager();
         SessionManager sm = new SessionManager("C:\\passProtect\\pass");
-        sm.openSession( "test", "test", "teeet" );
+        sm.openSession( "test", "test", "test" );
         sm.session = "test";
 //         ArrayList<Object[]> data = new ArrayList<Object[]>();
 //         Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
@@ -67,8 +67,7 @@ public class SessionManager {
         System.out.println( "version : " + sm.readVersion() );
         System.out.println( iv.length );
         ArrayList<Object[]> data = (ArrayList<Object[]>) jm.deserialize(
-                sm.cipher, iv, sm.directoryPath + "\\" + sm.session
-                        + sm.dataExtension );
+                sm.cipher.getCipher(), sm.getDataPath() );
         System.out.println( data == null );
         for( int i = 0; i < data.size(); i++ ){
             for( int j = 0; j < data.get( i ).length; j++ ){
@@ -81,57 +80,49 @@ public class SessionManager {
     
     
     /**********************************************************
-     * constructors
+     * constructor
      **********************************************************/
-    public SessionManager() {
-    }
-    
     
     public SessionManager(String directoryPath) {
-        this.directoryPath = directoryPath;
-    }
+        File file = new File(directoryPath);
+        
+        if(file.exists() && file.isDirectory() ){
+            this.directoryPath = directoryPath;           
+        }else{
+            throw new Exceptions.NotInitializedException( directoryPath + "is not a valid directory" );
+        }
+    }//end constructor
     
     
-    /**
-     * Saves the iv (a limited array of bytes generated during encryption) into
-     * the specified file
-     * 
-     * @param iv
-     * @param path
-     * @throws IOException
-     */
-    public void saveIv( byte[] iv ) throws IOException {
-        
-        FileOutputStream fos = new FileOutputStream( new File( directoryPath
-                + "\\" + session + this.ivExtension ) );
-        
-        // fos.write( ( "version " + currentVersion + newLine ).getBytes() );
-        // fos.write( ("ivlength " + iv.length + newLine).getBytes() );
-        // fos.write( ("iv-").getBytes());
-        fos.write( currentVersion );
-        fos.write( iv );
-        fos.flush();
-        fos.close();
-        
-    }// end saveIV
-    
+    /**************************************************************
+     * get available sessions, check if a sessions exists
+     ************************************************************/
     
     /**
      * returns an array of strings with all the existing sessions
      * 
-     * @param pathToDir
-     *            the directory containing the sessions
+     * @return
+     * @throws FileNotFoundException
+     */
+    public String[] availableSessions() throws FileNotFoundException {
+        return this.availableSessions( ".*\\" + dataExtension
+                + "$" );
+    }//end available sessions
+    
+    /**
+     * returns an array of strings with all the existing sessions
+     * 
      * @param pattern
      *            the regex to recognize the sessions
      * @return
      * @throws FileNotFoundException
      */
-    public String[] availableSessions( String pathToDir, String pattern )
+    public String[] availableSessions( String pattern )
             throws FileNotFoundException {
         
-        File folder = new File( pathToDir );
+        File folder = new File( this.directoryPath );
         if( !folder.exists() || !folder.isDirectory() ){
-            throw new FileNotFoundException( pathToDir
+            throw new FileNotFoundException( this.directoryPath
                     + " is not a valid directory" );
         }
         
@@ -148,91 +139,6 @@ public class SessionManager {
         
         return sessions;
     }// end getAvailableSessions
-    
-    
-    /**
-     * returns an array of strings with all the existing sessions
-     * 
-     * @return
-     * @throws FileNotFoundException
-     */
-    public String[] availableSessions() throws FileNotFoundException {
-        return this.availableSessions( directoryPath, ".*\\" + dataExtension
-                + "$" );
-    }
-    
-    
-    /**
-     * returns true if a session is currently opened
-     * 
-     * @return
-     */
-    public boolean isOpened() {
-        return ( this.cipher == null ? false : true );
-    }
-    
-    
-    
-    public void close(){
-        this.cipher = null;
-    }
-    
-    
-    /**
-     * creates a new session
-     * 
-     * @param directoryPath
-     * @param sessionName
-     * @param pass
-     * @param salt
-     * @throws CryptoException
-     */
-    public void createSession( String directoryPath, String sessionName,
-            String pass, String salt ) throws CryptoException {
-        
-        this.directoryPath = directoryPath;
-        this.session = sessionName;
-        try{
-            this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
-                    encryptionType, keyIterationCount, keyLength, pass, salt );
-        }catch( NoSuchAlgorithmException | NoSuchPaddingException
-                | InvalidKeySpecException e ){
-            e.printStackTrace();
-            throw new Exceptions.CryptoException();
-        }
-        
-    }
-    
-    
-    /**
-     * creates a new session. If the directoryPath (where the sessions files are
-     * stored) for this object is not set, an exception of type
-     * FileNotFoundException is fired.
-     * 
-     * @param sessionName
-     * @param pass
-     * @param salt
-     * @throws FileNotFoundException
-     * @throws CryptoException
-     */
-    public void createSession( String sessionName, String pass, String salt )
-            throws FileNotFoundException, CryptoException {
-        
-        if( this.directoryPath == null )
-            throw new FileNotFoundException( "no directoryPath specified" );
-        
-        this.session = sessionName;
-        try{
-            this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
-                    encryptionType, keyIterationCount, keyLength, pass, salt );
-            
-        }catch( NoSuchAlgorithmException | NoSuchPaddingException
-                | InvalidKeySpecException e ){
-            e.printStackTrace();
-            throw new Exceptions.CryptoException();
-        }
-        
-    }
     
     
     /**
@@ -263,15 +169,46 @@ public class SessionManager {
      * @param name
      * @return
      */
-    public boolean sessionExists( String name ) {
-        
-        return this.sessionExists( directoryPath, name );
-        
+    public boolean sessionExists( String name ) {        
+        return this.sessionExists( directoryPath, name );       
     }// end sessionExists
     
     
+    /**************************************************************
+     * opens or create sessions
+     ************************************************************/
+    
     /**
-     * open a session and returns the datas of the jtable
+     * creates a new session. If the directoryPath (where the sessions files are
+     * stored) for this object is not set, an exception of type
+     * FileNotFoundException is fired.
+     * 
+     * @param sessionName
+     * @param pass
+     * @param salt
+     * @throws FileNotFoundException
+     * @throws CryptoException
+     */
+    public void createSession( String sessionName, String pass, String salt )
+            throws FileNotFoundException, CryptoException {
+        
+        this.session = sessionName;
+        
+        try{
+            this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
+                    encryptionType, keyIterationCount, keyLength, pass, salt );
+            
+        }catch( NoSuchAlgorithmException | NoSuchPaddingException
+                | InvalidKeySpecException e ){
+            e.printStackTrace();
+            throw new Exceptions.CryptoException();
+        }
+        
+    }//end createSession
+    
+    
+    /**
+     * open an already existing session and returns the datas of the jtable
      * 
      * @param pass
      * @param salt
@@ -291,14 +228,9 @@ public class SessionManager {
             this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
                     encryptionType, keyIterationCount, keyLength, pass, salt );
             
-//            return (List<Object[]>) cipher.deserializeObject(
-//                    this.directoryPath + "\\" + this.session
-//                            + this.dataExtension, this.readIv() );
+            this.cipher.initCipherForDecryption( readIv() );
             
-
-            return new JsonManager().deserialize( this.cipher, this.readIv(),
-                    this.directoryPath + "\\" + this.session
-                            + this.dataExtension );
+            return new JsonManager().deserialize( this.cipher.getCipher(), this.getDataPath() );
 
         }catch( Exceptions.WrongCredentialsException e ){
           // if the pass was wrong, loops again
@@ -311,7 +243,99 @@ public class SessionManager {
                             + ee.toString() );
         }
         
+    }//end openSession
+    
+    
+    
+    /**************************************************************
+     * manages sessions
+     ************************************************************/
+    /**
+     * returns true if a session is currently opened
+     * @return
+     */
+    public boolean isOpened() {
+        return ( this.cipher == null ? false : true );
     }
+    
+    
+    public boolean save( List<Object[]> data ) {
+        
+        if( !this.isOpened() ){
+            throw new Exceptions.NotInitializedException( "no session opened" );
+        }
+        try{
+            
+            this.cipher.initCipherForEncryption();
+            byte[] iv = new JsonManager().serialize( data,
+                    this.cipher.getCipher(), this.getDataPath() );
+            
+            this.saveIv( iv );
+            
+            return true;
+            
+        }catch( IOException | InvalidKeyException e ){
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return false;
+        }
+    }//end save
+    
+    /**
+     * close the current session
+     */
+    public void close(){
+        this.cipher = null;
+    }
+    
+    
+
+
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+   
+    
+    /**************************************************************
+     * private utilities
+     ************************************************************/
+    
+    private String getIvPath(){
+        return this.directoryPath + "\\" + this.session + this.ivExtension;
+    }
+    
+    private String getDataPath(){
+        return this.directoryPath + "\\" + this.session + this.dataExtension;
+    }
+    
+    
+    /**
+     * Saves the iv (a limited array of bytes generated during encryption) into
+     * the specified file
+     * 
+     * @param iv
+     * @param path
+     * @throws IOException
+     */
+    private void saveIv( byte[] iv ) throws IOException {
+        
+        FileOutputStream fos = new FileOutputStream( new File( directoryPath
+                + "\\" + session + this.ivExtension ) );
+
+        fos.write( currentVersion );
+        fos.write( iv );
+        fos.flush();
+        fos.close();
+        
+    }// end saveIV
     
     
     /**
@@ -325,28 +349,6 @@ public class SessionManager {
      */
     private byte[] readIv() throws IOException, IvNotFoundException {
         
-        // File file = new File( directoryPath + "\\" + session + ivExtension );
-        // FileInputStream fis = new FileInputStream( file );
-        // Scanner sc = new Scanner( fis );
-        //
-        //
-        // try{
-        // // sc.useDelimiter(newLine);
-        // sc.findWithinHorizon( Pattern.compile( "ivlength " ),
-        // (int) file.length() );
-        // byte[] iv = new byte[sc.nextInt()];
-        // int counter = 0;
-        // while(!sc.hasNextByte());
-        // while( sc.hasNextByte() ){
-        // iv[ counter++ ] = sc.nextByte();
-        // }
-        // return iv;
-        // }catch( InputMismatchException e ){
-        // throw new Exceptions.IvNotFoundException();
-        // }finally{
-        // sc.close();
-        // }
-        
         File file = new File( directoryPath + "\\" + session + ivExtension );
         FileInputStream fin = new FileInputStream( file );
         fin.read();
@@ -358,12 +360,17 @@ public class SessionManager {
         
     }// end readIv
     
-    
-    public int readVersion() throws VersionNumberNotFoundException, IOException {
+    /**
+     * reads the version number of the ivFile of the current session
+     * @return
+     * @throws VersionNumberNotFoundException
+     * @throws IOException
+     */
+    private int readVersion() throws VersionNumberNotFoundException, IOException {
         
         FileInputStream fin = null;
         try{
-            File file = new File( directoryPath + "\\" + session + ivExtension );
+            File file = new File( this.getIvPath() );
             fin = new FileInputStream( file );
             return fin.read();
         }catch( IOException e ){
@@ -374,5 +381,4 @@ public class SessionManager {
                 fin.close();
         }
     }
-    
 }

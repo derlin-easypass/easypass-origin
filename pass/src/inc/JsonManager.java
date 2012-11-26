@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 
@@ -50,25 +51,20 @@ public class JsonManager {
     
     // }
     
-    public byte[] serialize( List<Object[]> data, Crypto crypto, String filepath )
-            throws IOException, CryptoException {
+    public byte[] serialize( List<Object[]> data, Cipher cipher, String filepath )
+            throws IOException {
         
         CipherOutputStream cout = null;
         
         try{
             FileOutputStream fos = new FileOutputStream( filepath );
-            crypto.initCipherForEncryption();
-            cout = new CipherOutputStream( fos, crypto.getCipher() );
+            cout = new CipherOutputStream( fos, cipher );
             Gson gson = new GsonBuilder().create();
             cout.write( gson.toJson( data ).getBytes() );
             cout.flush();
             
-            return crypto.getCipher().getIV();
-            
-        }catch( InvalidKeyException e ){
-            e.printStackTrace();
-            System.out.println( "problem with cipher" );
-            throw new CryptoException( "problem with cipher" );
+            return cipher.getIV();
+         
         }finally{
             if( cout != null )
                 cout.close();
@@ -77,26 +73,24 @@ public class JsonManager {
     }// end serialize
     
     
-    public List<Object[]> deserialize( Crypto crypto, byte[] iv, String filepath )
+    public List<Object[]> deserialize( Cipher cipher, String filepath )
             throws CryptoException, WrongCredentialsException, IOException {
         
         CipherInputStream cin = null;
         
         try{
-            crypto.initCipherForDecryption( iv );
+            
             cin = new CipherInputStream( new FileInputStream( filepath ),
-                    crypto.getCipher() );
+                    cipher );
             
             return ( new GsonBuilder().create().fromJson(
                     new InputStreamReader( cin ),
                     new TypeToken<List<Object[]>>() {
                     }.getType() ) );
             
-        }catch( JsonSyntaxException | IllegalStateException | InvalidKeyException ike ){
+        }catch( JsonSyntaxException | IllegalStateException e ){
             throw new Exceptions.WrongCredentialsException();
-        }catch( InvalidAlgorithmParameterException iae ){
-            iae.printStackTrace();
-            throw new CryptoException( "problem with cipher" );
+
         }finally{
             if( cin != null )
                 cin.close();

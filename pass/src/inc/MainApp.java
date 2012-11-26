@@ -7,6 +7,7 @@ import java.security.*;
 import javax.crypto.BadPaddingException;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.TableRowSorter;
 
 import dialogs.SessionAndPassFrame;
 import dialogs.SimpleDialog;
@@ -30,10 +31,13 @@ public class MainApp {
     private static int winWidth = 400;
     
     private static JPanel mainContainer; 		//main container (BorderLayout)
+    private static TableRowSorter<PassTableModel> sorter;
+    private static JTextField filterText;
 
     private static PassTableModel model; 		// containing the datas, the object serialized
     private static MyTable table; 				// the jtable
     private static  JScrollPane scrollPane; 	//scrollPane for the JTable
+    private static SessionManager sm;
        			
     
     private static String[] columnNames =  {
@@ -96,11 +100,11 @@ public class MainApp {
         }//end try
         
         // sets the size of the JTable and hide "id" column
-        //table.setPreferredScrollableViewportSize(new Dimension((winWidth - 40), winHeight));
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
         table.setRowHeight(20);
-
+        
+ 
 
         // add scrollpane and JTable to the window
         scrollPane = new JScrollPane(table,
@@ -108,9 +112,38 @@ public class MainApp {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(winWidth, winHeight - 50));
         mainContainer.add(scrollPane, BorderLayout.CENTER);
-//        scrollPane.setMaximumSize(new Dimension(200, 400));
-//        scrollPane.setMinimumSize(new Dimension(200, 200));
         window.getContentPane().add(mainContainer);
+        
+        
+        
+        sorter = new TableRowSorter<PassTableModel>(model);
+        table.setRowSorter(sorter);
+        //Create a separate form for filterText and statusText
+        JPanel form = new JPanel(new SpringLayout());
+        JLabel l1 = new JLabel("Filter Text:", SwingConstants.TRAILING);
+        form.add(l1);
+        filterText = new JTextField();
+        //Whenever filterText changes, invoke newFilter.
+        filterText.getDocument().addDocumentListener(
+                new DocumentListener() {
+                    public void changedUpdate(DocumentEvent e) {
+                        newFilter();
+                    }
+                    public void insertUpdate(DocumentEvent e) {
+                        newFilter();
+                    }
+                    public void removeUpdate(DocumentEvent e) {
+                        newFilter();
+                    }
+                });
+        l1.setLabelFor(filterText);
+        form.add( l1 );
+        form.add(filterText);
+        form.setSize( new Dimension(50, 100) );
+        System.out.println(form.getSize( ).height + " width " + form.getSize().width);
+        mainContainer.add( form, BorderLayout.SOUTH );
+        
+        
         
         //updates the GUI and show the window
         mainContainer.updateUI();
@@ -121,6 +154,22 @@ public class MainApp {
 
     }//end main
     
+
+
+/**
+ * Update the row filter regular expression from the expression in
+ * the text box.
+ */
+  private static void newFilter() {
+    RowFilter<PassTableModel, Object> rf = null;
+    //If current expression doesn't parse, don't update.
+    try {
+        rf = RowFilter.regexFilter(filterText.getText(), 0);
+    } catch (java.util.regex.PatternSyntaxException e) {
+        return;
+    }
+    sorter.setRowFilter(rf);
+}
     
     /**
      * This method is called when the user want to quit the application.
@@ -141,11 +190,11 @@ public class MainApp {
 
 				if (answer == JOptionPane.YES_OPTION) { // serializes and quits
 					try {
-						byte[] iv = cipher.serializeObject(pathToClassFolder
-								+ "\\" + serializeFile, (ArrayList<Object[]>)model.getData());
-						Functionalities.saveIv(iv, pathToClassFolder
-								+ "\\" + ivFile);
-						System.out.println("datas serialized");
+					    if(sm.save( (ArrayList<Object[]>)model.getData() )){
+					        System.out.println("datas serialized");
+					    }else{
+					        System.out.println("data not saved");
+					    }
 					} catch (Exception e) {
 						System.out
 								.println("error in serialization. Possible data loss");
@@ -335,7 +384,7 @@ public class MainApp {
     public static void test() {
         
         SessionAndPassFrame modal = null;
-        SessionManager sm = new SessionManager("C:\\passProtect\\pass");
+        sm = new SessionManager("C:\\passProtect\\pass");
         try {
             
             modal = new SessionAndPassFrame(
@@ -433,7 +482,17 @@ public class MainApp {
                 ActionEvent.CTRL_MASK ) );
         menuItem.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-               System.out.println("save");
+                try {
+                    if(sm.save( (ArrayList<Object[]>)model.getData() )){
+                        System.out.println("datas serialized");
+                    }else{
+                        System.out.println("data not saved");
+                    }
+                } catch (Exception ee) {
+                    System.out
+                            .println("error in serialization. Possible data loss");
+                    ee.printStackTrace();
+                }// end try
             }
         } );
         menu.add( menuItem );
