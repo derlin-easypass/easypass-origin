@@ -1,0 +1,139 @@
+package inc;
+
+import java.io.*;
+import java.lang.reflect.Type;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+
+import models.Crypto;
+import models.Exceptions;
+import models.Exceptions.*;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
+
+public class JsonManager {
+    
+     public static void main( String[] args ) throws Exception {
+    
+    // Crypto crypto = new Crypto( "PBKDF2WithHmacSHA1",
+    // "AES/CBC/PKCS5Padding", "AES", 65536, 128, "pass", "salt" );
+    
+    // crypto.initCipherForEncryption();
+    // System.out.println(crypto.getCipher().getIV().length);
+    // saveIv(crypto.getCipher().getIV());
+     ArrayList<Object[]> data = new ArrayList<Object[]>();
+     Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
+     Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
+     Object[] o3 = { "paypal", "winthoutid@hotmail.fr", "", "pass", "" };
+    
+     data.add( o1 );
+     data.add( o2 );
+     data.add( o3 );
+    
+     Writer fw = new FileWriter( "test.gson" );
+     BufferedWriter bf = new BufferedWriter(fw);
+     GsonBuilder gsonbuilder = new GsonBuilder().setPrettyPrinting();
+//     gsonbuilder.registerTypeAdapter(new TypeToken<List<Object[]>>() {
+//     }.getType(), new MyCustomSerializer());
+     Gson gson = gsonbuilder.create();
+     SomeContainer thing = new SomeContainer(data.get(0));
+     bf.write( gson.toJson( thing ) );
+     bf.close();
+     System.out.println("ok");
+    // CipherOutputStream cout = new CipherOutputStream( fw,
+    // crypto.getCipher() );
+    // Gson gson = new GsonBuilder().create();
+    // cout.write(gson.toJson( data ).getBytes());
+    // cout.flush();
+    // cout.close();
+    // System.out.println( "ok" );
+    // System.out.println(readIv().length);
+    
+     }
+    
+     private static class MyCustomSerializer implements JsonSerializer<ArrayList<Object[]>>
+     {
+       @Override
+       public JsonElement serialize(ArrayList<Object[]> src, Type typeOfSrc, JsonSerializationContext context)
+       {
+         return new Gson().toJsonTree(src);
+       }
+     }
+     
+     
+	private static class SomeContainer {
+		String account;
+		String emailAddress;
+		String password;
+		String notes;
+
+		SomeContainer(Object[] obj) {
+
+			account = (String) obj[0];
+			emailAddress = (String) obj[1];
+			password = (String) obj[2];
+			notes = (String) obj[3];
+		}
+	}
+     
+    public byte[] serialize( List<Object[]> data, Cipher cipher, String filepath )
+            throws IOException {
+        
+        CipherOutputStream cout = null;
+        
+        try{
+            FileOutputStream fos = new FileOutputStream( filepath );
+            cout = new CipherOutputStream( fos, cipher );
+            Gson gson = new GsonBuilder().create();
+            cout.write( gson.toJson( data ).getBytes() );
+            cout.flush();
+            
+            return cipher.getIV();
+         
+        }finally{
+            if( cout != null )
+                cout.close();
+        }
+        
+    }// end serialize
+    
+    
+    public List<Object[]> deserialize( Cipher cipher, String filepath )
+            throws CryptoException, WrongCredentialsException, IOException {
+        
+        CipherInputStream cin = null;
+        
+        try{
+            
+            cin = new CipherInputStream( new FileInputStream( filepath ),
+                    cipher );
+            
+            return ( new GsonBuilder().create().fromJson(
+                    new InputStreamReader( cin ),
+                    new TypeToken<List<Object[]>>() {
+                    }.getType() ) );
+            
+        }catch( JsonSyntaxException | IllegalStateException e ){
+            throw new Exceptions.WrongCredentialsException();
+
+        }finally{
+            if( cin != null )
+                cin.close();
+        }// end try
+        
+    }// end deserialize
+    
+}// end class

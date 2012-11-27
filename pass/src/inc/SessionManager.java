@@ -286,11 +286,15 @@ public class SessionManager {
      */
     public void close(){
         this.cipher = null;
+        this.session = "";
     }
     
     
 
 
+    public void writeAsJson(List<Object[]> data, File file ) throws IOException{
+        new JsonManager().writeToFile( data, file );
+    }
     
     
     
@@ -312,7 +316,7 @@ public class SessionManager {
         return this.directoryPath + "\\" + this.session + this.ivExtension;
     }
     
-    private String getDataPath(){
+    public String getDataPath(){
         return this.directoryPath + "\\" + this.session + this.dataExtension;
     }
     

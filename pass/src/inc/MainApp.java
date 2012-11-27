@@ -23,7 +23,7 @@ import models.Exceptions.WrongCredentialsException;
 public class MainApp extends JFrame {
     
     private static Crypto cipher; // for encryption/decryption
-    private static String pathToClassFolder;
+    private static String pathToSessionsFolder;
     private static String serializeFile = "datas.data_ser";
     private static String ivFile = "iv.iv_ser";
     private static String logFile = "easypass.log";
@@ -66,9 +66,7 @@ public class MainApp extends JFrame {
         this.setLocation( winX, winY );
         
         // get the path to the current .class folder
-        pathToClassFolder = this.getSessionPath();
-        
-        System.out.println();
+        pathToSessionsFolder = this.getSessionPath();
         
         // ArrayList<Object[]> data = new ArrayList<Object[]>();
         // Object[] o1 = {"Google", "Smith", "Snowboarding", "dlskafj", ""};
@@ -80,23 +78,22 @@ public class MainApp extends JFrame {
         // data.add(o3);
         // model = new PassTableModel(columnNames, data);
         
-        // handleCredentialsAndLoadSession();
-        // test();
+        handleCredentialsAndLoadSession();
         
         // debug
-        SessionManager sm = new SessionManager( this.pathToClassFolder );
-        try{
-            ArrayList<Object[]> data = (ArrayList<Object[]>) sm.openSession(
-                    "test", "test", "test" );
-            model = new PassTableModel( columnNames, data );
-            
-        }catch( CryptoException e1 ){
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }catch( WrongCredentialsException e1 ){
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+        // SessionManager sm = new SessionManager( this.pathToClassFolder );
+        // try{
+        // ArrayList<Object[]> data = (ArrayList<Object[]>) sm.openSession(
+        // "test", "test", "test" );
+        // model = new PassTableModel( columnNames, data );
+        //
+        // }catch( CryptoException e1 ){
+        // // TODO Auto-generated catch block
+        // e1.printStackTrace();
+        // }catch( WrongCredentialsException e1 ){
+        // // TODO Auto-generated catch block
+        // e1.printStackTrace();
+        // }
         
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
@@ -107,7 +104,7 @@ public class MainApp extends JFrame {
         try{
             
             table = new MyTable( model );
-            // table = new MyTable(columnNames, datas.dataAsObjectArray());
+            
         }catch( Exception e ){
             System.out.println( "problem while filling the table with data" );
             e.printStackTrace();
@@ -150,7 +147,9 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                askSaveBeforeClose();
+                if( askSaveData() ){
+                    System.exit( 0 );
+                }
             }
         } );
         
@@ -166,7 +165,7 @@ public class MainApp extends JFrame {
                 filterText.requestFocusInWindow();
             }
         } );
-    }
+    }// end setShortCuts
     
     
     /**
@@ -228,18 +227,20 @@ public class MainApp extends JFrame {
         // adds a listener
         // asks the user if he wants to save data and quit, just quit, or resume
         this.addWindowListener( new WindowAdapter() {
-            public void windowClosing( WindowEvent we ) {               
-                askSaveBeforeClose();              
+            public void windowClosing( WindowEvent we ) {
+                if( askSaveData() ){
+                    System.exit( 0 );
+                }
             }
         } );
     }// end setWindowClosing
     
     
     /**
-     * creates a JDialog asking the user if he wants to save before quit.
-     * If the user clicks cancel, the method will return without ending the application
+     * creates a JDialog asking the user if he wants to save before quit. The
+     * method will return false only if the user clicked cancel.
      */
-    private void askSaveBeforeClose() {
+    private boolean askSaveData() {
         
         int answer = JOptionPane.showConfirmDialog( null,
                 "Would you like to save the modifications?", "save",
@@ -247,6 +248,7 @@ public class MainApp extends JFrame {
         
         if( answer == JOptionPane.YES_OPTION ){ // serializes and quits
             try{
+                System.out.println( sm.getDataPath() );
                 if( sm.save( (ArrayList<Object[]>) model.getData() ) ){
                     System.out.println( "datas serialized" );
                 }else{
@@ -258,133 +260,48 @@ public class MainApp extends JFrame {
                 e.printStackTrace();
             }// end try
             
-            System.exit( 0 );
+            return true;
             
         }else if( answer == JOptionPane.NO_OPTION ){ // just quit
-            System.exit( 0 );
+            return true;
         }// end if
         
+        return false;
     }// end askSaveBeforeClose
     
     
-    /**
-     * asks the user to choose the session to load and get his credentials. The
-     * method then creates the cipher, deserializes the data and creates a
-     * TableModel.
-     * 
-     * If an error occurs : - either the problem comes from the credentials, so
-     * it prompts the user to enter them again - or the problem is somewhere
-     * else and the program exits (after logging the cause of the exception)
-     */
-    @SuppressWarnings("unchecked")
-    public void handleCredentialsAndLoadSession() {
+    public File fileChooser() {
         
-        SessionAndPassFrame modal = null;
-        try{
-            
-            modal = new SessionAndPassFrame( this,
-                    Functionalities.getAvailableSessions( pathToClassFolder,
-                            ".*\\.data_ser$" )
-            
-            );
-            
-        }catch( Exception e ){
-            e.printStackTrace();
-            System.exit( 0 );
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter( new TextFilter() );
+        chooser.setCurrentDirectory( new java.io.File( "." ) );
+        chooser.setDialogTitle( "select folder" );
+        chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
+        
+        if( chooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION ){
+            return chooser.getSelectedFile();
+        }else{
+            System.out.println( "No Selection " );
+            return null;
         }
         
-        while( true ){
-            
-            // asks for pass with a dialog and loads the serialized datas
-            // if the pass is wrong, ask again. If the user cancels, quits the
-            // application
-            
-            modal.setVisible( true );
-            
-            if( modal.getStatus() == false ){ // checks if user clicked cancel
-                                              // or closed
-                System.exit( 0 );
-            }
-            // get pass and salt
-            // String pass = modal.getPass();
-            // String salt = modal.getSalt();
-            // String session = modal.getSession();
-            
-            String pass = "test";
-            String salt = "test";
-            String session = "test";
-            
-            try{
-                
-                if( !Functionalities.sessionExists( pathToClassFolder, session ) ){
-                    model = new PassTableModel( columnNames );
-                    System.out.println( "no file" );
-                    cipher = new Crypto( "PBKDF2WithHmacSHA1",
-                            "AES/CBC/PKCS5Padding", "AES", 65536, 128, pass,
-                            salt );
-                    return;
-                }
-                
-                // creates cipher
-                cipher = new Crypto( "PBKDF2WithHmacSHA1",
-                        "AES/CBC/PKCS5Padding", "AES", 65536, 128, pass, salt );
-                
-                // loads the data and gives it to a new jtable model instance
-                model = new PassTableModel( columnNames,
-                        (ArrayList<Object[]>) cipher.deserializeObject(
-                                pathToClassFolder + "\\" + serializeFile,
-                                Functionalities.readIv( pathToClassFolder
-                                        + "\\" + ivFile ) ) );
-                
-                System.out.println( "deserialization ok" );
-                break;
-                
-            }catch( BadPaddingException e ){
-                // if the pass was wrong, loops again
-                System.out
-                        .println( "wrong parameters : could not retrieve iv and datas" );
-                Functionalities.writeLog( "info: " + e.toString(),
-                        pathToClassFolder + "\\" + logFile );
-                continue;
-            }catch( Exception e ){
-                // otherwise, writes the exception to the log file and quit
-                System.out.println( "unplanned exception" );
-                e.printStackTrace();
-                Functionalities.writeLog( "severe: " + e.toString(),
-                        pathToClassFolder + "\\" + logFile );
-                System.exit( 0 );
-            }
-        }// end while
-    }// end handleCredentials
+    }// end filechooser
     
     
-    /**
-     * it was a try, not really conclusive, to restrict the resizing of the main
-     * frame
-     * 
-     * @param window
-     */
-    public void setResizeManager( JFrame window ) {
+    private class TextFilter extends javax.swing.filechooser.FileFilter {
         
-        this.addComponentListener( new ComponentAdapter() {
-            @Override
-            public void componentResized( final ComponentEvent e ) {
-                JFrame win = (JFrame) e.getSource();
-                System.out.println( win.getWidth() );
-                if( win.getWidth() < 600 ){
-                    int[] sizes = { 200, 200, 200, 200 };
-                    table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
-                    table.setColSizes( sizes );
-                }else if( win.getWidth() > 900 ){
-                    int[] sizes = { 400, 400, 400, 400 };
-                    table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
-                    table.setColSizes( sizes );
-                }else{
-                    table.setAutoResizeMode( JTable.AUTO_RESIZE_ALL_COLUMNS );
-                }
+        public String getDescription() {
+            return "Plain text document (*.txt)";
+        }
+        
+        
+        public boolean accept( File file ) {
+            if( file.isDirectory() ){
+                return true;
             }
-        } );
-    }// end setResizeManager
+            return file.getName().endsWith( ".txt" );
+        }
+    }
     
     
     /**
@@ -435,10 +352,10 @@ public class MainApp extends JFrame {
      * else and the program exits (after logging the cause of the exception)
      */
     @SuppressWarnings("unchecked")
-    public void test() {
+    public void handleCredentialsAndLoadSession() {
         
         SessionAndPassFrame modal = null;
-        sm = new SessionManager( this.pathToClassFolder );
+        sm = new SessionManager( this.pathToSessionsFolder );
         try{
             
             modal = new SessionAndPassFrame( this, sm.availableSessions()
@@ -494,14 +411,14 @@ public class MainApp extends JFrame {
                 System.out
                         .println( "wrong parameters : could not retrieve iv and datas" );
                 Functionalities.writeLog( "info: " + e.toString(),
-                        pathToClassFolder + "\\" + logFile );
+                        pathToSessionsFolder + "\\" + logFile );
                 continue;
             }catch( Exception e ){
                 // otherwise, writes the exception to the log file and quit
                 System.out.println( "unplanned exception" );
                 e.printStackTrace();
                 Functionalities.writeLog( "severe: " + e.toString(),
-                        pathToClassFolder + "\\" + logFile );
+                        pathToSessionsFolder + "\\" + logFile );
                 System.exit( 0 );
             }
         }// end while
@@ -513,7 +430,7 @@ public class MainApp extends JFrame {
         // Where the GUI is created:
         JMenuBar menuBar;
         JMenu menu, submenu;
-        JMenuItem menuItem;
+        JMenuItem saveSubMenu, jsonSubMenu;
         JRadioButtonMenuItem rbMenuItem;
         JCheckBoxMenuItem cbMenuItem;
         
@@ -528,10 +445,10 @@ public class MainApp extends JFrame {
         menuBar.add( menu );
         
         // a group of JMenuItems
-        menuItem = new JMenuItem( "save", KeyEvent.VK_T );
-        menuItem.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
+        saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
+        saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
                 ActionEvent.CTRL_MASK ) );
-        menuItem.addActionListener( new ActionListener() {
+        saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 try{
                     if( sm.save( (ArrayList<Object[]>) model.getData() ) ){
@@ -546,7 +463,31 @@ public class MainApp extends JFrame {
                 }// end try
             }
         } );
-        menu.add( menuItem );
+        menu.add( saveSubMenu );
+        
+        jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
+        jsonSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_E,
+                ActionEvent.CTRL_MASK ) );
+        jsonSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                File file = fileChooser();
+                if( file != null ){
+                    try{
+                        sm.writeAsJson( model.getData(), file );
+                        JOptionPane.showMessageDialog( null,
+                                "data saved to " + file.getName(),
+                                "export complete", JOptionPane.PLAIN_MESSAGE );
+                    }catch( IOException ee ){
+                        ee.printStackTrace();
+                        JOptionPane.showMessageDialog(  null,
+                                "an error occurred during export",
+                                "export error", JOptionPane.ERROR_MESSAGE );
+                    }
+                }// end if
+            }
+        } );
+        menu.add( jsonSubMenu );
         
         // menuItem = new JMenuItem( "Both text and icon", new ImageIcon(
         // "images/middle.gif" ) );
@@ -564,13 +505,13 @@ public class MainApp extends JFrame {
         submenu = new JMenu( "A submenu" );
         submenu.setMnemonic( KeyEvent.VK_S );
         
-        menuItem = new JMenuItem( "An item in the submenu" );
-        menuItem.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_2,
+        saveSubMenu = new JMenuItem( "An item in the submenu" );
+        saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_2,
                 ActionEvent.ALT_MASK ) );
-        submenu.add( menuItem );
+        submenu.add( saveSubMenu );
         
-        menuItem = new JMenuItem( "Another item" );
-        submenu.add( menuItem );
+        saveSubMenu = new JMenuItem( "Another item" );
+        submenu.add( saveSubMenu );
         menu.add( submenu );
         
         // Build second menu in the menu bar.

@@ -1,2 +1,4 @@
 bin/*
 pass/bin 
+pass/.classpath
+.metadata/*
