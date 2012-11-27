@@ -1,4 +1,6 @@
 bin/*
-pass/bin 
+pass/bin/*
 pass/.classpath
 .metadata/*
+pass/.settings/*
+
