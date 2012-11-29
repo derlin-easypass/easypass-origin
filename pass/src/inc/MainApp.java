@@ -165,6 +165,39 @@ public class MainApp extends JFrame {
                 filterText.requestFocusInWindow();
             }
         } );
+        
+        // CTRL+N to add a new line
+        KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
+                InputEvent.CTRL_DOWN_MASK );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( NewLineKeyStroke, "NEWLINE" );
+        
+        this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                model.addRow();
+            }
+        } );
+        
+        // DEL to delete selected rows
+        KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
+                InputEvent.CTRL_DOWN_MASK );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( NewLineKeyStroke, "DELLINE" );
+        
+        this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                int[] selectedRows = table.getSelectedRows();
+                System.out.println( "\ndeleteing rows:" );
+                for( int i = 0; i < selectedRows.length; i++ ){
+                    // row index minus i since the table size shrinks by 1
+                    // everytime
+                    model.deleteRow( selectedRows[ i ] - i );
+                }
+            }
+        } );
+        
     }// end setShortCuts
     
     
@@ -475,12 +508,12 @@ public class MainApp extends JFrame {
                 if( file != null ){
                     try{
                         sm.writeAsJson( model.getData(), file );
-                        JOptionPane.showMessageDialog( null,
-                                "data saved to " + file.getName(),
-                                "export complete", JOptionPane.PLAIN_MESSAGE );
+                        JOptionPane.showMessageDialog( null, "data saved to "
+                                + file.getName(), "export complete",
+                                JOptionPane.PLAIN_MESSAGE );
                     }catch( IOException ee ){
                         ee.printStackTrace();
-                        JOptionPane.showMessageDialog(  null,
+                        JOptionPane.showMessageDialog( null,
                                 "an error occurred during export",
                                 "export error", JOptionPane.ERROR_MESSAGE );
                     }
