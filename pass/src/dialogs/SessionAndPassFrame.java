@@ -4,7 +4,17 @@
  */
 package dialogs;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -23,14 +33,41 @@ public class SessionAndPassFrame extends javax.swing.JDialog {
      */
     public SessionAndPassFrame(javax.swing.JFrame parent, String[] sessions) throws ClassNotFoundException, IllegalAccessException, InstantiationException, UnsupportedLookAndFeelException {
         super(parent, "session and credentials", true);
+        
         if(sessions == null){
             this.sessionList = new String[0];
         }
-            
+        
+        //sets close operation
+        this.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                status = false;
+            }
+        });
+        
+   
         this.sessionList = sessions;
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         initComponents();
-    }
+        
+
+        // press ENTER to to activate the ok button 
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "OK" );
+        
+        this.getRootPane().getActionMap().put( "OK", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                okButton.doClick();
+            }
+        } );
+        
+        //removes the new button from the togglePolicy (ignored when using tabs to navigate through inputs)
+        newSessionButton.setFocusable(false);
+
+	}
 
     /**
      * This method is called from within the constructor to initialize the form.

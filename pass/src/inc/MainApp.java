@@ -51,9 +51,11 @@ public class MainApp extends JFrame {
     
     
     public MainApp() {
-        
         // initializes the main Frame
         super( "accounts and passwords" );
+        int a = 1;
+        a += ++a;
+        System.out.println(a);
         // sets the listener to save data on quit
         this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         this.setWindowClosingListener();
