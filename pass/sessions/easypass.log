@@ -1,0 +1,9 @@
+
+Sun Dec 02 10:02:37 CET 2012 info: models.Exceptions$WrongCredentialsException: test : wrong salt and/or password
+Sun Dec 02 10:02:48 CET 2012 info: models.Exceptions$WrongCredentialsException: test : wrong salt and/or password
+Sun Dec 02 10:02:50 CET 2012 info: models.Exceptions$WrongCredentialsException: test : wrong salt and/or password
+Sun Dec 02 10:28:26 CET 2012 severe: java.lang.NullPointerException
+Sun Dec 02 10:28:27 CET 2012 severe: java.lang.NullPointerException
+Sun Dec 02 11:41:40 CET 2012 info: models.Exceptions$WrongCredentialsException: test : wrong salt and/or password
+Sun Dec 02 13:28:39 CET 2012 info: models.Exceptions$WrongCredentialsException: test : wrong salt and/or password
+Sun Dec 02 13:38:43 CET 2012 severe: java.lang.NullPointerException

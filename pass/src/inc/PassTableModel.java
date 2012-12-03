@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
 import javax.swing.table.AbstractTableModel;
 
 public class PassTableModel extends AbstractTableModel implements Serializable {
@@ -74,11 +76,34 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
 	
 	public void setValueAt(Object value, int row, int col) {
 
-		data.get(row)[col] = value;
-		fireTableCellUpdated(row, col);
+		this.setValueAt(value, row, col, true);
+		
 	}
 
-	
+    public void setValueAt(Object value, int row, int col, boolean undoable)
+    {
+        UndoableEditListener listeners[] = getListeners(UndoableEditListener.class);
+        if (undoable == false || listeners == null)
+        {
+        	data.get(row)[col] = value;
+    		fireTableCellUpdated(row, col);
+            return;
+        }
+
+
+        Object oldValue = getValueAt(row, col);
+        data.get(row)[col] = value;
+		fireTableCellUpdated(row, col);
+        JvCellEdit cellEdit = new JvCellEdit(this, oldValue, value, row, col);
+        UndoableEditEvent editEvent = new UndoableEditEvent(this, cellEdit);
+        for (UndoableEditListener listener : listeners)
+            listener.undoableEditHappened(editEvent);
+    }
+    
+    public void addUndoableEditListener(UndoableEditListener listener){
+        listenerList.add(UndoableEditListener.class, listener);
+    }
+    
 	public void addRow(Object[] row) {
 
 		data.add(row);

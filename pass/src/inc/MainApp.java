@@ -2,6 +2,7 @@ package inc;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.print.PrinterException;
 import java.io.*;
 import java.security.*;
 import javax.crypto.BadPaddingException;
@@ -24,14 +25,13 @@ public class MainApp extends JFrame {
     
     private static Crypto cipher; // for encryption/decryption
     private static String pathToSessionsFolder;
-    private static String serializeFile = "datas.data_ser";
-    private static String ivFile = "iv.iv_ser";
     private static String logFile = "easypass.log";
     
     private static int winHeight = 300; // dimensions of the main frame
     private static int winWidth = 400;
     
     private static JPanel mainContainer; // main container (BorderLayout)
+    private static JvUndoManager undoManager;
     private static TableRowSorter<PassTableModel> sorter;
     private static JTextField filterText;
     
@@ -58,8 +58,7 @@ public class MainApp extends JFrame {
         System.out.println(a);
         // sets the listener to save data on quit
         this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
-        this.setWindowClosingListener();
-        this.setKeyboardShortcuts();
+        this.setWindowClosingListener();        
         // sets position, size, etc
         this.setSize( new Dimension( winWidth, winHeight ) );
         Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -116,6 +115,11 @@ public class MainApp extends JFrame {
         table.setAutoCreateRowSorter( true );
         table.setFillsViewportHeight( true );
         table.setRowHeight( 20 );
+        table.setStyle();
+        
+        //sets the undo manager for CTRL Z 
+        undoManager = new JvUndoManager();
+        model.addUndoableEditListener(undoManager);
         
         // adds scrollpane and JTable
         scrollPane = new JScrollPane( table,
@@ -130,9 +134,16 @@ public class MainApp extends JFrame {
         
         // updates the GUI and show the window
         mainContainer.updateUI();
+        try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			System.out.println("problem loading default UIManager");
+		}
+        
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
+        this.setKeyboardShortcuts();
         this.setVisible( true );
         
     }// end constructor
@@ -199,7 +210,7 @@ public class MainApp extends JFrame {
                 }
             }
         } );
-        
+          
     }// end setShortCuts
     
     
@@ -464,8 +475,8 @@ public class MainApp extends JFrame {
         
         // Where the GUI is created:
         JMenuBar menuBar;
-        JMenu menu, submenu;
-        JMenuItem saveSubMenu, jsonSubMenu;
+        JMenu menu, editMenu;
+        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu;
         JRadioButtonMenuItem rbMenuItem;
         JCheckBoxMenuItem cbMenuItem;
         
@@ -524,37 +535,45 @@ public class MainApp extends JFrame {
         } );
         menu.add( jsonSubMenu );
         
-        // menuItem = new JMenuItem( "Both text and icon", new ImageIcon(
-        // "images/middle.gif" ) );
-        // menuItem.setMnemonic( KeyEvent.VK_B );
-        // menu.add( menuItem );
-        //
-        // menuItem = new JMenuItem( new ImageIcon( "images/middle.gif" ) );
-        // menuItem.setMnemonic( KeyEvent.VK_D );
-        // menu.add( menuItem );
         
-        // a group of check box menu items
-        
-        // a submenu
+        // print subMenu
         menu.addSeparator();
-        submenu = new JMenu( "A submenu" );
-        submenu.setMnemonic( KeyEvent.VK_S );
+        printSubMenu = new JMenuItem("print");
+        printSubMenu.setMnemonic( KeyEvent.VK_P );
+        printSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P,
+        		ActionEvent.CTRL_MASK ) );
         
-        saveSubMenu = new JMenuItem( "An item in the submenu" );
-        saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_2,
-                ActionEvent.ALT_MASK ) );
-        submenu.add( saveSubMenu );
+        printSubMenu.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+            try {
+              table.print(JTable.PrintMode.NORMAL);
+            } catch (PrinterException pe) {
+              System.err.println("Error printing: " + pe.getMessage());
+            }
+          }
+        });
+
+       
+        menu.add( printSubMenu );
         
-        saveSubMenu = new JMenuItem( "Another item" );
-        submenu.add( saveSubMenu );
-        menu.add( submenu );
+        // Build edit menu in the menu bar.      
+        editMenu = new JMenu("Edit"); 
+        //add undo submenu
+        undoSubMenu = new JMenuItem(undoManager.getUndoAction());
+        undoSubMenu.setMnemonic( KeyEvent.VK_Z );
+        undoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Z,
+        		ActionEvent.CTRL_MASK ) );
+        //add redo submenu
+        redoSubMenu = new JMenuItem(undoManager.getRedoAction());
+        redoSubMenu.setMnemonic( KeyEvent.VK_Y );
+        redoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Y,
+        		ActionEvent.CTRL_MASK ) );
+        editMenu.add(undoSubMenu);
+        editMenu.add(redoSubMenu);
         
-        // Build second menu in the menu bar.
-        menu = new JMenu( "Another Menu" );
-        menu.setMnemonic( KeyEvent.VK_N );
-        menu.getAccessibleContext().setAccessibleDescription(
-                "This menu does nothing" );
-        menuBar.add( menu );
+        menuBar.add(editMenu);
+        
+        
         
         return menuBar;
     }
@@ -568,7 +587,7 @@ public class MainApp extends JFrame {
         JPanel form = new JPanel();
         JLabel l1 = new JLabel( "Find :" );
         form.add( l1 );
-        filterText = new JTextField( 50 );
+        filterText = new JTextField( 30 );
         // Whenever filterText changes, invoke newFilter.
         filterText.getDocument().addDocumentListener( new DocumentListener() {
             public void changedUpdate( DocumentEvent e ) {
