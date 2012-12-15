@@ -4,35 +4,31 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.util.EventObject;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-public class MyTable extends JTable {
+public class PassTable extends JTable {
     
-    private Font font;
-    
-    
-    public MyTable(String[] columnNames, List<Object[]> data) {
+    public PassTable(String[] columnNames, List<Object[]> data) {
         this( new PassTableModel( columnNames, data ) );
     }
     
     
-    public MyTable(PassTableModel model) {
+    public PassTable(PassTableModel model) {
         super( model );
-        //font = new Font( this.getFont().getFamily(), Font.PLAIN, 15 );
-        //this.setFont( font );
-        this.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+        // stops the editing when the user clicks on a button or else
+        // so when the user clicks on delete rows for example, there is no
+        // editing ghost cell hanging in the void !
+        this.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
     }
     
     
@@ -48,41 +44,55 @@ public class MyTable extends JTable {
         JComponent c = (JComponent) super.prepareRenderer( renderer, row,
                 column );
         
-        if(column == 2 && (!isRowSelected( row ) || !isColumnSelected( column ))){               
-                c.setForeground( c.getBackground() );            
-        }else{
-            c.setForeground( Color.BLACK );                
-        }
-        
-        
         if( !isRowSelected( row ) ){
-            c.setBackground( row % 2 == 0 ? getBackground() : new Color( 230,
-                    230, 230 ) );
-            
+            c.setBackground( row % 2 == 0 ? getBackground() : new Color( 250,
+                    250, 250 ) );
+            c.setForeground( Color.BLACK );
         }else{
-
+            c.setBackground( new Color( 232, 242, 254 ) );
+            c.setForeground( Color.BLACK);
             c.setFont( getFont().deriveFont( Font.BOLD ) );
             if( getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
                     && isRowSelected( row ) && isColumnSelected( column ) ){
-                
-                c.setBorder( BorderFactory.createLineBorder( Color.BLUE, 2 ) );
-            }else if( column == getEditingColumn() && row == getEditingRow() ){
-                System.out.println( "true" );
-                c.setBorder( BorderFactory.createLineBorder( Color.BLUE, 2 ) );
-                c.setForeground( Color.BLACK );
-                c.setBackground( new Color( 0, 0, 200 ) );
-            }else{
-                
+                c.setBackground( new Color( 184, 202, 238 ) );
             }
         }
-        
+        // else if(getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
+        // && isCellSelected( row, column )){
+        // c.setBackground( new Color( 0, 250, 0 ) );
+        // c.setBorder( BorderFactory.createLineBorder( Color.RED, 2 ) );
+        //
+        // }else{
+        //
+        // c.setFont( getFont().deriveFont( Font.BOLD ) );
+        // if( getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
+        // && isRowSelected( row ) && isColumnSelected( column ) ){
+        //
+        // c.setBackground( new Color( 0, 0, 250 ) );
+        //
+        // }else{
+        // System.out.println( "true" );
+        // c.setBorder( BorderFactory.createLineBorder( Color.CYAN, 2 ) );
+        // c.setBackground( new Color( 250, 0, 0 ) );
+        // }
+        // }
+        //
         return c;
     }
     
     
+    public TableCellRenderer getCellRenderer( int row, int column ) {
+        if( column == 2 ){
+            return new PasswordCellRenderer();
+        }
+        return super.getCellRenderer( row, column );
+    }
+    
+    
     public Component prepareEditor( TableCellEditor editor, int row, int column ) {
-        Component c = super.prepareEditor( editor, row, column );
-        //c.setFont( font.deriveFont( Font.BOLD ) );
+        JComponent c = (JComponent) super.prepareEditor( editor, row, column );
+        c.setFont( c.getFont().deriveFont( Font.BOLD ) );
+        c.setBorder( BorderFactory.createLineBorder( new Color( 52, 153, 255 ), 1 ) );
         return c;
     }
     
@@ -123,8 +133,8 @@ public class MyTable extends JTable {
     }
     
     
-    //TODO
-    public AbstractAction getDeleteRowsAction(){
+    // TODO
+    public AbstractAction getDeleteRowsAction() {
         return new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
                 int[] selectedRows = getSelectedRows();
@@ -132,7 +142,8 @@ public class MyTable extends JTable {
                 for( int i = 0; i < selectedRows.length; i++ ){
                     // row index minus i since the table size shrinks by 1
                     // everytime
-                    ((PassTableModel)getModel()).deleteRow( selectedRows[ i ] - i );
+                    ( (PassTableModel) getModel() ).deleteRow( selectedRows[ i ]
+                            - i );
                 }
             }
         };

@@ -24,7 +24,6 @@ import models.Exceptions.WrongCredentialsException;
 
 public class MainApp extends JFrame {
     
-    private Crypto cipher; // for encryption/decryption
     private String pathToSessionsFolder;
     private String appName = "easypass";
     private String logFile = appName + ".log";
@@ -41,9 +40,9 @@ public class MainApp extends JFrame {
     
     private PassTableModel model; // containing the datas, the object
                                   // serialized
-    private MyTable table; // the jtable
+    private PassTable table; // the jtable
     private JScrollPane scrollPane; // scrollPane for the JTable
-    private SessionManager sm;
+    private SessionManager sessionManager;
     
     private String[] columnNames = { "account", "email address", "password",
             "notes" }; // the headers for the jtable
@@ -73,32 +72,7 @@ public class MainApp extends JFrame {
         // get the path to the current .class folder
         pathToSessionsFolder = this.getSessionPathAppData();
         
-        // ArrayList<Object[]> data = new ArrayList<Object[]>();
-        // Object[] o1 = {"Google", "Smith", "Snowboarding", "dlskafj", ""};
-        // Object[] o2 = {"John", "Doe", "Rowing", "pass", ""};
-        // Object[] o3 = {"paypal", "winthoutid@hotmail.fr", "", "pass", ""};
-        //
-        // data.add(o1);
-        // data.add(o2);
-        // data.add(o3);
-        // model = new PassTableModel(columnNames, data);
-        
         handleCredentialsAndLoadSession();
-        
-        // debug
-        // SessionManager sm = new SessionManager( this.pathToClassFolder );
-        // try{
-        // ArrayList<Object[]> data = (ArrayList<Object[]>) sm.openSession(
-        // "test", "test", "test" );
-        // model = new PassTableModel( columnNames, data );
-        //
-        // }catch( CryptoException e1 ){
-        // // TODO Auto-generated catch block
-        // e1.printStackTrace();
-        // }catch( WrongCredentialsException e1 ){
-        // // TODO Auto-generated catch block
-        // e1.printStackTrace();
-        // }
         
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
@@ -108,7 +82,7 @@ public class MainApp extends JFrame {
         // creates the jtable
         try{
             
-            table = new MyTable( model );
+            table = new PassTable( model );
             
         }catch( Exception e ){
             System.out.println( "problem while filling the table with data" );
@@ -145,6 +119,28 @@ public class MainApp extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                new AWTEventListener() {
+                    @Override
+                    public void eventDispatched( AWTEvent evt ) {
+                        if( evt.getID() != MouseEvent.MOUSE_CLICKED ){
+                            return;
+                        }
+                        
+                        MouseEvent event = (MouseEvent)evt;
+                        int row = table.rowAtPoint( event.getPoint() );
+                        if( row == -1
+                                || !( event.getSource() instanceof PassTable ) ){
+                            if( table.isEditing() )
+                                table.getCellEditor().stopCellEditing();
+                            table.clearSelection();
+//                        }else if(! (event.ge) ){
+//                         TODO   
+                        }
+                    }
+                    
+                }, AWTEvent.MOUSE_EVENT_MASK );
+        
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
@@ -154,6 +150,12 @@ public class MainApp extends JFrame {
     }// end constructor
     
     
+    /**
+     * adds the different keyboards shortcuts to the jpanel
+     * 
+     * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
+     * bar; CTRL+N - new row; DEL - delete selected rows;
+     */
     public void setKeyboardShortcuts() {
         
         // escape event closes window
@@ -193,6 +195,7 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
+                table.getCellEditor().stopCellEditing();
                 model.addRow();
             }
         } );
@@ -202,11 +205,12 @@ public class MainApp extends JFrame {
                 InputEvent.CTRL_DOWN_MASK );
         
         this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( NewLineKeyStroke, "DELLINE" );
+                .put( DelLineKeyStroke, "DELLINE" );
         
         this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
                 
+                table.getCellEditor().stopCellEditing();
                 int[] selectedRows = table.getSelectedRows();
                 System.out.println( "\ndeleteing rows:" );
                 for( int i = 0; i < selectedRows.length; i++ ){
@@ -221,28 +225,9 @@ public class MainApp extends JFrame {
     
     
     /**
-     * gets the path to the sessions folder inside the project. Note : a new
-     * folder will be created if it does not already exist
-     * 
-     * @return
-     */
-    public String getSessionPath() {
-        System.out.println( System.getenv( "APPDATA" ) );
-        String path = this.getClass().getResource( "" ).getPath().split( "bin" )[ 0 ]
-                + "/sessions";
-        
-        File dir = new File( path );
-        if( !dir.exists() ){
-            dir.mkdir();
-        }
-        
-        return path;
-    }
-    
-    
-    /**
-     * gets the path to the sessions folder inside the project. Note : a new
-     * folder will be created if it does not already exist
+     * gets the path to the sessions folder stored in <user>/AppData/<appli
+     * name>/sessions. Note : a new folder will be created if it does not
+     * already exist
      * 
      * @return
      */
@@ -261,15 +246,12 @@ public class MainApp extends JFrame {
         }else{
             return path + "\\sessions";
         }
-        
     }
     
     
-    // TODO : bug quand effacer des rows avec une cellule sélectionnée
-    
     /**
-     * Update the row filter regular expression from the expression in the text
-     * box.
+     * Implements the search bar logic :updates the row filter regular
+     * expression from the expression in the text box.
      */
     public void setTableFilter() {
         RowFilter<PassTableModel, Object> rf = null;
@@ -328,8 +310,8 @@ public class MainApp extends JFrame {
         
         if( answer == JOptionPane.YES_OPTION ){ // serializes and quits
             try{
-                System.out.println( sm.getDataPath() );
-                if( sm.save( (ArrayList<Object[]>) model.getData() ) ){
+                System.out.println( sessionManager.getDataPath() );
+                if( sessionManager.save( (ArrayList<Object[]>) model.getData() ) ){
                     System.out.println( "datas serialized" );
                 }else{
                     System.out.println( "data not saved" );
@@ -350,6 +332,13 @@ public class MainApp extends JFrame {
     }// end askSaveBeforeClose
     
     
+    /**
+     * opens a filechooser window to let the user choose a txt file. Used mainly
+     * for saving the table data in clear json format ( see writeIlFile method
+     * from JsonManager and the "save as json" option in the upper menu )
+     * 
+     * @return
+     */
     public File fileChooser() {
         
         JFileChooser chooser = new JFileChooser();
@@ -368,6 +357,12 @@ public class MainApp extends JFrame {
     }// end filechooser
     
     
+    /**
+     * class used to filter the files selectables in the filechooser window.
+     * 
+     * @author lucy
+     * 
+     */
     private class TextFilter extends javax.swing.filechooser.FileFilter {
         
         public String getDescription() {
@@ -435,12 +430,12 @@ public class MainApp extends JFrame {
     public void handleCredentialsAndLoadSession() {
         
         SessionAndPassFrame modal = null;
-        sm = new SessionManager( this.pathToSessionsFolder );
+        sessionManager = new SessionManager( this.pathToSessionsFolder );
+        
         try{
             
-            modal = new SessionAndPassFrame( this, sm.availableSessions()
-            
-            );
+            modal = new SessionAndPassFrame( this,
+                    sessionManager.availableSessions() );
             
         }catch( Exception e ){
             e.printStackTrace();
@@ -461,24 +456,20 @@ public class MainApp extends JFrame {
             }
             // get pass and salt
             String pass = modal.getPass();
-            String salt = modal.getSalt();
             String session = modal.getSession();
             
             try{
                 
-                if( !sm.sessionExists( session ) ){
+                if( !sessionManager.sessionExists( session ) ){
                     model = new PassTableModel( columnNames );
-                    sm.createSession( session, pass, salt );
+                    sessionManager.createSession( session, pass );
                     System.out.println( "no file" );
-                    cipher = new Crypto( "PBKDF2WithHmacSHA1",
-                            "AES/CBC/PKCS5Padding", "AES", 65536, 128, pass,
-                            salt );
                     return;
                 }
                 
-                // creates cipher
-                ArrayList<Object[]> data = (ArrayList<Object[]>) sm
-                        .openSession( session, pass, salt );
+                // try to open the session and loads the encrypted data
+                ArrayList<Object[]> data = (ArrayList<Object[]>) sessionManager
+                        .openSession( session, pass );
                 
                 // loads the data and gives it to a new jtable model instance
                 model = new PassTableModel( columnNames, data );
@@ -490,15 +481,15 @@ public class MainApp extends JFrame {
                 // if the pass was wrong, loops again
                 System.out
                         .println( "wrong parameters : could not retrieve iv and datas" );
-                Functionalities.writeLog( "info: " + e.toString(),
-                        pathToSessionsFolder + "\\" + logFile );
+                // Functionalities.writeLog( "info: " + e.toString(),
+                // pathToSessionsFolder + "\\" + logFile );
                 continue;
             }catch( Exception e ){
                 // otherwise, writes the exception to the log file and quit
                 System.out.println( "unplanned exception" );
                 e.printStackTrace();
-                Functionalities.writeLog( "severe: " + e.toString(),
-                        pathToSessionsFolder + "\\" + logFile );
+                // Functionalities.writeLog( "severe: " + e.toString(),
+                // pathToSessionsFolder + "\\" + logFile );
                 System.exit( 0 );
             }
         }// end while
@@ -511,8 +502,6 @@ public class MainApp extends JFrame {
         JMenuBar menuBar;
         JMenu menu, editMenu;
         JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu;
-        JRadioButtonMenuItem rbMenuItem;
-        JCheckBoxMenuItem cbMenuItem;
         
         // Create the menu bar.
         menuBar = new JMenuBar();
@@ -530,13 +519,17 @@ public class MainApp extends JFrame {
                 ActionEvent.CTRL_MASK ) );
         saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
+                table.getCellEditor().stopCellEditing();
+                
                 try{
-                    if( sm.save( (ArrayList<Object[]>) model.getData() ) ){
+                    if( sessionManager.save( (ArrayList<Object[]>) model
+                            .getData() ) ){
                         System.out.println( "datas serialized" );
-                        showInfos("data saved.");
+                        showInfos( "data saved.", 10000 );
                     }else{
                         System.out.println( "data not saved" );
-                        showInfos("an error occurred! Data not saved...");
+                        showInfos( "an error occurred! Data not saved...",
+                                10000 );
                     }
                 }catch( Exception ee ){
                     System.out
@@ -552,8 +545,8 @@ public class MainApp extends JFrame {
         
         newSessionSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                if( sm.isOpened() )
-                    sm.close();
+                if( sessionManager.isOpened() )
+                    sessionManager.close();
                 table.setVisible( false );
                 handleCredentialsAndLoadSession();
                 table.setModel( model );
@@ -563,6 +556,7 @@ public class MainApp extends JFrame {
         } );
         menu.add( newSessionSubMenu );
         
+        // save as json menu
         jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
         jsonSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_E,
                 ActionEvent.CTRL_MASK ) );
@@ -572,7 +566,7 @@ public class MainApp extends JFrame {
                 File file = fileChooser();
                 if( file != null ){
                     try{
-                        sm.writeAsJson( model.getData(), file );
+                        sessionManager.writeAsJson( model.getData(), file );
                         JOptionPane.showMessageDialog( null, "data saved to "
                                 + file.getName(), "export complete",
                                 JOptionPane.PLAIN_MESSAGE );
@@ -608,11 +602,13 @@ public class MainApp extends JFrame {
         
         // Build edit menu in the menu bar.
         editMenu = new JMenu( "edit" );
+        
         // add undo submenu
         undoSubMenu = new JMenuItem( undoManager.getUndoAction() );
         undoSubMenu.setMnemonic( KeyEvent.VK_Z );
         undoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Z,
                 ActionEvent.CTRL_MASK ) );
+        
         // add redo submenu
         redoSubMenu = new JMenuItem( undoManager.getRedoAction() );
         redoSubMenu.setMnemonic( KeyEvent.VK_Y );
@@ -627,6 +623,14 @@ public class MainApp extends JFrame {
     }
     
     
+    /**
+     * returns the searchbox to filter the data in the table (implementation
+     * logic : see the setTableFilter method) as well as an uneditable
+     * jtextfield used to display informations to the user (if data have been
+     * saved for example)
+     * 
+     * @return
+     */
     public JPanel getDownMenu() {
         
         sorter = new TableRowSorter<PassTableModel>( model );
@@ -656,25 +660,31 @@ public class MainApp extends JFrame {
         form.add( l1 );
         form.add( filterText );
         
-        
-        infos = new JTextField(15);
+        infos = new JTextField( 15 );
         infos.setEditable( false );
-        form.add(infos);
+        form.add( infos );
         // form.setSize( new Dimension(50, 100) );
         
         return form;
     }// end getFilterMenu
     
     
-    public void showInfos(String info){
+    /**
+     * displays informations in the uneditable jtextfield of the downMenu. The
+     * informations will be displayed for x milliseconds before disappearing
+     * 
+     * @param info
+     */
+    public void showInfos( String info, int ms ) {
         infos.setText( info );
-        if(infosTimer != null && infosTimer.isRunning()) infosTimer.stop();
+        if( infosTimer != null && infosTimer.isRunning() )
+            infosTimer.stop();
         
-        infosTimer = new Timer(10000, new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
+        infosTimer = new Timer( ms, new ActionListener() {
+            public void actionPerformed( ActionEvent evt ) {
                 infos.setText( "" );
-            }    
-        });
+            }
+        } );
         infosTimer.start();
     }
 }// end class

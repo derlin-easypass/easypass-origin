@@ -1,37 +1,21 @@
 package inc;
 
-import inc.Functionalities.Filter;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Pattern;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.NoSuchPaddingException;
-
-import models.Crypto;
 import models.Exceptions;
-import models.Exceptions.*;
+import models.Exceptions.CryptoException;
+import models.Exceptions.WrongCredentialsException;
 
 public class SessionManager {
     
     private static int currentVersion = 1;
     private static String cryptoAlgorithm = "aes-128-cbc";
     
-    private String ivExtension = ".iv_ser";
     private String dataExtension = ".data_ser";
     private String directoryPath;
     private String session;
@@ -39,10 +23,7 @@ public class SessionManager {
     
     
     public static void main( String[] args ) {
-//        JsonManager jm = new JsonManager();
-//        SessionManager sm = new SessionManager( "C:\\passProtect\\pass" );
-//        sm.openSession( "test", "test", "test" );
-//        sm.session = "test";
+
         // ArrayList<Object[]> data = new ArrayList<Object[]>();
         // Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
         // Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
@@ -51,23 +32,7 @@ public class SessionManager {
         // data.add( o1 );
         // data.add( o2 );
         // data.add( o3 );
-        // sm.saveIv( jm.serialize( (List<Object[]>) data, sm.cipher, "test"
-        // + sm.dataExtension ) );
-        
-        // byte[] iv = sm.readIv();
-        // System.out.println( iv );
-        // System.out.println( "version : " + sm.readVersion() );
-        // System.out.println( iv.length );
-        // ArrayList<Object[]> data = (ArrayList<Object[]>) jm.deserialize(
-        // sm.cipher.getCipher(), sm.getDataPath() );
-        // System.out.println( data == null );
-        // for( int i = 0; i < data.size(); i++ ){
-        // for( int j = 0; j < data.get( i ).length; j++ ){
-        // System.out.println( data.get( i )[ j ] );
-        // }
-        // }
-        // sm.readIv();
-        
+       
     }
     
     
@@ -272,11 +237,29 @@ public class SessionManager {
     
     
     /**************************************************************
-     * private utilities
+     * utilities
      ************************************************************/
     
     public String getDataPath() {
         return this.directoryPath + "\\" + this.session + this.dataExtension;
     }
+    
+ 
+    /**
+     * private class used to get files in a folder that match a pattern
+     * @author lucy
+     */
+    public static class Filter implements FilenameFilter {
+
+        protected String pattern;
+
+        public Filter(String str) {
+            pattern = str;
+        }
+
+        public boolean accept(File dir, String name) {
+            return name.toLowerCase().matches(pattern);
+        }
+    }//end class filter
 
 }//end class

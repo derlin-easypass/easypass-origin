@@ -1,20 +1,12 @@
 package inc;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.JTable;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.UndoManager;
 
 public class PassTableModel extends AbstractTableModel implements Serializable {
     
