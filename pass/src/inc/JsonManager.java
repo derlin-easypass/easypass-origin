@@ -2,6 +2,7 @@ package inc;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import models.Exceptions.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
@@ -47,15 +49,16 @@ public class JsonManager {
         data.add( o2 );
         data.add( o3 );
         
+        String password = "essai"; // {'c','h','a','n','g','e','i','t'};
         
-        String password = "essai"; //{'c','h','a','n','g','e','i','t'};
-
         // Encrypt!
         
         Gson gson = new GsonBuilder().create();
-        FileOutputStream fs = new FileOutputStream(new File("D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt"));
-        fs.write( OpenSSL.encrypt("aes-128-cbc", password.toCharArray(), gson.toJson( data ).getBytes() ) );
-        fs.write("\r\n".getBytes());
+        FileOutputStream fs = new FileOutputStream( new File(
+                "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" ) );
+        fs.write( OpenSSL.encrypt( "aes-128-cbc", password.toCharArray(), gson
+                .toJson( data ).getBytes() ) );
+        fs.write( "\r\n".getBytes() );
         fs.close();
         
         // decrypt
@@ -63,21 +66,25 @@ public class JsonManager {
         FileInputStream fin = null;
         password = "ess";
         
-        try{  
+        try{
             
-            fin = new FileInputStream("D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt");
-            ArrayList<Object[]> data_decrypt = new GsonBuilder().create().fromJson(
-                    new InputStreamReader(OpenSSL.decrypt( "aes-128-cbc", password.toCharArray(), fin )),
-                    new TypeToken<List<Object[]>>() {
-                    }.getType() );
+            fin = new FileInputStream(
+                    "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" );
+            ArrayList<Object[]> data_decrypt = new GsonBuilder()
+                    .create()
+                    .fromJson(
+                            new InputStreamReader( OpenSSL.decrypt(
+                                    "aes-128-cbc", password.toCharArray(), fin ) ),
+                            new TypeToken<List<Object[]>>() {
+                            }.getType() );
             
-            for(Object[] o : data_decrypt ){
-                for(Object s : o){
-                    System.out.println((String)s);
+            for( Object[] o : data_decrypt ){
+                for( Object s : o ){
+                    System.out.println( (String) s );
                 }
             }
         }catch( JsonSyntaxException | IllegalStateException e ){
-//            throw new Exceptions.WrongCredentialsException();
+            // throw new Exceptions.WrongCredentialsException();
             e.printStackTrace();
             
         }finally{
@@ -100,23 +107,24 @@ public class JsonManager {
      * @return
      * @throws IOException
      */
-    public byte[] serialize( List<Object[]> data, Cipher cipher, String filepath )
-            throws IOException {
+    public void serialize( List<Object[]> data, String algo, String filepath,
+            String password ) throws IOException {
         
-        CipherOutputStream cout = null;
+        FileOutputStream fos = null;      
         
         try{
-            FileOutputStream fos = new FileOutputStream( filepath );
-            cout = new CipherOutputStream( fos, cipher );
             Gson gson = new GsonBuilder().create();
-            cout.write( gson.toJson( data ).getBytes() );
-            cout.flush();
+            fos = new FileOutputStream( filepath );
+            fos.write( OpenSSL.encrypt( algo, password.toCharArray(),
+                    gson.toJson( data ).getBytes() ) );
+            fos.write( "\r\n".getBytes() );
+            fos.flush();
             
-            return cipher.getIV();
-            
+        }catch( FileNotFoundException | GeneralSecurityException e ){
+            e.printStackTrace();
         }finally{
-            if( cout != null )
-                cout.close();
+            if( fos != null )
+                fos.close();
         }
         
     }// end serialize
@@ -139,27 +147,29 @@ public class JsonManager {
      * @throws IOException
      *             If a problem occurs while opening/reading the file
      */
-    public List<Object[]> deserialize( Cipher cipher, String filepath )
-            throws CryptoException, WrongCredentialsException, IOException {
+    public List<Object[]> deserialize( String algo, String filepath,
+            String password ) throws WrongCredentialsException, IOException {
         
-        CipherInputStream cin = null;
+        FileInputStream fin = null;
         
         try{
             
-            cin = new CipherInputStream( new FileInputStream( filepath ),
-                    cipher );
-            
+            fin = new FileInputStream( filepath );
             return ( new GsonBuilder().create().fromJson(
-                    new InputStreamReader( cin ),
+                    new InputStreamReader( OpenSSL.decrypt( algo,
+                            password.toCharArray(), fin ) ),
                     new TypeToken<List<Object[]>>() {
                     }.getType() ) );
             
-        }catch( JsonSyntaxException | IllegalStateException e ){
-            throw new Exceptions.WrongCredentialsException();
+        }catch( IOException | JsonSyntaxException | JsonIOException
+                | GeneralSecurityException e ){
+
+            e.printStackTrace();
+            throw new Exceptions.WrongCredentialsException( e.getMessage() );
             
         }finally{
-            if( cin != null )
-                cin.close();
+            if( fin != null )
+                fin.close();
         }// end try
         
     }// end deserialize

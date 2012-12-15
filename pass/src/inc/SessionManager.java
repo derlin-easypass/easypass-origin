@@ -29,51 +29,43 @@ import models.Exceptions.*;
 public class SessionManager {
     
     private static int currentVersion = 1;
-    private static String keyFactAlgo = "PBKDF2WithHmacSHA1";
-    private static String cipherTransfo = "AES/CBC/PKCS5Padding";
-    private static String encryptionType = "AES";
-    private static int keyIterationCount = 65536;
-    private static int keyLength = 128;
+    private static String cryptoAlgorithm = "aes-128-cbc";
     
     private String ivExtension = ".iv_ser";
     private String dataExtension = ".data_ser";
-    private String newLine = System.getProperty( "line.separator" );
     private String directoryPath;
     private String session;
+    private String password;
     
-    private Crypto cipher = null;
     
-    
-    public static void main( String[] args ) throws IOException,
-            VersionNumberNotFoundException, CryptoException,
-            IvNotFoundException, WrongCredentialsException, InvalidKeyException, InvalidAlgorithmParameterException {
-        JsonManager jm = new JsonManager();
-        SessionManager sm = new SessionManager("C:\\passProtect\\pass");
-        sm.openSession( "test", "test", "test" );
-        sm.session = "test";
-//         ArrayList<Object[]> data = new ArrayList<Object[]>();
-//         Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
-//         Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
-//         Object[] o3 = { "paypal", "winthoutid@hotmail.fr", "", "pass", "" };
-//        
-//         data.add( o1 );
-//         data.add( o2 );
-//         data.add( o3 );
-//         sm.saveIv( jm.serialize( (List<Object[]>) data, sm.cipher, "test"
-//         + sm.dataExtension ) );
+    public static void main( String[] args ) {
+//        JsonManager jm = new JsonManager();
+//        SessionManager sm = new SessionManager( "C:\\passProtect\\pass" );
+//        sm.openSession( "test", "test", "test" );
+//        sm.session = "test";
+        // ArrayList<Object[]> data = new ArrayList<Object[]>();
+        // Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
+        // Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
+        // Object[] o3 = { "paypal", "winthoutid@hotmail.fr", "", "pass", "" };
+        //
+        // data.add( o1 );
+        // data.add( o2 );
+        // data.add( o3 );
+        // sm.saveIv( jm.serialize( (List<Object[]>) data, sm.cipher, "test"
+        // + sm.dataExtension ) );
         
-        byte[] iv = sm.readIv();
-        System.out.println( iv );
-        System.out.println( "version : " + sm.readVersion() );
-        System.out.println( iv.length );
-        ArrayList<Object[]> data = (ArrayList<Object[]>) jm.deserialize(
-                sm.cipher.getCipher(), sm.getDataPath() );
-        System.out.println( data == null );
-        for( int i = 0; i < data.size(); i++ ){
-            for( int j = 0; j < data.get( i ).length; j++ ){
-                System.out.println( data.get( i )[ j ] );
-            }
-        }
+        // byte[] iv = sm.readIv();
+        // System.out.println( iv );
+        // System.out.println( "version : " + sm.readVersion() );
+        // System.out.println( iv.length );
+        // ArrayList<Object[]> data = (ArrayList<Object[]>) jm.deserialize(
+        // sm.cipher.getCipher(), sm.getDataPath() );
+        // System.out.println( data == null );
+        // for( int i = 0; i < data.size(); i++ ){
+        // for( int j = 0; j < data.get( i ).length; j++ ){
+        // System.out.println( data.get( i )[ j ] );
+        // }
+        // }
         // sm.readIv();
         
     }
@@ -84,14 +76,15 @@ public class SessionManager {
      **********************************************************/
     
     public SessionManager(String directoryPath) {
-        File file = new File(directoryPath);
+        File file = new File( directoryPath );
         
-        if(file.exists() && file.isDirectory() ){
-            this.directoryPath = directoryPath;           
+        if( file.exists() && file.isDirectory() ){
+            this.directoryPath = directoryPath;
         }else{
-            throw new Exceptions.NotInitializedException( directoryPath + "is not a valid directory" );
+            throw new Exceptions.NotInitializedException( directoryPath
+                    + "is not a valid directory" );
         }
-    }//end constructor
+    }// end constructor
     
     
     /**************************************************************
@@ -105,9 +98,9 @@ public class SessionManager {
      * @throws FileNotFoundException
      */
     public String[] availableSessions() throws FileNotFoundException {
-        return this.availableSessions( ".*\\" + dataExtension
-                + "$" );
-    }//end available sessions
+        return this.availableSessions( ".*\\" + dataExtension + "$" );
+    }// end available sessions
+    
     
     /**
      * returns an array of strings with all the existing sessions
@@ -169,8 +162,8 @@ public class SessionManager {
      * @param name
      * @return
      */
-    public boolean sessionExists( String name ) {        
-        return this.sessionExists( directoryPath, name );       
+    public boolean sessionExists( String name ) {
+        return this.sessionExists( directoryPath, name );
     }// end sessionExists
     
     
@@ -189,22 +182,12 @@ public class SessionManager {
      * @throws FileNotFoundException
      * @throws CryptoException
      */
-    public void createSession( String sessionName, String pass, String salt )
-            throws FileNotFoundException, CryptoException {
+    public void createSession( String sessionName, String password ) {
         
         this.session = sessionName;
+        this.password = password;
         
-        try{
-            this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
-                    encryptionType, keyIterationCount, keyLength, pass, salt );
-            
-        }catch( NoSuchAlgorithmException | NoSuchPaddingException
-                | InvalidKeySpecException e ){
-            e.printStackTrace();
-            throw new Exceptions.CryptoException();
-        }
-        
-    }//end createSession
+    }// end createSession
     
     
     /**
@@ -215,36 +198,26 @@ public class SessionManager {
      * @return
      * @throws CryptoErrorException
      * @throws WrongCredentialsException
+     * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> openSession( String session, String pass, String salt )
-            throws Exceptions.CryptoException,
-            Exceptions.WrongCredentialsException {
-        
-        this.session = session;
+    public List<Object[]> openSession( String session, String password )
+            throws Exceptions.WrongCredentialsException, IOException {
         
         try{
             
-            this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
-                    encryptionType, keyIterationCount, keyLength, pass, salt );
+            this.session = session;
+            this.password = password;            
+            return new JsonManager().deserialize( cryptoAlgorithm,
+                    this.getDataPath(), this.password );
             
-            this.cipher.initCipherForDecryption( this.readIv() );
-            
-            return new JsonManager().deserialize( this.cipher.getCipher(), this.getDataPath() );
-
         }catch( Exceptions.WrongCredentialsException e ){
-          // if the pass was wrong, loops again
-          throw new Exceptions.WrongCredentialsException( session
-                  + " : wrong salt and/or password" );     
-        }catch( Exception ee ){
             // if the pass was wrong, loops again
-            throw new Exceptions.CryptoException(
-                    ee.getMessage() + " An unplanned error occurred during crypto "
-                            + ee.toString() );
+            throw new Exceptions.WrongCredentialsException( session
+                    + " : wrong salt and/or password" );
         }
         
-    }//end openSession
-    
+    }// end openSession
     
     
     /**************************************************************
@@ -252,10 +225,11 @@ public class SessionManager {
      ************************************************************/
     /**
      * returns true if a session is currently opened
+     * 
      * @return
      */
     public boolean isOpened() {
-        return ( this.cipher == null ? false : true );
+        return ( this.session == null ? false : true );
     }
     
     
@@ -264,125 +238,45 @@ public class SessionManager {
         if( !this.isOpened() ){
             throw new Exceptions.NotInitializedException( "no session opened" );
         }
+        
         try{
             
-            this.cipher.initCipherForEncryption();
-            byte[] iv = new JsonManager().serialize( data,
-                    this.cipher.getCipher(), this.getDataPath() );
-            
-            this.saveIv( iv );
-            
+            new JsonManager().serialize( data, cryptoAlgorithm, this.getDataPath(), this.password );            
             return true;
             
-        }catch( IOException | InvalidKeyException e ){
-            // TODO Auto-generated catch block
+        }catch( IOException e ){
             e.printStackTrace();
             return false;
         }
-    }//end save
+    }// end save
+    
     
     /**
      * close the current session
      */
-    public void close(){
-        this.cipher = null;
-        this.session = "";
+    public void close() {
+        this.password = null;
+        this.session = null;
     }
     
-    
-
-
-    public void writeAsJson(List<Object[]> data, File file ) throws IOException{
+    /**
+     * writes the content of the list as proper json in the specified file
+     * @param data
+     * @param file
+     * @throws IOException
+     */
+    public void writeAsJson( List<Object[]> data, File file )
+            throws IOException {
         new JsonManager().writeToFile( data, file );
     }
     
-    
-    
-    
-    
-
-    
-    
-
-    
-    
-   
     
     /**************************************************************
      * private utilities
      ************************************************************/
     
-    private String getIvPath(){
-        return this.directoryPath + "\\" + this.session + this.ivExtension;
-    }
-    
-    public String getDataPath(){
+    public String getDataPath() {
         return this.directoryPath + "\\" + this.session + this.dataExtension;
     }
-    
-    
-    /**
-     * Saves the iv (a limited array of bytes generated during encryption) into
-     * the specified file
-     * 
-     * @param iv
-     * @param path
-     * @throws IOException
-     */
-    private void saveIv( byte[] iv ) throws IOException {
-        
-        FileOutputStream fos = new FileOutputStream( new File( directoryPath
-                + "\\" + session + this.ivExtension ) );
 
-        fos.write( currentVersion );
-        fos.write( iv );
-        fos.flush();
-        fos.close();
-        
-    }// end saveIV
-    
-    
-    /**
-     * reads and return the iv (a limited array of bytes used for decryption)
-     * from the specified file
-     * 
-     * @param path
-     * @return
-     * @throws IOException
-     * @throws IvNotFoundException
-     */
-    private byte[] readIv() throws IOException, IvNotFoundException {
-        
-        File file = new File( directoryPath + "\\" + session + ivExtension );
-        FileInputStream fin = new FileInputStream( file );
-        fin.read();
-        byte[] iv = new byte[(int) file.length() - 1];
-        fin.read( iv );
-        fin.close();
-        
-        return iv;
-        
-    }// end readIv
-    
-    /**
-     * reads the version number of the ivFile of the current session
-     * @return
-     * @throws VersionNumberNotFoundException
-     * @throws IOException
-     */
-    private int readVersion() throws VersionNumberNotFoundException, IOException {
-        
-        FileInputStream fin = null;
-        try{
-            File file = new File( this.getIvPath() );
-            fin = new FileInputStream( file );
-            return fin.read();
-        }catch( IOException e ){
-            e.printStackTrace();
-            throw new Exceptions.VersionNumberNotFoundException();
-        }finally{
-            if( fin != null )
-                fin.close();
-        }
-    }
-}
+}//end class
