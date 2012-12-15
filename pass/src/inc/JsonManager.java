@@ -13,6 +13,8 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 
+import org.apache.commons.ssl.OpenSSL;
+
 import models.Crypto;
 import models.Exceptions;
 import models.Exceptions.*;
@@ -24,6 +26,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 
 public class JsonManager {
     
@@ -44,14 +47,43 @@ public class JsonManager {
         data.add( o2 );
         data.add( o3 );
         
-        // CipherOutputStream cout = new CipherOutputStream( fw,
-        // crypto.getCipher() );
-        // Gson gson = new GsonBuilder().create();
-        // cout.write(gson.toJson( data ).getBytes());
-        // cout.flush();
-        // cout.close();
-        // System.out.println( "ok" );
-        // System.out.println(readIv().length);
+        
+        String password = "essai"; //{'c','h','a','n','g','e','i','t'};
+
+        // Encrypt!
+        
+        Gson gson = new GsonBuilder().create();
+        FileOutputStream fs = new FileOutputStream(new File("D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt"));
+        fs.write( OpenSSL.encrypt("aes-128-cbc", password.toCharArray(), gson.toJson( data ).getBytes() ) );
+        fs.write("\r\n".getBytes());
+        fs.close();
+        
+        // decrypt
+        
+        FileInputStream fin = null;
+        password = "ess";
+        
+        try{  
+            
+            fin = new FileInputStream("D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt");
+            ArrayList<Object[]> data_decrypt = new GsonBuilder().create().fromJson(
+                    new InputStreamReader(OpenSSL.decrypt( "aes-128-cbc", password.toCharArray(), fin )),
+                    new TypeToken<List<Object[]>>() {
+                    }.getType() );
+            
+            for(Object[] o : data_decrypt ){
+                for(Object s : o){
+                    System.out.println((String)s);
+                }
+            }
+        }catch( JsonSyntaxException | IllegalStateException e ){
+//            throw new Exceptions.WrongCredentialsException();
+            e.printStackTrace();
+            
+        }finally{
+            if( fin != null )
+                fin.close();
+        }// end try
         
     }
     

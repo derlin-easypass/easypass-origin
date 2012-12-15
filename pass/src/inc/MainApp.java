@@ -15,6 +15,7 @@ import dialogs.SimpleDialog;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimerTask;
 import java.util.regex.Pattern;
 
 import models.*;
@@ -23,26 +24,29 @@ import models.Exceptions.WrongCredentialsException;
 
 public class MainApp extends JFrame {
     
-    private static Crypto cipher; // for encryption/decryption
-    private static String pathToSessionsFolder;
-    private static String logFile = "easypass.log";
+    private Crypto cipher; // for encryption/decryption
+    private String pathToSessionsFolder;
+    private String appName = "easypass";
+    private String logFile = appName + ".log";
     
-    private static int winHeight = 300; // dimensions of the main frame
-    private static int winWidth = 400;
+    private int winHeight = 300; // dimensions of the main frame
+    private int winWidth = 480;
     
-    private static JPanel mainContainer; // main container (BorderLayout)
-    private static JvUndoManager undoManager;
-    private static TableRowSorter<PassTableModel> sorter;
-    private static JTextField filterText;
+    private JPanel mainContainer; // main container (BorderLayout)
+    private JvUndoManager undoManager;
+    private TableRowSorter<PassTableModel> sorter;
+    private JTextField filterText;
+    private JTextField infos;
+    private Timer infosTimer;
     
-    private static PassTableModel model; // containing the datas, the object
-                                         // serialized
-    private static MyTable table; // the jtable
-    private static JScrollPane scrollPane; // scrollPane for the JTable
-    private static SessionManager sm;
+    private PassTableModel model; // containing the datas, the object
+                                  // serialized
+    private MyTable table; // the jtable
+    private JScrollPane scrollPane; // scrollPane for the JTable
+    private SessionManager sm;
     
-    private static String[] columnNames = { "account", "email address",
-            "password", "notes" }; // the headers for the jtable
+    private String[] columnNames = { "account", "email address", "password",
+            "notes" }; // the headers for the jtable
     
     
     public static void main( String[] args ) {
@@ -55,10 +59,10 @@ public class MainApp extends JFrame {
         super( "accounts and passwords" );
         int a = 1;
         a += ++a;
-        System.out.println(a);
+        System.out.println( a );
         // sets the listener to save data on quit
         this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
-        this.setWindowClosingListener();        
+        this.setWindowClosingListener();
         // sets position, size, etc
         this.setSize( new Dimension( winWidth, winHeight ) );
         Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -67,7 +71,7 @@ public class MainApp extends JFrame {
         this.setLocation( winX, winY );
         
         // get the path to the current .class folder
-        pathToSessionsFolder = this.getSessionPath();
+        pathToSessionsFolder = this.getSessionPathAppData();
         
         // ArrayList<Object[]> data = new ArrayList<Object[]>();
         // Object[] o1 = {"Google", "Smith", "Snowboarding", "dlskafj", ""};
@@ -114,12 +118,12 @@ public class MainApp extends JFrame {
         // sets the sizes of the JTable
         table.setAutoCreateRowSorter( true );
         table.setFillsViewportHeight( true );
-        table.setRowHeight( 20 );
+        table.setRowHeight( 30 );
         table.setStyle();
         
-        //sets the undo manager for CTRL Z 
+        // sets the undo manager for CTRL Z
         undoManager = new JvUndoManager();
-        model.addUndoableEditListener(undoManager);
+        model.addUndoableEditListener( undoManager );
         
         // adds scrollpane and JTable
         scrollPane = new JScrollPane( table,
@@ -130,15 +134,16 @@ public class MainApp extends JFrame {
         this.getContentPane().add( mainContainer );
         
         // adds filter/find menu
-        mainContainer.add( this.getFilterMenu(), BorderLayout.SOUTH );
+        mainContainer.add( this.getDownMenu(), BorderLayout.SOUTH );
         
         // updates the GUI and show the window
         mainContainer.updateUI();
-        try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			System.out.println("problem loading default UIManager");
-		}
+        try{
+            UIManager
+                    .setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+        }catch( Exception e ){
+            System.out.println( "problem loading default UIManager" );
+        }
         
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
@@ -201,6 +206,7 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
+                
                 int[] selectedRows = table.getSelectedRows();
                 System.out.println( "\ndeleteing rows:" );
                 for( int i = 0; i < selectedRows.length; i++ ){
@@ -210,7 +216,7 @@ public class MainApp extends JFrame {
                 }
             }
         } );
-          
+        
     }// end setShortCuts
     
     
@@ -221,6 +227,7 @@ public class MainApp extends JFrame {
      * @return
      */
     public String getSessionPath() {
+        System.out.println( System.getenv( "APPDATA" ) );
         String path = this.getClass().getResource( "" ).getPath().split( "bin" )[ 0 ]
                 + "/sessions";
         
@@ -232,6 +239,33 @@ public class MainApp extends JFrame {
         return path;
     }
     
+    
+    /**
+     * gets the path to the sessions folder inside the project. Note : a new
+     * folder will be created if it does not already exist
+     * 
+     * @return
+     */
+    public String getSessionPathAppData() {
+        String path = System.getenv( "APPDATA" ) + "\\" + appName;
+        File appdata = new File( path );
+        if( !appdata.exists() || !appdata.isDirectory() ){
+            if( appdata.mkdir() ){
+                path += "\\sessions";
+                if( new File( path ).mkdir() ){
+                    return path;
+                }
+            }
+            System.out.println( "error appdata" );
+            return "";
+        }else{
+            return path + "\\sessions";
+        }
+        
+    }
+    
+    
+    // TODO : bug quand effacer des rows avec une cellule sélectionnée
     
     /**
      * Update the row filter regular expression from the expression in the text
@@ -476,7 +510,7 @@ public class MainApp extends JFrame {
         // Where the GUI is created:
         JMenuBar menuBar;
         JMenu menu, editMenu;
-        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu;
+        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu;
         JRadioButtonMenuItem rbMenuItem;
         JCheckBoxMenuItem cbMenuItem;
         
@@ -490,7 +524,7 @@ public class MainApp extends JFrame {
                 "The only menu in this program that has menu items" );
         menuBar.add( menu );
         
-        // a group of JMenuItems
+        // save option
         saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
         saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
                 ActionEvent.CTRL_MASK ) );
@@ -499,8 +533,10 @@ public class MainApp extends JFrame {
                 try{
                     if( sm.save( (ArrayList<Object[]>) model.getData() ) ){
                         System.out.println( "datas serialized" );
+                        showInfos("data saved.");
                     }else{
                         System.out.println( "data not saved" );
+                        showInfos("an error occurred! Data not saved...");
                     }
                 }catch( Exception ee ){
                     System.out
@@ -510,6 +546,22 @@ public class MainApp extends JFrame {
             }
         } );
         menu.add( saveSubMenu );
+        
+        // open a new session menu
+        newSessionSubMenu = new JMenuItem( "open new session" );
+        
+        newSessionSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                if( sm.isOpened() )
+                    sm.close();
+                table.setVisible( false );
+                handleCredentialsAndLoadSession();
+                table.setModel( model );
+                table.updateUI();
+                table.setVisible( true );
+            }
+        } );
+        menu.add( newSessionSubMenu );
         
         jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
         jsonSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_E,
@@ -535,51 +587,47 @@ public class MainApp extends JFrame {
         } );
         menu.add( jsonSubMenu );
         
-        
         // print subMenu
         menu.addSeparator();
-        printSubMenu = new JMenuItem("print");
+        printSubMenu = new JMenuItem( "print" );
         printSubMenu.setMnemonic( KeyEvent.VK_P );
         printSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P,
-        		ActionEvent.CTRL_MASK ) );
+                ActionEvent.CTRL_MASK ) );
         
-        printSubMenu.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-            try {
-              table.print(JTable.PrintMode.NORMAL);
-            } catch (PrinterException pe) {
-              System.err.println("Error printing: " + pe.getMessage());
+        printSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                try{
+                    table.print( JTable.PrintMode.NORMAL );
+                }catch( PrinterException pe ){
+                    System.err.println( "Error printing: " + pe.getMessage() );
+                }
             }
-          }
-        });
-
-       
+        } );
+        
         menu.add( printSubMenu );
         
-        // Build edit menu in the menu bar.      
-        editMenu = new JMenu("Edit"); 
-        //add undo submenu
-        undoSubMenu = new JMenuItem(undoManager.getUndoAction());
+        // Build edit menu in the menu bar.
+        editMenu = new JMenu( "edit" );
+        // add undo submenu
+        undoSubMenu = new JMenuItem( undoManager.getUndoAction() );
         undoSubMenu.setMnemonic( KeyEvent.VK_Z );
         undoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Z,
-        		ActionEvent.CTRL_MASK ) );
-        //add redo submenu
-        redoSubMenu = new JMenuItem(undoManager.getRedoAction());
+                ActionEvent.CTRL_MASK ) );
+        // add redo submenu
+        redoSubMenu = new JMenuItem( undoManager.getRedoAction() );
         redoSubMenu.setMnemonic( KeyEvent.VK_Y );
         redoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Y,
-        		ActionEvent.CTRL_MASK ) );
-        editMenu.add(undoSubMenu);
-        editMenu.add(redoSubMenu);
+                ActionEvent.CTRL_MASK ) );
+        editMenu.add( undoSubMenu );
+        editMenu.add( redoSubMenu );
         
-        menuBar.add(editMenu);
-        
-        
+        menuBar.add( editMenu );
         
         return menuBar;
     }
     
     
-    public JPanel getFilterMenu() {
+    public JPanel getDownMenu() {
         
         sorter = new TableRowSorter<PassTableModel>( model );
         table.setRowSorter( sorter );
@@ -607,9 +655,26 @@ public class MainApp extends JFrame {
         l1.setLabelFor( filterText );
         form.add( l1 );
         form.add( filterText );
+        
+        
+        infos = new JTextField(15);
+        infos.setEditable( false );
+        form.add(infos);
         // form.setSize( new Dimension(50, 100) );
         
         return form;
     }// end getFilterMenu
     
+    
+    public void showInfos(String info){
+        infos.setText( info );
+        if(infosTimer != null && infosTimer.isRunning()) infosTimer.stop();
+        
+        infosTimer = new Timer(10000, new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                infos.setText( "" );
+            }    
+        });
+        infosTimer.start();
+    }
 }// end class

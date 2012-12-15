@@ -228,7 +228,7 @@ public class SessionManager {
             this.cipher = new Crypto( keyFactAlgo, cipherTransfo,
                     encryptionType, keyIterationCount, keyLength, pass, salt );
             
-            this.cipher.initCipherForDecryption( readIv() );
+            this.cipher.initCipherForDecryption( this.readIv() );
             
             return new JsonManager().deserialize( this.cipher.getCipher(), this.getDataPath() );
 
