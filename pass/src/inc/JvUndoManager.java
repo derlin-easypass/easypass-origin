@@ -4,15 +4,18 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JTable;
 import javax.swing.undo.*;
 
 class JvUndoManager extends UndoManager {
 	protected Action undoAction;
 	protected Action redoAction;
 
-	public JvUndoManager() {
+
+	public JvUndoManager(JTable table) {
 		this.undoAction = new JvUndoAction(this);
 		this.redoAction = new JvRedoAction(this);
+
 
 		synchronizeActions(); // to set initial names
 	}

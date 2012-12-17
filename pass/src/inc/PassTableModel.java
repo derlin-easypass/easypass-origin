@@ -121,11 +121,30 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    public void deleteRow( int index ) {
+    public void deleteRow( int index, boolean undoable ) {
         if( index >= 0 && index < data.size() ){
+            {
+//                UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
+//                if( undoable == false || listeners == null ){
+//                    data.remove( index );
+//                    this.fireTableDataChanged();
+//                    return;
+//                }
+//                
+//                Object oldValue = getValueAt( row, col );
+//                data.get( row )[ col ] = value;
+//                fireTableCellUpdated( row, col );
+//                JvCellEdit cellEdit = new JvCellEdit( this, oldValue, value,
+//                        row, col );
+//                UndoableEditEvent editEvent = new UndoableEditEvent( this,
+//                        cellEdit );
+//                for( UndoableEditListener listener : listeners )
+//                    listener.undoableEditHappened( editEvent );
+//            }
             data.remove( index );
             this.fireTableDataChanged();
         }
+        
     }
     
     
@@ -148,7 +167,4 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         }
     }
     
-    
-
-
-}//end class
+}// end class
