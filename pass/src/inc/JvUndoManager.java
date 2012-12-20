@@ -12,7 +12,7 @@ class JvUndoManager extends UndoManager {
 	protected Action redoAction;
 
 
-	public JvUndoManager(JTable table) {
+	public JvUndoManager() {
 		this.undoAction = new JvUndoAction(this);
 		this.redoAction = new JvRedoAction(this);
 

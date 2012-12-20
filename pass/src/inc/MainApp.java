@@ -70,7 +70,7 @@ public class MainApp extends JFrame {
         this.setLocation( winX, winY );
         
         // get the path to the current .class folder
-        pathToSessionsFolder = this.getSessionPathAppData();
+        pathToSessionsFolder = this.getSessionPath();
         
         handleCredentialsAndLoadSession();
         
@@ -127,15 +127,15 @@ public class MainApp extends JFrame {
                             return;
                         }
                         
-                        MouseEvent event = (MouseEvent)evt;
+                        MouseEvent event = (MouseEvent) evt;
                         int row = table.rowAtPoint( event.getPoint() );
                         if( row == -1
                                 || !( event.getSource() instanceof PassTable ) ){
                             if( table.isEditing() )
                                 table.getCellEditor().stopCellEditing();
                             table.clearSelection();
-//                        }else if(! (event.ge) ){
-//                         TODO   
+                            // }else if(! (event.ge) ){
+                            // TODO
                         }
                     }
                     
@@ -225,26 +225,48 @@ public class MainApp extends JFrame {
     
     
     /**
-     * gets the path to the sessions folder stored in <user>/AppData/<appli
-     * name>/sessions. Note : a new folder will be created if it does not
-     * already exist
+     * gets the path to the sessions folder stored in
+     * <user>/AppData/<appliName>/sessions under windows and
+     * <user.home>/.<appliName>/sessions under Linux. Note : a new folder will be created if it does
+     * not already exist
      * 
      * @return
      */
-    public String getSessionPathAppData() {
-        String path = System.getenv( "APPDATA" ) + "\\" + appName;
-        File appdata = new File( path );
-        if( !appdata.exists() || !appdata.isDirectory() ){
-            if( appdata.mkdir() ){
-                path += "\\sessions";
+    public String getSessionPath() {
+        
+        System.out.println();
+        String os = System.getProperty( "os.name" );
+        String path = "";
+        
+        //depending on the os system, choose the best location to store session data
+        if( os.contains( "Linux" ) ){
+            path = System.getProperty( "user.home" ) + File.separator + "."
+                    + appName;
+        }else if( os.contains( "Windows" ) ){
+            path = System.getenv( "APPDATA" ) + File.separator + appName;
+            
+        }else{
+            System.out.println( "os " + os + " not supported." );
+            System.exit( 0 );
+        }
+        
+        System.out.println( path );
+        File sessionDir = new File( path );
+        
+        //if the session folder does not exist, creates it
+        if( !sessionDir.exists() || !sessionDir.isDirectory() ){
+            if( sessionDir.mkdir() ){
+                path += File.separator + "sessions";
                 if( new File( path ).mkdir() ){
                     return path;
                 }
             }
+            //an error occurred
             System.out.println( "error appdata" );
             return "";
-        }else{
-            return path + "\\sessions";
+            
+        }else{ //the session folder exists, return its path
+            return path + File.separator + "sessions";
         }
     }
     
@@ -404,7 +426,7 @@ public class MainApp extends JFrame {
         delJB.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 int[] selectedRows = table.getSelectedRows();
-                System.out.println( "\ndeleteing rows:" );
+                System.out.println( "\ndeleting rows:" );
                 for( int i = 0; i < selectedRows.length; i++ ){
                     // row index minus i since the table size shrinks by 1
                     // everytime

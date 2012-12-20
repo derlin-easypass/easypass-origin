@@ -241,7 +241,7 @@ public class SessionManager {
      ************************************************************/
     
     public String getDataPath() {
-        return this.directoryPath + "\\" + this.session + this.dataExtension;
+        return this.directoryPath + File.separator + this.session + this.dataExtension;
     }
     
  

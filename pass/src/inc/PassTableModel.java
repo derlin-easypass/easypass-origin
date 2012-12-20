@@ -121,9 +121,9 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    public void deleteRow( int index, boolean undoable ) {
+    public void deleteRow( int index) {
         if( index >= 0 && index < data.size() ){
-            {
+//            {
 //                UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
 //                if( undoable == false || listeners == null ){
 //                    data.remove( index );

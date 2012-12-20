@@ -133,21 +133,21 @@ public class PassTable extends JTable {
     }
     
     
-    // TODO
-    public AbstractAction getDeleteRowsAction() {
-        return new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                int[] selectedRows = getSelectedRows();
-                System.out.println( "\ndeleteing rows:" );
-                for( int i = 0; i < selectedRows.length; i++ ){
-                    // row index minus i since the table size shrinks by 1
-                    // everytime
-                    ( (PassTableModel) getModel() ).deleteRow( selectedRows[ i ]
-                            - i );
-                }
-            }
-        };
-        
-    }
+//    // TODO
+//    public AbstractAction getDeleteRowsAction() {
+//        return new AbstractAction() {
+//            public void actionPerformed( ActionEvent e ) {
+//                int[] selectedRows = getSelectedRows();
+//                System.out.println( "\ndeleteing rows:" );
+//                for( int i = 0; i < selectedRows.length; i++ ){
+//                    // row index minus i since the table size shrinks by 1
+//                    // everytime
+//                    ( (PassTableModel) getModel() ).deleteRow( selectedRows[ i ]
+//                            - i );
+//                }
+//            }
+//        };
+//        
+//    }
     
 }// end MyTable
