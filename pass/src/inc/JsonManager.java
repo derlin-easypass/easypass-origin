@@ -25,70 +25,73 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * this class provides utilities in order to encrypt/data data (openssl style, pass
+ * and auto-generated salt, no iv) and to serialize/deserialize them  (in a json format).
+ * 
+ * it is also possible to write the content of a list in a cleartext "pretty" valid json  format.
+ * 
+ * @author Lucy Linder
+ * @date Dec 21, 2012
+ * 
+ */
 public class JsonManager {
     
-    public static void main( String[] args ) throws Exception {
-        
-        // Crypto crypto = new Crypto( "PBKDF2WithHmacSHA1",
-        // "AES/CBC/PKCS5Padding", "AES", 65536, 128, "pass", "salt" );
-        
-        // crypto.initCipherForEncryption();
-        // System.out.println(crypto.getCipher().getIV().length);
-        // saveIv(crypto.getCipher().getIV());
-        ArrayList<Object[]> data = new ArrayList<Object[]>();
-        Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
-        Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
-        Object[] o3 = { "paypal", "winthoutid@hotmail.fr", "", "pass", "" };
-        
-        data.add( o1 );
-        data.add( o2 );
-        data.add( o3 );
-        
-        String password = "essai"; // {'c','h','a','n','g','e','i','t'};
-        
-        // Encrypt!
-        
-        Gson gson = new GsonBuilder().create();
-        FileOutputStream fs = new FileOutputStream( new File(
-                "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" ) );
-        fs.write( OpenSSL.encrypt( "aes-128-cbc", password.toCharArray(), gson
-                .toJson( data ).getBytes() ) );
-        fs.write( "\r\n".getBytes() );
-        fs.close();
-        
-        // decrypt
-        
-        FileInputStream fin = null;
-        password = "ess";
-        
-        try{
-            
-            fin = new FileInputStream(
-                    "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" );
-            ArrayList<Object[]> data_decrypt = new GsonBuilder()
-                    .create()
-                    .fromJson(
-                            new InputStreamReader( OpenSSL.decrypt(
-                                    "aes-128-cbc", password.toCharArray(), fin ) ),
-                            new TypeToken<List<Object[]>>() {
-                            }.getType() );
-            
-            for( Object[] o : data_decrypt ){
-                for( Object s : o ){
-                    System.out.println( (String) s );
-                }
-            }
-        }catch( JsonSyntaxException | IllegalStateException e ){
-            // throw new Exceptions.WrongCredentialsException();
-            e.printStackTrace();
-            
-        }finally{
-            if( fin != null )
-                fin.close();
-        }// end try
-        
-    }
-    
+    // public static void main( String[] args ) throws Exception {
+    //
+    // ArrayList<Object[]> data = new ArrayList<Object[]>();
+    // Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
+    // Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
+    // Object[] o3 = { "paypal", "winthoutid@hotmail.fr", "", "pass", "" };
+    //
+    // data.add( o1 );
+    // data.add( o2 );
+    // data.add( o3 );
+    //
+    // String password = "essai"; // {'c','h','a','n','g','e','i','t'};
+    //
+    // // Encrypt!
+    //
+    // Gson gson = new GsonBuilder().create();
+    // FileOutputStream fs = new FileOutputStream( new File(
+    // "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" ) );
+    // fs.write( OpenSSL.encrypt( "aes-128-cbc", password.toCharArray(), gson
+    // .toJson( data ).getBytes() ) );
+    // fs.write( "\r\n".getBytes() );
+    // fs.close();
+    //
+    // // decrypt
+    //
+    // FileInputStream fin = null;
+    // password = "ess";
+    //
+    // try{
+    //
+    // fin = new FileInputStream(
+    // "D:\\Windows\\Users\\lucy\\Desktop\\test_encrypt" );
+    // ArrayList<Object[]> data_decrypt = new GsonBuilder()
+    // .create()
+    // .fromJson(
+    // new InputStreamReader( OpenSSL.decrypt(
+    // "aes-128-cbc", password.toCharArray(), fin ) ),
+    // new TypeToken<List<Object[]>>() {
+    // }.getType() );
+    //
+    // for( Object[] o : data_decrypt ){
+    // for( Object s : o ){
+    // System.out.println( (String) s );
+    // }
+    // }
+    // }catch( JsonSyntaxException | IllegalStateException e ){
+    // // throw new Exceptions.WrongCredentialsException();
+    // e.printStackTrace();
+    //
+    // }finally{
+    // if( fin != null )
+    // fin.close();
+    // }// end try
+    //
+    // }
     
     /**
      * encrypts the arraylist of objects with the cipher given in parameter and
@@ -105,14 +108,15 @@ public class JsonManager {
     public void serialize( List<Object[]> data, String algo, String filepath,
             String password ) throws IOException {
         
-        FileOutputStream fos = null;      
+        FileOutputStream fos = null;
         
         try{
             Gson gson = new GsonBuilder().create();
             fos = new FileOutputStream( filepath );
-            fos.write( OpenSSL.encrypt( algo, password.toCharArray(),
-                    gson.toJson( data ).getBytes() ) );
+            fos.write( OpenSSL.encrypt( algo, password.toCharArray(), gson
+                    .toJson( data ).getBytes() ) );
             fos.write( "\r\n".getBytes() );
+            fos.write( System.getProperty( "line.separator" ).getBytes() );
             fos.flush();
             
         }catch( FileNotFoundException | GeneralSecurityException e ){
@@ -158,7 +162,7 @@ public class JsonManager {
             
         }catch( IOException | JsonSyntaxException | JsonIOException
                 | GeneralSecurityException e ){
-
+            
             e.printStackTrace();
             throw new Exceptions.WrongCredentialsException( e.getMessage() );
             
@@ -202,7 +206,7 @@ public class JsonManager {
     
     /********************************************************
      * container used for clean printing in json, i.e. adds the correct "labels"
-     * to each value.
+     * to each value and writes a "pretty" file.
      * 
      * @author me
      * 

@@ -24,7 +24,8 @@ import models.Exceptions.WrongCredentialsException;
 
 public class MainApp extends JFrame {
     
-    private String pathToSessionsFolder;
+    private String pathToSessionsFolder; // depends on the implementation
+                                         // (APPDATA or user.home)
     private String appName = "easypass";
     private String logFile = appName + ".log";
     
@@ -33,10 +34,13 @@ public class MainApp extends JFrame {
     
     private JPanel mainContainer; // main container (BorderLayout)
     private JvUndoManager undoManager;
-    private TableRowSorter<PassTableModel> sorter;
-    private JTextField filterText;
-    private JTextField infos;
-    private Timer infosTimer;
+    private TableRowSorter<PassTableModel> sorter; // used for the search bar
+                                                   // ("find")
+    private JTextField filterText; // text entered by the user, used to filter
+                                   // the table cells
+    private JTextField infos; // informations bar (data have been saved, for
+                              // example)
+    private Timer infosTimer; // used to hide infos after x seconds
     
     private PassTableModel model; // containing the datas, the object
                                   // serialized
@@ -52,6 +56,10 @@ public class MainApp extends JFrame {
         MainApp ma = new MainApp();
     }
     
+    
+    /********************************************************************
+     * constructor, acts as a main method /
+     ********************************************************************/
     
     public MainApp() {
         // initializes the main Frame
@@ -150,294 +158,9 @@ public class MainApp extends JFrame {
     }// end constructor
     
     
-    /**
-     * adds the different keyboards shortcuts to the jpanel
-     * 
-     * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
-     * bar; CTRL+N - new row; DEL - delete selected rows;
-     */
-    public void setKeyboardShortcuts() {
-        
-        // escape event closes window
-        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE,
-                0, false );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( escapeKeyStroke, "ESCAPE" );
-        
-        this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                if( askSaveData() ){
-                    System.exit( 0 );
-                }
-            }
-        } );
-        
-        // CTRL+F to put focus on the filter/find textfield
-        KeyStroke ctrlFKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_F,
-                InputEvent.CTRL_DOWN_MASK );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( ctrlFKeyStroke, "FIND" );
-        
-        this.getRootPane().getActionMap().put( "FIND", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                filterText.requestFocusInWindow();
-            }
-        } );
-        
-        // CTRL+N to add a new line
-        KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
-                InputEvent.CTRL_DOWN_MASK );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( NewLineKeyStroke, "NEWLINE" );
-        
-        this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                table.getCellEditor().stopCellEditing();
-                model.addRow();
-            }
-        } );
-        
-        // DEL to delete selected rows
-        KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
-                InputEvent.CTRL_DOWN_MASK );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( DelLineKeyStroke, "DELLINE" );
-        
-        this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                
-                table.getCellEditor().stopCellEditing();
-                int[] selectedRows = table.getSelectedRows();
-                System.out.println( "\ndeleteing rows:" );
-                for( int i = 0; i < selectedRows.length; i++ ){
-                    // row index minus i since the table size shrinks by 1
-                    // everytime
-                    model.deleteRow( selectedRows[ i ] - i );
-                }
-            }
-        } );
-        
-    }// end setShortCuts
-    
-    
-    /**
-     * gets the path to the sessions folder stored in
-     * <user>/AppData/<appliName>/sessions under windows and
-     * <user.home>/.<appliName>/sessions under Linux. Note : a new folder will be created if it does
-     * not already exist
-     * 
-     * @return
-     */
-    public String getSessionPath() {
-        
-        System.out.println();
-        String os = System.getProperty( "os.name" );
-        String path = "";
-        
-        //depending on the os system, choose the best location to store session data
-        if( os.contains( "Linux" ) ){
-            path = System.getProperty( "user.home" ) + File.separator + "."
-                    + appName;
-        }else if( os.contains( "Windows" ) ){
-            path = System.getenv( "APPDATA" ) + File.separator + appName;
-            
-        }else{
-            System.out.println( "os " + os + " not supported." );
-            System.exit( 0 );
-        }
-        
-        System.out.println( path );
-        File sessionDir = new File( path );
-        
-        //if the session folder does not exist, creates it
-        if( !sessionDir.exists() || !sessionDir.isDirectory() ){
-            if( sessionDir.mkdir() ){
-                path += File.separator + "sessions";
-                if( new File( path ).mkdir() ){
-                    return path;
-                }
-            }
-            //an error occurred
-            System.out.println( "error appdata" );
-            return "";
-            
-        }else{ //the session folder exists, return its path
-            return path + File.separator + "sessions";
-        }
-    }
-    
-    
-    /**
-     * Implements the search bar logic :updates the row filter regular
-     * expression from the expression in the text box.
-     */
-    public void setTableFilter() {
-        RowFilter<PassTableModel, Object> rf = null;
-        ArrayList<RowFilter<Object, Object>> rfs = new ArrayList<RowFilter<Object, Object>>();
-        
-        try{
-            String text = filterText.getText();
-            String[] textArray = text.split( " " );
-            
-            for( int i = 0; i < textArray.length; i++ ){
-                rfs.add( RowFilter.regexFilter( "(?i)" + textArray[ i ], 0, 1,
-                        2, 3, 4 ) );
-            }
-            
-            rf = RowFilter.andFilter( rfs );
-            
-        }catch( java.util.regex.PatternSyntaxException e ){
-            return;
-        }
-        
-        sorter.setRowFilter( rf );
-    }
-    
-    
-    /**
-     * This method is called when the user wants to quit the application. It
-     * launches a dialog and asks the user if he wants to save the
-     * modifications. If yes, the datas are serialized (overriding the previous
-     * serialization) before quit.
-     * 
-     * @param window
-     */
-    public void setWindowClosingListener() {
-        
-        // adds a listener
-        // asks the user if he wants to save data and quit, just quit, or resume
-        this.addWindowListener( new WindowAdapter() {
-            public void windowClosing( WindowEvent we ) {
-                if( askSaveData() ){
-                    System.exit( 0 );
-                }
-            }
-        } );
-    }// end setWindowClosing
-    
-    
-    /**
-     * creates a JDialog asking the user if he wants to save before quit. The
-     * method will return false only if the user clicked cancel.
-     */
-    private boolean askSaveData() {
-        
-        int answer = JOptionPane.showConfirmDialog( null,
-                "Would you like to save the modifications?", "save",
-                JOptionPane.YES_NO_CANCEL_OPTION );
-        
-        if( answer == JOptionPane.YES_OPTION ){ // serializes and quits
-            try{
-                System.out.println( sessionManager.getDataPath() );
-                if( sessionManager.save( (ArrayList<Object[]>) model.getData() ) ){
-                    System.out.println( "datas serialized" );
-                }else{
-                    System.out.println( "data not saved" );
-                }
-            }catch( Exception e ){
-                System.out
-                        .println( "error in serialization. Possible data loss" );
-                e.printStackTrace();
-            }// end try
-            
-            return true;
-            
-        }else if( answer == JOptionPane.NO_OPTION ){ // just quit
-            return true;
-        }// end if
-        
-        return false;
-    }// end askSaveBeforeClose
-    
-    
-    /**
-     * opens a filechooser window to let the user choose a txt file. Used mainly
-     * for saving the table data in clear json format ( see writeIlFile method
-     * from JsonManager and the "save as json" option in the upper menu )
-     * 
-     * @return
-     */
-    public File fileChooser() {
-        
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter( new TextFilter() );
-        chooser.setCurrentDirectory( new java.io.File( "." ) );
-        chooser.setDialogTitle( "select folder" );
-        chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
-        
-        if( chooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION ){
-            return chooser.getSelectedFile();
-        }else{
-            System.out.println( "No Selection " );
-            return null;
-        }
-        
-    }// end filechooser
-    
-    
-    /**
-     * class used to filter the files selectables in the filechooser window.
-     * 
-     * @author lucy
-     * 
-     */
-    private class TextFilter extends javax.swing.filechooser.FileFilter {
-        
-        public String getDescription() {
-            return "Plain text document (*.txt)";
-        }
-        
-        
-        public boolean accept( File file ) {
-            if( file.isDirectory() ){
-                return true;
-            }
-            return file.getName().endsWith( ".txt" );
-        }
-    }
-    
-    
-    /**
-     * creates and return the upper panel, which contains the buttons "add row"
-     * and "delete rows"
-     * 
-     * @return
-     */
-    public JPanel getRowsManipulationMenu() {
-        
-        JPanel upperMenu = new JPanel( new FlowLayout() );
-        
-        // creates the add row button
-        JButton addJB = new JButton( "add row" );
-        addJB.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                model.addRow();
-            }
-        } );
-        
-        upperMenu.add( addJB );
-        
-        // creates the delete button
-        JButton delJB = new JButton( "delete selected rows" );
-        delJB.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                int[] selectedRows = table.getSelectedRows();
-                System.out.println( "\ndeleting rows:" );
-                for( int i = 0; i < selectedRows.length; i++ ){
-                    // row index minus i since the table size shrinks by 1
-                    // everytime
-                    model.deleteRow( selectedRows[ i ] - i );
-                }
-            }
-        } );
-        upperMenu.add( delJB );
-        return upperMenu;
-    }// end getUpperMenu
-    
+    /********************************************************************
+     * interaction with the user (save data, load session, show infos) /
+     ********************************************************************/
     
     /**
      * asks the user to choose the session to load and get his credentials. The
@@ -518,6 +241,246 @@ public class MainApp extends JFrame {
     }// end handleCredentials
     
     
+    /**
+     * creates a JDialog asking the user if he wants to save before quit. The
+     * method will return false only if the user clicked cancel.
+     */
+    private boolean askSaveData() {
+        
+        int answer = JOptionPane.showConfirmDialog( null,
+                "Would you like to save the modifications?", "save",
+                JOptionPane.YES_NO_CANCEL_OPTION );
+        
+        if( answer == JOptionPane.YES_OPTION ){ // serializes and quits
+            try{
+                System.out.println( sessionManager.getDataPath() );
+                if( sessionManager.save( (ArrayList<Object[]>) model.getData() ) ){
+                    System.out.println( "datas serialized" );
+                }else{
+                    System.out.println( "data not saved" );
+                }
+            }catch( Exception e ){
+                System.out
+                        .println( "error in serialization. Possible data loss" );
+                e.printStackTrace();
+            }// end try
+            
+            return true;
+            
+        }else if( answer == JOptionPane.NO_OPTION ){ // just quit
+            return true;
+        }// end if
+        
+        return false;
+    }// end askSaveBeforeClose
+    
+    
+    /**
+     * displays informations in the uneditable jtextfield of the downMenu. The
+     * informations will be displayed for x milliseconds before disappearing
+     * 
+     * @param info
+     */
+    public void showInfos( String info, int ms ) {
+        infos.setText( info );
+        if( infosTimer != null && infosTimer.isRunning() )
+            infosTimer.stop();
+        
+        infosTimer = new Timer( ms, new ActionListener() {
+            public void actionPerformed( ActionEvent evt ) {
+                infos.setText( "" );
+            }
+        } );
+        infosTimer.start();
+    }
+    
+    
+    /**
+     * opens a filechooser window to let the user choose a txt file. Used mainly
+     * for saving the table data in clear json format ( see writeIlFile method
+     * from JsonManager and the "save as json" option in the upper menu )
+     * 
+     * @return
+     */
+    public File showTxtFileChooser() {
+        
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter( new TextFilter() );
+        chooser.setCurrentDirectory( new java.io.File( "." ) );
+        chooser.setDialogTitle( "select folder" );
+        chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
+        
+        if( chooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION ){
+            return chooser.getSelectedFile();
+        }else{
+            System.out.println( "No Selection " );
+            return null;
+        }
+        
+    }// end showTxtfilechooser
+    
+    
+    /********************************************************************
+     * sets the closing operation and the keyboard shortcuts /
+     ********************************************************************/
+    
+    /**
+     * This method is called when the user wants to quit the application. It
+     * launches a dialog and asks the user if he wants to save the
+     * modifications. If yes, the datas are serialized (overriding the previous
+     * serialization) before quit.
+     * 
+     * @param window
+     */
+    public void setWindowClosingListener() {
+        
+        // adds a listener
+        // asks the user if he wants to save data and quit, just quit, or resume
+        this.addWindowListener( new WindowAdapter() {
+            public void windowClosing( WindowEvent we ) {
+                if( askSaveData() ){
+                    System.exit( 0 );
+                }
+            }
+        } );
+    }// end setWindowClosing
+    
+    
+    /**
+     * adds the different keyboards shortcuts to the jpanel
+     * 
+     * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
+     * bar; CTRL+N - new row; DEL - delete selected rows;
+     */
+    public void setKeyboardShortcuts() {
+        
+        // escape event closes window
+        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE,
+                0, false );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( escapeKeyStroke, "ESCAPE" );
+        
+        this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                if( askSaveData() ){
+                    System.exit( 0 );
+                }
+            }
+        } );
+        
+        // CTRL+F to put focus on the filter/find textfield
+        KeyStroke ctrlFKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_F,
+                InputEvent.CTRL_DOWN_MASK );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( ctrlFKeyStroke, "FIND" );
+        
+        this.getRootPane().getActionMap().put( "FIND", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                filterText.requestFocusInWindow();
+            }
+        } );
+        
+        // CTRL+N to add a new line
+        KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
+                InputEvent.CTRL_DOWN_MASK );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( NewLineKeyStroke, "NEWLINE" );
+        
+        this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                table.getCellEditor().stopCellEditing();
+                model.addRow();
+            }
+        } );
+        
+        // CTRL+D to delete selected rows
+        KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
+                InputEvent.CTRL_DOWN_MASK );
+        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+                .put( DelLineKeyStroke, "DELLINE" );
+        
+        this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                table.getCellEditor().stopCellEditing();
+                int[] selectedRows = table.getSelectedRows();
+                System.out.println( "\ndeleting rows:" );
+                for( int i = 0; i < selectedRows.length; i++ ){
+                    // row index minus i since the table size shrinks by 1
+                    // at each iteration
+                    model.deleteRow( selectedRows[ i ] - i );
+                }
+            }
+        } );
+        
+    }// end setShortCuts
+    
+    
+    /********************************************************************
+     * getters (menus, sessionPath) /
+     ********************************************************************/
+    
+    /**
+     * gets the path to the sessions folder stored in
+     * <user>/AppData/<appliName>/sessions under windows and
+     * <user.home>/.<appliName>/sessions under Linux. Note : a new folder will
+     * be created if it does not already exist
+     * 
+     * @return
+     */
+    public String getSessionPath() {
+        
+        System.out.println();
+        String os = System.getProperty( "os.name" );
+        String path = "";
+        
+        // depending on the os system, choose the best location to store session
+        // data
+        if( os.contains( "Linux" ) || os.contains( "Mac" ) ){
+            path = System.getProperty( "user.home" ) + File.separator + "."
+                    + appName;
+        }else if( os.contains( "Windows" ) ){
+            path = System.getenv( "APPDATA" ) + File.separator + appName;
+            
+        }else{
+            System.out.println( "os " + os + " not supported." );
+            System.exit( 0 );
+        }
+        
+        System.out.println( path );
+        File sessionDir = new File( path );
+        
+        // if the session folder does not exist, creates it
+        if( !sessionDir.exists() || !sessionDir.isDirectory() ){
+            if( sessionDir.mkdir() ){
+                path += File.separator + "sessions";
+                if( new File( path ).mkdir() ){
+                    return path;
+                }
+            }
+            // an error occurred
+            System.out.println( "error appdata" );
+            return "";
+            
+        }else{ // the session folder exists, return its path
+            return path + File.separator + "sessions";
+        }
+    }
+    
+    
+    /**
+     * returns the window menu. Menus :
+     * 
+     * options : save, save as json, print, open a new session
+     * 
+     * edit : undo, redo
+     * 
+     * @return
+     */
     public JMenuBar getJFrameMenu() {
         
         // Where the GUI is created:
@@ -585,7 +548,7 @@ public class MainApp extends JFrame {
         jsonSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 
-                File file = fileChooser();
+                File file = showTxtFileChooser();
                 if( file != null ){
                     try{
                         sessionManager.writeAsJson( model.getData(), file );
@@ -642,7 +605,46 @@ public class MainApp extends JFrame {
         menuBar.add( editMenu );
         
         return menuBar;
-    }
+        
+    }// end getJFrameMenu
+    
+    
+    /**
+     * creates and return the upper panel, which contains the buttons "add row"
+     * and "delete rows"
+     * 
+     * @return
+     */
+    public JPanel getRowsManipulationMenu() {
+        
+        JPanel upperMenu = new JPanel( new FlowLayout() );
+        
+        // creates the add row button
+        JButton addJB = new JButton( "add row" );
+        addJB.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                model.addRow();
+            }
+        } );
+        
+        upperMenu.add( addJB );
+        
+        // creates the delete button
+        JButton delJB = new JButton( "delete selected rows" );
+        delJB.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                int[] selectedRows = table.getSelectedRows();
+                System.out.println( "\ndeleting rows:" );
+                for( int i = 0; i < selectedRows.length; i++ ){
+                    // row index minus i since the table size shrinks by 1
+                    // everytime
+                    model.deleteRow( selectedRows[ i ] - i );
+                }
+            }
+        } );
+        upperMenu.add( delJB );
+        return upperMenu;
+    }// end getUpperMenu
     
     
     /**
@@ -691,22 +693,56 @@ public class MainApp extends JFrame {
     }// end getFilterMenu
     
     
+    /********************************************************************
+     * implementation of the "find" filter search bar /
+     ********************************************************************/
+    
     /**
-     * displays informations in the uneditable jtextfield of the downMenu. The
-     * informations will be displayed for x milliseconds before disappearing
-     * 
-     * @param info
+     * Implements the search bar logic :updates the row filter regular
+     * expression from the expression in the text box.
      */
-    public void showInfos( String info, int ms ) {
-        infos.setText( info );
-        if( infosTimer != null && infosTimer.isRunning() )
-            infosTimer.stop();
+    public void setTableFilter() {
+        RowFilter<PassTableModel, Object> rf = null;
+        ArrayList<RowFilter<Object, Object>> rfs = new ArrayList<RowFilter<Object, Object>>();
         
-        infosTimer = new Timer( ms, new ActionListener() {
-            public void actionPerformed( ActionEvent evt ) {
-                infos.setText( "" );
+        try{
+            String text = filterText.getText();
+            String[] textArray = text.split( " " );
+            
+            for( int i = 0; i < textArray.length; i++ ){
+                rfs.add( RowFilter.regexFilter( "(?i)" + textArray[ i ], 0, 1,
+                        2, 3, 4 ) );
             }
-        } );
-        infosTimer.start();
+            
+            rf = RowFilter.andFilter( rfs );
+            
+        }catch( java.util.regex.PatternSyntaxException e ){
+            return;
+        }
+        
+        sorter.setRowFilter( rf );
     }
+    
+    
+    /**
+     * class used to filter the files selectables in the filechooser window.
+     * 
+     * @author lucy
+     * 
+     */
+    private class TextFilter extends javax.swing.filechooser.FileFilter {
+        
+        public String getDescription() {
+            return "Plain text document (*.txt)";
+        }
+        
+        
+        public boolean accept( File file ) {
+            if( file.isDirectory() ){
+                return true;
+            }
+            return file.getName().endsWith( ".txt" );
+        }
+    }// end private class
+    
 }// end class

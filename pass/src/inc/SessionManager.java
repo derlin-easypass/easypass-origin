@@ -1,6 +1,5 @@
 package inc;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
@@ -11,6 +10,28 @@ import models.Exceptions;
 import models.Exceptions.CryptoException;
 import models.Exceptions.WrongCredentialsException;
 
+/**
+ * This class manages the manipulation of session files. It returns the name of
+ * the existing sessions, opens and close them, serializes the data when needed.
+ * 
+ * Note that in order to use it, you must specify a valid folder path containing
+ * valid easypass sessions files.
+ * 
+ * The data are encrypted with the aes-128 cbc algorithm and stored in a json
+ * format. It is possible to decrypt them by simply using openssl, with the
+ * following options :
+ * 
+ * openssl enc -d -aes-128-cbc -a -salt -pass pass:yourpass -in <encrypted
+ * file> -out <destination file>
+ * 
+ * 
+ * Notes : - no utility to delete a session yet - the password is stored in RAM
+ * until the session is closed (unavoidable??)
+ * 
+ * @author Lucy Linder
+ * @date Dec 21, 2012
+ * 
+ */
 public class SessionManager {
     
     private static int currentVersion = 1;
@@ -23,7 +44,7 @@ public class SessionManager {
     
     
     public static void main( String[] args ) {
-
+        
         // ArrayList<Object[]> data = new ArrayList<Object[]>();
         // Object[] o1 = { "Google", "Smith", "Snowboarding", "dlskafj", "" };
         // Object[] o2 = { "John", "Doe", "Rowing", "pass", "" };
@@ -32,7 +53,7 @@ public class SessionManager {
         // data.add( o1 );
         // data.add( o2 );
         // data.add( o3 );
-       
+        
     }
     
     
@@ -133,7 +154,7 @@ public class SessionManager {
     
     
     /**************************************************************
-     * opens or create sessions
+     * opens or creates sessions
      ************************************************************/
     
     /**
@@ -172,7 +193,7 @@ public class SessionManager {
         try{
             
             this.session = session;
-            this.password = password;            
+            this.password = password;
             return new JsonManager().deserialize( cryptoAlgorithm,
                     this.getDataPath(), this.password );
             
@@ -206,7 +227,8 @@ public class SessionManager {
         
         try{
             
-            new JsonManager().serialize( data, cryptoAlgorithm, this.getDataPath(), this.password );            
+            new JsonManager().serialize( data, cryptoAlgorithm,
+                    this.getDataPath(), this.password );
             return true;
             
         }catch( IOException e ){
@@ -224,8 +246,10 @@ public class SessionManager {
         this.session = null;
     }
     
+    
     /**
      * writes the content of the list as proper json in the specified file
+     * 
      * @param data
      * @param file
      * @throws IOException
@@ -241,25 +265,29 @@ public class SessionManager {
      ************************************************************/
     
     public String getDataPath() {
-        return this.directoryPath + File.separator + this.session + this.dataExtension;
+        return this.directoryPath + File.separator + this.session
+                + this.dataExtension;
     }
     
- 
+    
     /**
      * private class used to get files in a folder that match a pattern
+     * 
      * @author lucy
      */
     public static class Filter implements FilenameFilter {
-
+        
         protected String pattern;
-
+        
+        
         public Filter(String str) {
             pattern = str;
         }
-
-        public boolean accept(File dir, String name) {
-            return name.toLowerCase().matches(pattern);
+        
+        
+        public boolean accept( File dir, String name ) {
+            return name.toLowerCase().matches( pattern );
         }
-    }//end class filter
-
-}//end class
+    }// end class filter
+    
+}// end class

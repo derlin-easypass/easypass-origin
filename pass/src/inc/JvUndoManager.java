@@ -7,11 +7,20 @@ import javax.swing.Action;
 import javax.swing.JTable;
 import javax.swing.undo.*;
 
+/**
+ * this class, alongside JvCellEdit, JvRowsEdit and PassTableModel, manages the undo/redo actions.
+ * 
+ * @author Lucy Linder
+ * @date Dec 21, 2012
+ *
+ */
 class JvUndoManager extends UndoManager {
 	protected Action undoAction;
 	protected Action redoAction;
 
-
+    /********************************************************************
+     * constructor                   
+    /********************************************************************/
 	public JvUndoManager() {
 		this.undoAction = new JvUndoAction(this);
 		this.redoAction = new JvRedoAction(this);
@@ -20,6 +29,10 @@ class JvUndoManager extends UndoManager {
 		synchronizeActions(); // to set initial names
 	}
 
+    /********************************************************************
+     * getters and setters                  
+    /********************************************************************/
+	
 	public Action getUndoAction() {
 		return undoAction;
 	}
@@ -28,10 +41,14 @@ class JvUndoManager extends UndoManager {
 		return redoAction;
 	}
 
+    /********************************************************************
+     * override methods                  
+    /********************************************************************/
+	
 	@Override
-	public boolean addEdit(UndoableEdit anEdit) {
+	public boolean addEdit(UndoableEdit edit) {
 		try {
-			return super.addEdit(anEdit);
+			return super.addEdit(edit);
 		} finally {
 			synchronizeActions();
 		}
@@ -63,7 +80,14 @@ class JvUndoManager extends UndoManager {
 		redoAction.setEnabled(canRedo());
 		redoAction.putValue(Action.NAME, getRedoPresentationName());
 	}
-}
+}//end class
+
+
+
+
+/********************************************************************
+ * Actions classes                
+/********************************************************************/
 
 class JvUndoAction extends AbstractAction {
 	protected final UndoManager manager;
@@ -79,7 +103,7 @@ class JvUndoAction extends AbstractAction {
 			ex.printStackTrace();
 		}
 	}
-}
+}//end class
 
 class JvRedoAction extends AbstractAction {
 	protected final UndoManager manager;
@@ -95,4 +119,4 @@ class JvRedoAction extends AbstractAction {
 			ex.printStackTrace();
 		}
 	}
-}
+}//end class
