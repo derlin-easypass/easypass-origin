@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JTable;
 import javax.swing.undo.*;
 
 /**
@@ -15,7 +14,9 @@ import javax.swing.undo.*;
  *
  */
 class JvUndoManager extends UndoManager {
-	protected Action undoAction;
+
+    private static final long serialVersionUID = -8283248203575191285L;
+    protected Action undoAction;
 	protected Action redoAction;
 
     /********************************************************************
@@ -90,7 +91,9 @@ class JvUndoManager extends UndoManager {
 /********************************************************************/
 
 class JvUndoAction extends AbstractAction {
-	protected final UndoManager manager;
+
+    private static final long serialVersionUID = 2331596696022415927L;
+    protected final UndoManager manager;
 
 	public JvUndoAction(UndoManager manager) {
 		this.manager = manager;
@@ -106,7 +109,9 @@ class JvUndoAction extends AbstractAction {
 }//end class
 
 class JvRedoAction extends AbstractAction {
-	protected final UndoManager manager;
+
+    private static final long serialVersionUID = -3169421200120733379L;
+    protected final UndoManager manager;
 
 	public JvRedoAction(UndoManager manager) {
 		this.manager = manager;

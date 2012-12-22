@@ -22,6 +22,8 @@ import javax.swing.UnsupportedLookAndFeelException;
  */
 public class SessionAndPassFrame extends javax.swing.JDialog {
 
+    private static final long serialVersionUID = 4257208977996785090L;
+    
     private String[] sessionList;
     private String pass, salt, session;
     private boolean status = true; //set to false if window closed or cancel button pressed
@@ -29,6 +31,7 @@ public class SessionAndPassFrame extends javax.swing.JDialog {
     /**
      * Creates new form SessionAndPassFrame
      */
+    @SuppressWarnings("serial")
     public SessionAndPassFrame(javax.swing.JFrame parent, String[] sessions) throws ClassNotFoundException, IllegalAccessException, InstantiationException, UnsupportedLookAndFeelException {
         super(parent, "session and credentials", true);
         
@@ -52,7 +55,7 @@ public class SessionAndPassFrame extends javax.swing.JDialog {
         initComponents();
         
 
-        // press ENTER to to activate the ok button 
+        // press ENTER to activate the ok button 
         this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
                 .put( KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "OK" );
         
@@ -348,7 +351,7 @@ public class SessionAndPassFrame extends javax.swing.JDialog {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    String[] sessions = {""};
+                    String[] sessions = {""}; //TODO
                     new SessionAndPassFrame(null, null).setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();;

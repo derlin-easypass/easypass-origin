@@ -15,6 +15,9 @@ import javax.swing.undo.CannotUndoException;
  *
  */
 class JvCellEdit extends AbstractUndoableEdit {
+
+    private static final long serialVersionUID = 3227903502002101373L;
+    
     protected PassTableModel tableModel;
     protected Object oldValue;
     protected Object newValue;

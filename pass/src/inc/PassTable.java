@@ -3,10 +3,8 @@ package inc;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
@@ -14,7 +12,6 @@ import javax.swing.UIManager;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 
 /**
  * This class is an extension of the basic JTable, adapted in order to use a
@@ -28,7 +25,10 @@ import javax.swing.table.TableColumn;
  * 
  */
 public class PassTable extends JTable {
-    
+
+    private static final long serialVersionUID = -5878840678754267165L;
+
+
     /********************************************************************
      * constructors and update /
      ********************************************************************/
@@ -75,7 +75,6 @@ public class PassTable extends JTable {
      */
     public void setColSizes( int[] sizes ) {
         
-        TableColumn col;
         int colCount = this.getColumnModel().getColumnCount();
         
         if( colCount > sizes.length )
@@ -92,6 +91,7 @@ public class PassTable extends JTable {
      * this method customizes the global appearance of the jtable.
      */
     public void setStyle() {
+        //TODO
         // try {
         // for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
         // if ("Nimbus".equals(info.getName())) {

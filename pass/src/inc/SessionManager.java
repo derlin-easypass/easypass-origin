@@ -34,7 +34,7 @@ import models.Exceptions.WrongCredentialsException;
  */
 public class SessionManager {
     
-    private static int currentVersion = 1;
+    private static int currentVersion = 1; //TODO
     private static String cryptoAlgorithm = "aes-128-cbc";
     
     private String dataExtension = ".data_ser";
@@ -186,7 +186,6 @@ public class SessionManager {
      * @throws WrongCredentialsException
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public List<Object[]> openSession( String session, String password )
             throws Exceptions.WrongCredentialsException, IOException {
         

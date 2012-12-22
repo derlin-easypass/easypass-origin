@@ -53,7 +53,7 @@ public class MainApp extends JFrame {
     
     
     public static void main( String[] args ) {
-        MainApp ma = new MainApp();
+        new MainApp();
     }
     
     
@@ -352,6 +352,7 @@ public class MainApp extends JFrame {
      * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
      * bar; CTRL+N - new row; DEL - delete selected rows;
      */
+    @SuppressWarnings("serial")
     public void setKeyboardShortcuts() {
         
         // escape event closes window

@@ -80,7 +80,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Class getColumnClass( int col ) {
         // if (col == 0)
         // return Integer.class;

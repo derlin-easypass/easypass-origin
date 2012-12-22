@@ -16,6 +16,8 @@ import javax.swing.undo.CannotUndoException;
  * 
  */
 class JvRowsEdit extends AbstractUndoableEdit {
+    private static final long serialVersionUID = 5470678378853711947L;
+    
     protected PassTableModel tableModel;
     protected Object[] deletedRow;
     protected int rowIndex;
