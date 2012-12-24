@@ -1,13 +1,16 @@
 package inc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 
 import models.Exceptions;
-import models.Exceptions.CryptoException;
+import models.Exceptions.ImportException;
+import models.Exceptions.SessionFileNotFoundException;
 import models.Exceptions.WrongCredentialsException;
 
 /**
@@ -21,8 +24,8 @@ import models.Exceptions.WrongCredentialsException;
  * format. It is possible to decrypt them by simply using openssl, with the
  * following options :
  * 
- * openssl enc -d -aes-128-cbc -a -salt -pass pass:yourpass -in <encrypted
- * file> -out <destination file>
+ * openssl enc -d -aes-128-cbc -a -salt -pass pass:yourpass -in <encrypted file>
+ * -out <destination file>
  * 
  * 
  * Notes : - no utility to delete a session yet - the password is stored in RAM
@@ -34,10 +37,10 @@ import models.Exceptions.WrongCredentialsException;
  */
 public class SessionManager {
     
-    private static int currentVersion = 1; //TODO
+    private static int currentVersion = 1; // TODO
     private static String cryptoAlgorithm = "aes-128-cbc";
+    private static String dataExtension = ".data_ser";
     
-    private String dataExtension = ".data_ser";
     private String directoryPath;
     private String session;
     private String password;
@@ -133,8 +136,8 @@ public class SessionManager {
         
         // only if folder exists and is actually a directory
         if( folder.exists() && folder.isDirectory() ){
-            return ( folder.listFiles( new Filter( name + "\\" + dataExtension
-                    + "$" ) ).length > 0 ? true : false );
+            return ( folder.listFiles( new Filter( name + "\\.*"
+                    + dataExtension + "$" ) ).length > 0 ? true : false );
         }
         
         return false;
@@ -154,7 +157,7 @@ public class SessionManager {
     
     
     /**************************************************************
-     * opens or creates sessions
+     * opens, creates or imports sessions
      ************************************************************/
     
     /**
@@ -197,9 +200,60 @@ public class SessionManager {
                     this.getDataPath(), this.password );
             
         }catch( Exceptions.WrongCredentialsException e ){
+            throw new Exceptions.WrongCredentialsException( "session \""
+                    + session + "\" : wrong credentials." );
+        }
+        
+    }// end openSession
+    
+    
+    public List<Object[]> importSession( String sessionPath, String password )
+            throws Exceptions.WrongCredentialsException, IOException,
+            SessionFileNotFoundException, ImportException {
+        
+        File fileIn = new File( sessionPath );
+        
+        if( fileIn.getName() == ""
+                || !fileIn.getName().endsWith( dataExtension ) ){
+            throw new Exceptions.ImportException(
+                    "Session "
+                            + sessionPath
+                            + " not found. The file does not exist or does not end with "
+                            + dataExtension + "." );
+        }
+        
+        this.session = fileIn.getName().substring( 0,
+                fileIn.getName().lastIndexOf( '.' ) );
+        
+        if( this.sessionExists( this.session ) ){
+            this.closeSession();
+            throw new Exceptions.ImportException( "duplicates existing session" );
+        }
+        
+        try{
+            
+            FileInputStream fin = new FileInputStream( sessionPath );
+            FileOutputStream fos = new FileOutputStream( this.getDataPath() );
+            
+            byte[] buf = new byte[1024];
+            int len;
+            while( ( len = fin.read( buf ) ) > 0 ){
+                fos.write( buf, 0, len );
+            }
+            
+            fin.close();
+            fos.close();
+            System.out.println( "File copied." );
+            // TODO
+            
+            return this.openSession( this.session, password );
+            
+        }catch( Exception e ){
+            new File( this.getDataPath() ).delete();
+            this.closeSession();
             // if the pass was wrong, loops again
             throw new Exceptions.WrongCredentialsException( session
-                    + " : wrong salt and/or password" );
+                    + " : file couldn't be copied " );
         }
         
     }// end openSession
@@ -238,14 +292,24 @@ public class SessionManager {
     
     
     /**
-     * close the current session
+     * closes the current session
      */
-    public void close() {
+    public void closeSession() {
         this.password = null;
         this.session = null;
     }
     
     
+    
+    public void deleteSession(){
+        if(!this.isOpened()){
+            return;
+        }
+               
+        File file = new File(this.getDataPath());
+        file.delete();
+        this.closeSession();
+    }
     /**
      * writes the content of the list as proper json in the specified file
      * 
@@ -260,13 +324,46 @@ public class SessionManager {
     
     
     /**************************************************************
+     * getters
+     ************************************************************/
+    
+    public static String getDataExtension() {
+        return dataExtension;
+    }
+    
+    
+    public static String getCryptoAlgorithm() {
+        return cryptoAlgorithm;
+    }
+    
+    /**
+     * returns the path to the sessions folder
+     * @return
+     */
+    public String getDirectoryPath() {
+        return directoryPath;
+    }
+    
+    
+    public String getSessionName() {
+        return session;
+    }
+    
+    /**
+     * returns the complete path to the current session file
+     * @return
+     */
+    public String getDataPath() {
+        return this.directoryPath + File.separator + this.session
+                + dataExtension;
+    }
+    
+    
+    
+    /**************************************************************
      * utilities
      ************************************************************/
     
-    public String getDataPath() {
-        return this.directoryPath + File.separator + this.session
-                + this.dataExtension;
-    }
     
     
     /**

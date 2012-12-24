@@ -7,9 +7,9 @@ public class Exceptions {
         public VersionNumberNotFoundException(String message) { super( message ); }
     }
     
-    public static class IvNotFoundException extends Exception {
-        public IvNotFoundException() { super(); }
-        public IvNotFoundException(String message) { super( message ); }
+    public static class SessionFileNotFoundException extends Exception {
+        public SessionFileNotFoundException() { super(); }
+        public SessionFileNotFoundException(String message) { super( message ); }
         
     }
     
@@ -18,9 +18,9 @@ public class Exceptions {
         public WrongCredentialsException(String message) { super( message ); }
     }
     
-    public static class CryptoException extends Exception {
-        public CryptoException() { super(); }
-        public CryptoException(String message) { super( message ); }
+    public static class ImportException extends Exception {
+        public ImportException() { super(); }
+        public ImportException(String message) { super( message ); }
     }
     
     public static class NotInitializedException extends RuntimeException {

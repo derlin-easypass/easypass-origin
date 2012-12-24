@@ -1,26 +1,48 @@
 package inc;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.print.PrinterException;
-import java.io.*;
-import java.security.*;
-import javax.crypto.BadPaddingException;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.RowFilter;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.TableRowSorter;
 
-import dialogs.SessionAndPassFrame;
-import dialogs.SimpleDialog;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimerTask;
-import java.util.regex.Pattern;
-
-import models.*;
-import models.Exceptions.CryptoException;
-import models.Exceptions.WrongCredentialsException;
+import models.Exceptions;
+import dialogs.SessionAndPassFrame2;
 
 public class MainApp extends JFrame {
     
@@ -174,12 +196,12 @@ public class MainApp extends JFrame {
     @SuppressWarnings("unchecked")
     public void handleCredentialsAndLoadSession() {
         
-        SessionAndPassFrame modal = null;
+        SessionAndPassFrame2 modal = null;
         sessionManager = new SessionManager( this.pathToSessionsFolder );
         
         try{
             
-            modal = new SessionAndPassFrame( this,
+            modal = new SessionAndPassFrame2( this,
                     sessionManager.availableSessions() );
             
         }catch( Exception e ){
@@ -205,16 +227,23 @@ public class MainApp extends JFrame {
             
             try{
                 
-                if( !sessionManager.sessionExists( session ) ){
+                ArrayList<Object[]> data;
+                
+                if( modal.isImported() ){
+                    System.out.println( "imported" );
+                    data = (ArrayList<Object[]>) sessionManager.importSession(
+                            session, pass );
+                    
+                }else if( !sessionManager.sessionExists( session ) ){
                     model = new PassTableModel( columnNames );
                     sessionManager.createSession( session, pass );
-                    System.out.println( "no file" );
                     return;
+                }else{
+                    
+                    // try to open the session and loads the encrypted data
+                    data = (ArrayList<Object[]>) sessionManager.openSession(
+                            session, pass );
                 }
-                
-                // try to open the session and loads the encrypted data
-                ArrayList<Object[]> data = (ArrayList<Object[]>) sessionManager
-                        .openSession( session, pass );
                 
                 // loads the data and gives it to a new jtable model instance
                 model = new PassTableModel( columnNames, data );
@@ -224,8 +253,15 @@ public class MainApp extends JFrame {
                 
             }catch( Exceptions.WrongCredentialsException e ){
                 // if the pass was wrong, loops again
-                System.out
-                        .println( "wrong parameters : could not retrieve iv and datas" );
+                JOptionPane.showMessageDialog( this, e.getMessage(),
+                        "open error", JOptionPane.ERROR_MESSAGE );
+                // Functionalities.writeLog( "info: " + e.toString(),
+                // pathToSessionsFolder + "\\" + logFile );
+                continue;
+            }catch( Exceptions.ImportException e ){
+                // if the pass was wrong, loops again
+                JOptionPane.showMessageDialog( this, e.getMessage(),
+                        "import error", JOptionPane.ERROR_MESSAGE );
                 // Functionalities.writeLog( "info: " + e.toString(),
                 // pathToSessionsFolder + "\\" + logFile );
                 continue;
@@ -487,7 +523,7 @@ public class MainApp extends JFrame {
         // Where the GUI is created:
         JMenuBar menuBar;
         JMenu menu, editMenu;
-        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu;
+        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu, deleteSessionSubMenu;
         
         // Create the menu bar.
         menuBar = new JMenuBar();
@@ -505,9 +541,13 @@ public class MainApp extends JFrame {
                 ActionEvent.CTRL_MASK ) );
         saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                table.getCellEditor().stopCellEditing();
+                // stops current editing
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
                 
                 try{
+                    // saves data
                     if( sessionManager.save( (ArrayList<Object[]>) model
                             .getData() ) ){
                         System.out.println( "datas serialized" );
@@ -531,16 +571,45 @@ public class MainApp extends JFrame {
         
         newSessionSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
+                
                 if( sessionManager.isOpened() )
-                    sessionManager.close();
-                table.setVisible( false );
+                    sessionManager.closeSession();
+                
+                setVisible( false );
+                
+                // open a new session
                 handleCredentialsAndLoadSession();
                 table.setModel( model );
                 table.updateUI();
-                table.setVisible( true );
+                setVisible( true );
             }
         } );
         menu.add( newSessionSubMenu );
+        
+        // delete sessions
+        // TODO
+        deleteSessionSubMenu = new JMenuItem( "delete current session" );
+        
+        deleteSessionSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( JOptionPane.showConfirmDialog( null,
+                        "are you sure you want to permanently delete session \""
+                                + sessionManager.getSessionName() + "\" ?", "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ){
+                    
+                    sessionManager.deleteSession();
+                    
+                    setVisible( false );
+                    
+                    // open a new session
+                    handleCredentialsAndLoadSession();
+                    table.setModel( model );
+                    table.updateUI();
+                    setVisible( true );
+                }
+            }
+        } );
+        menu.add( deleteSessionSubMenu );
         
         // save as json menu
         jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
@@ -550,6 +619,7 @@ public class MainApp extends JFrame {
             public void actionPerformed( ActionEvent e ) {
                 
                 File file = showTxtFileChooser();
+                
                 if( file != null ){
                     try{
                         sessionManager.writeAsJson( model.getData(), file );
