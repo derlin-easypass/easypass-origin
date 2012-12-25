@@ -215,6 +215,7 @@ public class JsonManager {
 	 ******************************************************/
 	private static class GsonContainer {
 		String account;
+		String pseudo;
 		String emailAddress;
 		String password;
 		String notes;
@@ -226,9 +227,10 @@ public class JsonManager {
 		private void setValues(Object[] obj) {
 
 			account = (String) obj[0];
-			emailAddress = (String) obj[1];
-			password = (String) obj[2];
-			notes = (String) obj[3];
+			pseudo = (String) obj[1];
+			emailAddress = (String) obj[2];
+			password = (String) obj[3];
+			notes = (String) obj[4];
 		}
 	}
 

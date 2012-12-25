@@ -14,9 +14,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.print.PrinterException;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -37,11 +41,14 @@ import javax.swing.RowFilter;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableRowSorter;
 
 import models.Exceptions;
+import dialogs.RefactorSessionDialog;
 import dialogs.SessionAndPassFrame2;
 
 public class MainApp extends JFrame {
@@ -63,6 +70,7 @@ public class MainApp extends JFrame {
     private JTextField infos; // informations bar (data have been saved, for
                               // example)
     private Timer infosTimer; // used to hide infos after x seconds
+    private final static int INFOS_DISPLAY_TIME = 6000; //in milliseconds, delay before resetting info text
     
     private PassTableModel model; // containing the datas, the object
                                   // serialized
@@ -70,8 +78,8 @@ public class MainApp extends JFrame {
     private JScrollPane scrollPane; // scrollPane for the JTable
     private SessionManager sessionManager;
     
-    private String[] columnNames = { "account", "email address", "password",
-            "notes" }; // the headers for the jtable
+    private String[] columnNames = { "account", "pseudo", "email address",
+            "password", "notes" }; // the headers for the jtable
     
     
     public static void main( String[] args ) {
@@ -140,6 +148,12 @@ public class MainApp extends JFrame {
         // adds filter/find menu
         mainContainer.add( this.getDownMenu(), BorderLayout.SOUTH );
         
+        
+        //adds mouselistener to make the table loose focus when click occurs outside
+        this.setMouseListener();
+
+        
+        
         // updates the GUI and show the window
         mainContainer.updateUI();
         try{
@@ -149,28 +163,7 @@ public class MainApp extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
-        Toolkit.getDefaultToolkit().addAWTEventListener(
-                new AWTEventListener() {
-                    @Override
-                    public void eventDispatched( AWTEvent evt ) {
-                        if( evt.getID() != MouseEvent.MOUSE_CLICKED ){
-                            return;
-                        }
-                        
-                        MouseEvent event = (MouseEvent) evt;
-                        int row = table.rowAtPoint( event.getPoint() );
-                        if( row == -1
-                                || !( event.getSource() instanceof PassTable ) ){
-                            if( table.isEditing() )
-                                table.getCellEditor().stopCellEditing();
-                            table.clearSelection();
-                            // }else if(! (event.ge) ){
-                            // TODO
-                        }
-                    }
-                    
-                }, AWTEvent.MOUSE_EVENT_MASK );
-        
+
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
@@ -248,6 +241,7 @@ public class MainApp extends JFrame {
                 // loads the data and gives it to a new jtable model instance
                 model = new PassTableModel( columnNames, data );
                 
+                this.setTitle( this.getTitle() + ": " + sessionManager.getSessionName() );
                 System.out.println( "deserialization ok" );
                 break;
                 
@@ -255,22 +249,22 @@ public class MainApp extends JFrame {
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "open error", JOptionPane.ERROR_MESSAGE );
-                // Functionalities.writeLog( "info: " + e.toString(),
-                // pathToSessionsFolder + "\\" + logFile );
+                writeLog( "info: " + e.toString(), pathToSessionsFolder
+                        + File.separator + logFile );
                 continue;
             }catch( Exceptions.ImportException e ){
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "import error", JOptionPane.ERROR_MESSAGE );
-                // Functionalities.writeLog( "info: " + e.toString(),
-                // pathToSessionsFolder + "\\" + logFile );
+                writeLog( "info: " + e.toString(), pathToSessionsFolder + "\\"
+                        + logFile );
                 continue;
             }catch( Exception e ){
                 // otherwise, writes the exception to the log file and quit
                 System.out.println( "unplanned exception" );
                 e.printStackTrace();
-                // Functionalities.writeLog( "severe: " + e.toString(),
-                // pathToSessionsFolder + "\\" + logFile );
+                writeLog( "severe: " + e.toString(), pathToSessionsFolder
+                        + File.separator + logFile );
                 System.exit( 0 );
             }
         }// end while
@@ -374,12 +368,49 @@ public class MainApp extends JFrame {
         // asks the user if he wants to save data and quit, just quit, or resume
         this.addWindowListener( new WindowAdapter() {
             public void windowClosing( WindowEvent we ) {
+                
+                //if everything is saved, quits
+                if(!model.isModified()){
+                    System.exit( 0 );
+                }
+                
+                //if unsaved modifications, asks to save them
                 if( askSaveData() ){
                     System.exit( 0 );
                 }
             }
         } );
     }// end setWindowClosing
+    
+    
+    /**
+     * adds a mouselistener so that the table cells loose focus and stop editing
+     * when the user clicks outside of the table
+     */
+    public void setMouseListener() {
+        
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                new AWTEventListener() {
+                    @Override
+                    public void eventDispatched( AWTEvent evt ) {
+                        if( evt.getID() != MouseEvent.MOUSE_CLICKED ){
+                            return;
+                        }
+                        
+                        MouseEvent event = (MouseEvent) evt;
+                        int row = table.rowAtPoint( event.getPoint() );
+                        System.out.println("row " + row);
+                        if( row == -1 ){
+                            if( table.isEditing() )
+                                table.getCellEditor().stopCellEditing();
+                            table.clearSelection();
+                            System.out.println("clear selection");
+                            // TODO
+                        }
+                    }
+                    
+                }, AWTEvent.MOUSE_EVENT_MASK );
+    }// end setMouseListener
     
     
     /**
@@ -400,6 +431,12 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
+                //if everything was saved, quits
+                if(!model.isModified()){
+                    System.exit( 0 );
+                }
+                
+                //if unsaved modifications, asks to save before quitting
                 if( askSaveData() ){
                     System.exit( 0 );
                 }
@@ -522,18 +559,17 @@ public class MainApp extends JFrame {
         
         // Where the GUI is created:
         JMenuBar menuBar;
-        JMenu menu, editMenu;
-        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu, deleteSessionSubMenu;
+        JMenu optionsMenu, editMenu, sessionMenu;
+        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu, deleteSessionSubMenu, refactorSessionSubMenu;
         
         // Create the menu bar.
         menuBar = new JMenuBar();
         
-        // Build the first menu.
-        menu = new JMenu( "options" );
-        menu.setMnemonic( KeyEvent.VK_A );
-        menu.getAccessibleContext().setAccessibleDescription(
+        // --------------------------- Build the option menu.
+        optionsMenu = new JMenu( "options" );
+        optionsMenu.setMnemonic( KeyEvent.VK_A );
+        optionsMenu.getAccessibleContext().setAccessibleDescription(
                 "The only menu in this program that has menu items" );
-        menuBar.add( menu );
         
         // save option
         saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
@@ -541,6 +577,12 @@ public class MainApp extends JFrame {
                 ActionEvent.CTRL_MASK ) );
         saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
+                //if no modification to save, returns
+                if(!model.isModified()){
+                    showInfos("everything up to date.", INFOS_DISPLAY_TIME);
+                    return;
+                }
+                
                 // stops current editing
                 if( table.isEditing() ){
                     table.getCellEditor().stopCellEditing();
@@ -551,11 +593,13 @@ public class MainApp extends JFrame {
                     if( sessionManager.save( (ArrayList<Object[]>) model
                             .getData() ) ){
                         System.out.println( "datas serialized" );
-                        showInfos( "data saved.", 10000 );
+                        showInfos( "data saved.", INFOS_DISPLAY_TIME );
+                        model.resetModified();
+                        
                     }else{
                         System.out.println( "data not saved" );
                         showInfos( "an error occurred! Data not saved...",
-                                10000 );
+                                INFOS_DISPLAY_TIME );
                     }
                 }catch( Exception ee ){
                     System.out
@@ -564,52 +608,7 @@ public class MainApp extends JFrame {
                 }// end try
             }
         } );
-        menu.add( saveSubMenu );
-        
-        // open a new session menu
-        newSessionSubMenu = new JMenuItem( "open new session" );
-        
-        newSessionSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                
-                if( sessionManager.isOpened() )
-                    sessionManager.closeSession();
-                
-                setVisible( false );
-                
-                // open a new session
-                handleCredentialsAndLoadSession();
-                table.setModel( model );
-                table.updateUI();
-                setVisible( true );
-            }
-        } );
-        menu.add( newSessionSubMenu );
-        
-        // delete sessions
-        // TODO
-        deleteSessionSubMenu = new JMenuItem( "delete current session" );
-        
-        deleteSessionSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                
-                if( JOptionPane.showConfirmDialog( null,
-                        "are you sure you want to permanently delete session \""
-                                + sessionManager.getSessionName() + "\" ?", "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ){
-                    
-                    sessionManager.deleteSession();
-                    
-                    setVisible( false );
-                    
-                    // open a new session
-                    handleCredentialsAndLoadSession();
-                    table.setModel( model );
-                    table.updateUI();
-                    setVisible( true );
-                }
-            }
-        } );
-        menu.add( deleteSessionSubMenu );
+        optionsMenu.add( saveSubMenu );
         
         // save as json menu
         jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
@@ -635,10 +634,10 @@ public class MainApp extends JFrame {
                 }// end if
             }
         } );
-        menu.add( jsonSubMenu );
+        optionsMenu.add( jsonSubMenu );
         
         // print subMenu
-        menu.addSeparator();
+        optionsMenu.addSeparator();
         printSubMenu = new JMenuItem( "print" );
         printSubMenu.setMnemonic( KeyEvent.VK_P );
         printSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P,
@@ -654,9 +653,83 @@ public class MainApp extends JFrame {
             }
         } );
         
-        menu.add( printSubMenu );
+        optionsMenu.add( printSubMenu );
         
-        // Build edit menu in the menu bar.
+        // -------------------------build menu to manage session
+        sessionMenu = new JMenu( "manage session" );
+        
+        // open a new session menu
+        newSessionSubMenu = new JMenuItem( "open new session" );
+        
+        newSessionSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( sessionManager.isOpened() )
+                    sessionManager.closeSession();
+                
+                setVisible( false );
+                
+                // open a new session
+                handleCredentialsAndLoadSession();
+                table.setModel( model );
+                table.updateUI();
+                setVisible( true );
+            }
+        } );
+        sessionMenu.add( newSessionSubMenu );
+        
+        // refactor current session
+        refactorSessionSubMenu = new JMenuItem( "refactor session" );
+        refactorSessionSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                RefactorSessionDialog dialog = new RefactorSessionDialog( null );
+                // if the user closed the dialog or clicked cancel, simply
+                // returns
+                if( dialog.getStatus() == false ){
+                    return;
+                }
+                
+                try{
+                    sessionManager.refactorSession( dialog.getSessionName(),
+                            dialog.getPass() );
+                    showInfos( "refactoring finished successfully.", INFOS_DISPLAY_TIME );
+                    
+                }catch( Exceptions.RefactorException ex ){
+                    showInfos( ex.getMessage(), INFOS_DISPLAY_TIME );
+                }
+                
+            }
+        } );
+        sessionMenu.add( refactorSessionSubMenu );
+        
+        // delete session
+        // TODO
+        deleteSessionSubMenu = new JMenuItem( "delete session" );
+        
+        deleteSessionSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( JOptionPane.showConfirmDialog( null,
+                        "are you sure you want to permanently delete session \""
+                                + sessionManager.getSessionName() + "\" ?",
+                        "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ){
+                    
+                    sessionManager.deleteSession();
+                    
+                    setVisible( false );
+                    
+                    // open a new session
+                    handleCredentialsAndLoadSession();
+                    table.setModel( model );
+                    table.updateUI();
+                    setVisible( true );
+                }
+            }
+        } );
+        sessionMenu.add( deleteSessionSubMenu );
+        
+        // --------------------------- Build edit menu in the menu bar.
         editMenu = new JMenu( "edit" );
         
         // add undo submenu
@@ -673,6 +746,9 @@ public class MainApp extends JFrame {
         editMenu.add( undoSubMenu );
         editMenu.add( redoSubMenu );
         
+        // adds the menu to the menubar
+        menuBar.add( optionsMenu );
+        menuBar.add( sessionMenu );
         menuBar.add( editMenu );
         
         return menuBar;
@@ -756,6 +832,7 @@ public class MainApp extends JFrame {
         form.add( filterText );
         
         infos = new JTextField( 15 );
+        infos.setBorder( null );
         infos.setEditable( false );
         form.add( infos );
         // form.setSize( new Dimension(50, 100) );
@@ -793,6 +870,44 @@ public class MainApp extends JFrame {
         
         sorter.setRowFilter( rf );
     }
+    
+    
+    /**
+     * 
+     * appends a message to a [log] file.
+     * 
+     * @param message
+     *            the message to write
+     * 
+     * @param logFilePath
+     *            the path to the file
+     */
+    
+    public static void writeLog( String message, String logFilePath ) {
+        try{
+            File file = new File( logFilePath );
+            
+            // if file doesn't exists, creates it
+            if( !file.exists() ){
+                file.createNewFile();
+            }
+            
+            // true = append to file
+            BufferedWriter writer = new BufferedWriter( new FileWriter( file,
+                    true ) );
+            
+            // adds the date and the message at the end of the file
+            writer.newLine();
+            writer.write( new Date().toString() + " " + message ); // +
+                                                                   // System.getProperty("line.separator"));
+            writer.flush();
+            writer.close();
+            System.out.println( "logging Done" );
+            
+        }catch( IOException e ){
+            e.printStackTrace();
+        }
+    }// end writeLog
     
     
     /**

@@ -3,11 +3,17 @@ package inc;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.EventObject;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
@@ -25,10 +31,11 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class PassTable extends JTable {
-
+    
     private static final long serialVersionUID = -5878840678754267165L;
-
-
+    private static final String PASS_COLUMN_NAME = "password";
+    
+    
     /********************************************************************
      * constructors and update /
      ********************************************************************/
@@ -39,6 +46,8 @@ public class PassTable extends JTable {
         // so when the user clicks on delete rows for example, there is no
         // editing ghost cell hanging in the void !
         this.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
+        this.setKeyBindings();
+        
     }// end constructor
     
     
@@ -61,7 +70,32 @@ public class PassTable extends JTable {
     
     
     /********************************************************************
-     * styles and appearances managements methods /
+     * key bindings
+     ********************************************************************/
+    
+    /**
+     * adds a listener in order to enter edit mode when pressing enter over a
+     * selected cell
+     */
+    public void setKeyBindings() {
+        
+        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
+                KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, 0, false ),
+                "enterEditMode" );
+        
+        this.getActionMap().put( "enterEditMode", new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                if( !isEditing() ){
+                    editCellAt( getSelectedRow(), getSelectedColumn() );
+                    
+                }
+            }
+        } );
+    }// end set keyBindings
+    
+    
+    /********************************************************************
+     * styles and appearances management methods /
      ********************************************************************/
     
     /**
@@ -91,7 +125,7 @@ public class PassTable extends JTable {
      * this method customizes the global appearance of the jtable.
      */
     public void setStyle() {
-        //TODO
+        // TODO
         // try {
         // for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
         // if ("Nimbus".equals(info.getName())) {
@@ -153,7 +187,7 @@ public class PassTable extends JTable {
      */
     @Override
     public TableCellRenderer getCellRenderer( int row, int column ) {
-        if( column == 2 ){
+        if( this.getColumnName( column ).equals( PASS_COLUMN_NAME ) ){
             return new PasswordCellRenderer();
         }
         return super.getCellRenderer( row, column );

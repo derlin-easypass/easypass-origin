@@ -18,6 +18,10 @@ public class Exceptions {
         public WrongCredentialsException(String message) { super( message ); }
     }
     
+    public static class RefactorException extends Exception {
+        public RefactorException() { super(); }
+        public RefactorException(String message) { super( message ); }
+    }
     public static class ImportException extends Exception {
         public ImportException() { super(); }
         public ImportException(String message) { super( message ); }

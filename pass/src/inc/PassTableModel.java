@@ -27,6 +27,8 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     private String[] columnNames;
     private List<Object[]> data;
     
+    private boolean isModified;
+    
     
     /********************************************************************
      * constructors /
@@ -37,6 +39,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         super();
         this.columnNames = columnNames;
         this.data = data;
+        this.isModified = false;
     }
     
     
@@ -45,12 +48,30 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         super();
         this.columnNames = columnNames;
         this.data = new ArrayList<Object[]>();
+        this.isModified = false;
     }
     
     
     /********************************************************************
      * getters and setters /
      ********************************************************************/
+    
+    /**
+     * returns true if a change occurred since the last modification reset
+     * @return
+     */
+    public boolean isModified() {
+        return isModified;
+    }
+    
+    
+    /**
+     * sets the isModified variable to false
+     */
+    public void resetModified() {
+        this.isModified = false;
+    }
+    
     
     /**
      * returns the headers of the table
@@ -61,7 +82,8 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         return columnNames;
     }
     
-    
+
+
     /**
      * returns the header the specified column.
      */
@@ -168,12 +190,14 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         if( undoable == false || listeners == null ){
             data.get( row )[ col ] = value;
             fireTableCellUpdated( row, col );
+            this.isModified = true;
             return;
         }
         
         Object oldValue = getValueAt( row, col );
         data.get( row )[ col ] = value;
         fireTableCellUpdated( row, col );
+        this.isModified = true;
         JvCellEdit cellEdit = new JvCellEdit( this, oldValue, value, row, col );
         UndoableEditEvent editEvent = new UndoableEditEvent( this, cellEdit );
         for( UndoableEditListener listener : listeners )
@@ -186,20 +210,6 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      ********************************************************************/
     
     /**
-     * adds an empty row to the model
-     */
-    public void addRow() {
-        
-        Object[] row = new Object[columnNames.length];
-        for( int i = 0; i < row.length; i++ ){
-            row[ i ] = "";
-        }
-        data.add( row );
-        this.fireTableDataChanged();
-    }
-    
-    
-    /**
      * adds the specified row to the model
      * 
      * @param row
@@ -209,6 +219,21 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         data.add( row );
         this.fireTableRowsInserted( this.getRowCount() - 1,
                 this.getRowCount() - 1 );
+        this.isModified = true;
+    }
+    
+    
+    /**
+     * adds an empty row to the model
+     */
+    public void addRow() {
+        
+        Object[] row = new Object[columnNames.length];
+        for( int i = 0; i < row.length; i++ ){
+            row[ i ] = "";
+        }
+        this.addRow( row );
+        
     }
     
     
@@ -220,13 +245,14 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * @param index
      */
     public void addRow( Object[] row, int index ) {
-        if( index >= 0 && index < data.size() )
+        if( index >= 0 && index < data.size() ){
             data.add( index, row );
-        else{
-            data.add( row );
-            index = data.size() - 1;
+            this.fireTableRowsInserted( index, index );
+            this.isModified = true;
+            
+        }else{
+            this.addRow( row );
         }
-        this.fireTableRowsInserted( index, index );
         
     }
     
@@ -259,6 +285,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
             // removes the row
             data.remove( index );
             this.fireTableDataChanged();
+            this.isModified = true;
         }
         
     }

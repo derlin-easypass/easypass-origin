@@ -10,6 +10,7 @@ import java.util.List;
 
 import models.Exceptions;
 import models.Exceptions.ImportException;
+import models.Exceptions.RefactorException;
 import models.Exceptions.SessionFileNotFoundException;
 import models.Exceptions.WrongCredentialsException;
 
@@ -37,9 +38,9 @@ import models.Exceptions.WrongCredentialsException;
  */
 public class SessionManager {
     
-    private static int currentVersion = 1; // TODO
-    private static String cryptoAlgorithm = "aes-128-cbc";
-    private static String dataExtension = ".data_ser";
+    private static int CURRENT_VERSION = 1; // TODO
+    private static String CRYPTO_ALGORITHM = "aes-128-cbc";
+    private static String DATA_EXTENSION = ".data_ser";
     
     private String directoryPath;
     private String session;
@@ -87,7 +88,7 @@ public class SessionManager {
      * @throws FileNotFoundException
      */
     public String[] availableSessions() throws FileNotFoundException {
-        return this.availableSessions( ".*\\" + dataExtension + "$" );
+        return this.availableSessions( ".*\\" + DATA_EXTENSION + "$" );
     }// end available sessions
     
     
@@ -137,7 +138,7 @@ public class SessionManager {
         // only if folder exists and is actually a directory
         if( folder.exists() && folder.isDirectory() ){
             return ( folder.listFiles( new Filter( name + "\\.*"
-                    + dataExtension + "$" ) ).length > 0 ? true : false );
+                    + DATA_EXTENSION + "$" ) ).length > 0 ? true : false );
         }
         
         return false;
@@ -196,7 +197,7 @@ public class SessionManager {
             
             this.session = session;
             this.password = password;
-            return new JsonManager().deserialize( cryptoAlgorithm,
+            return new JsonManager().deserialize( CRYPTO_ALGORITHM,
                     this.getDataPath(), this.password );
             
         }catch( Exceptions.WrongCredentialsException e ){
@@ -214,12 +215,12 @@ public class SessionManager {
         File fileIn = new File( sessionPath );
         
         if( fileIn.getName() == ""
-                || !fileIn.getName().endsWith( dataExtension ) ){
+                || !fileIn.getName().endsWith( DATA_EXTENSION ) ){
             throw new Exceptions.ImportException(
                     "Session "
                             + sessionPath
                             + " not found. The file does not exist or does not end with "
-                            + dataExtension + "." );
+                            + DATA_EXTENSION + "." );
         }
         
         this.session = fileIn.getName().substring( 0,
@@ -232,20 +233,7 @@ public class SessionManager {
         
         try{
             
-            FileInputStream fin = new FileInputStream( sessionPath );
-            FileOutputStream fos = new FileOutputStream( this.getDataPath() );
-            
-            byte[] buf = new byte[1024];
-            int len;
-            while( ( len = fin.read( buf ) ) > 0 ){
-                fos.write( buf, 0, len );
-            }
-            
-            fin.close();
-            fos.close();
-            System.out.println( "File copied." );
-            // TODO
-            
+            copyFile(sessionPath, this.getDataPath());            
             return this.openSession( this.session, password );
             
         }catch( Exception e ){
@@ -257,7 +245,7 @@ public class SessionManager {
         }
         
     }// end openSession
-    
+        
     
     /**************************************************************
      * manages sessions
@@ -280,7 +268,7 @@ public class SessionManager {
         
         try{
             
-            new JsonManager().serialize( data, cryptoAlgorithm,
+            new JsonManager().serialize( data, CRYPTO_ALGORITHM,
                     this.getDataPath(), this.password );
             return true;
             
@@ -323,17 +311,56 @@ public class SessionManager {
     }
     
     
+    /**
+     * changes the session name and the password of the currently opened session
+     * @param newName
+     * @param newPass
+     * @throws RefactorException
+     */
+    public void refactorSession(String newName, String newPass) throws RefactorException{
+        
+        String oldSessionName = this.session;
+        String oldPass = this.password;
+        
+        if(this.sessionExists( newName )){
+            throw new Exceptions.RefactorException( "duplicated session name" );
+            
+        }else if(this.isOpened() == false){
+            return;
+        }
+        
+        
+        String srcFile = this.getDataPath();
+        this.session = newName;
+        this.password = newPass;
+        
+        try{
+            
+            this.save(new JsonManager().deserialize( CRYPTO_ALGORITHM, srcFile, oldPass ));
+            new File(srcFile).delete();
+                       
+        }catch( Exception e ){
+            
+            this.session = oldSessionName;
+            this.password = oldPass;
+            throw new Exceptions.RefactorException( session
+                    + " : file couldn't be refactored " );
+        }
+        
+    }
+    
+    
     /**************************************************************
      * getters
      ************************************************************/
     
     public static String getDataExtension() {
-        return dataExtension;
+        return DATA_EXTENSION;
     }
     
     
     public static String getCryptoAlgorithm() {
-        return cryptoAlgorithm;
+        return CRYPTO_ALGORITHM;
     }
     
     /**
@@ -355,16 +382,37 @@ public class SessionManager {
      */
     public String getDataPath() {
         return this.directoryPath + File.separator + this.session
-                + dataExtension;
+                + DATA_EXTENSION;
     }
     
     
     
     /**************************************************************
      * utilities
+     * @throws IOException 
      ************************************************************/
     
-    
+    /**
+     * copies a file.
+     * @param srcFilepath
+     * @param destFilepath
+     * @throws IOException
+     */
+    public static void copyFile(String srcFilepath, String destFilepath) throws IOException{
+        
+            FileInputStream fin = new FileInputStream( srcFilepath );
+            FileOutputStream fos = new FileOutputStream( destFilepath );
+            
+            byte[] buf = new byte[1024];
+            int len;
+            while( ( len = fin.read( buf ) ) > 0 ){
+                fos.write( buf, 0, len );
+            }
+            
+            fin.close();
+            fos.close();
+            System.out.println( "File copied." );
+    }
     
     /**
      * private class used to get files in a folder that match a pattern
