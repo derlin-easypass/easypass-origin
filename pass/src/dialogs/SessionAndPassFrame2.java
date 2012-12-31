@@ -478,7 +478,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
             this.newSessionButton.setEnabled( false );
             this.browseButton.setEnabled( true );
             
-        }else{
+        }else if(this.selectSessionRB.isSelected()){
             this.imported = false;
             this.sessionCombo.setEnabled( true );
             this.newSessionButton.setEnabled( true );
@@ -501,7 +501,6 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
     public void reset() {
         this.passTF.setText( "" );
         this.importTF.setText( "" );
-        this.imported = false;
         this.sessionCombo.setSelectedIndex( 0 );
     }
     
@@ -553,7 +552,6 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
     
     
     public boolean isImported() {
-        System.out.println( "is imported " + this.imported );
         return imported;
     }
     

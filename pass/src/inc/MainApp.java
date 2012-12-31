@@ -94,9 +94,6 @@ public class MainApp extends JFrame {
     public MainApp() {
         // initializes the main Frame
         super( "accounts and passwords" );
-        int a = 1;
-        a += ++a;
-        System.out.println( a );
         // sets the listener to save data on quit
         this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         this.setWindowClosingListener();
@@ -223,7 +220,6 @@ public class MainApp extends JFrame {
                 ArrayList<Object[]> data;
                 
                 if( modal.isImported() ){
-                    System.out.println( "imported" );
                     data = (ArrayList<Object[]>) sessionManager.importSession(
                             session, pass );
                     
@@ -283,7 +279,6 @@ public class MainApp extends JFrame {
         
         if( answer == JOptionPane.YES_OPTION ){ // serializes and quits
             try{
-                System.out.println( sessionManager.getDataPath() );
                 if( sessionManager.save( (ArrayList<Object[]>) model.getData() ) ){
                     System.out.println( "datas serialized" );
                 }else{
@@ -391,7 +386,7 @@ public class MainApp extends JFrame {
         
         Toolkit.getDefaultToolkit().addAWTEventListener(
                 new AWTEventListener() {
-                    @Override
+                    //TODO @Override
                     public void eventDispatched( AWTEvent evt ) {
                         if( evt.getID() != MouseEvent.MOUSE_CLICKED ){
                             return;
@@ -482,7 +477,6 @@ public class MainApp extends JFrame {
                 
                 table.getCellEditor().stopCellEditing();
                 int[] selectedRows = table.getSelectedRows();
-                System.out.println( "\ndeleting rows:" );
                 for( int i = 0; i < selectedRows.length; i++ ){
                     // row index minus i since the table size shrinks by 1
                     // at each iteration
@@ -508,7 +502,6 @@ public class MainApp extends JFrame {
      */
     public String getSessionPath() {
         
-        System.out.println();
         String os = System.getProperty( "os.name" );
         String path = "";
         
@@ -525,7 +518,6 @@ public class MainApp extends JFrame {
             System.exit( 0 );
         }
         
-        System.out.println( path );
         File sessionDir = new File( path );
         
         // if the session folder does not exist, creates it
@@ -537,7 +529,7 @@ public class MainApp extends JFrame {
                 }
             }
             // an error occurred
-            System.out.println( "error appdata" );
+            System.out.println( "error retrieving sessions folder path" );
             return "";
             
         }else{ // the session folder exists, return its path
@@ -781,7 +773,6 @@ public class MainApp extends JFrame {
         delJB.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 int[] selectedRows = table.getSelectedRows();
-                System.out.println( "\ndeleting rows:" );
                 for( int i = 0; i < selectedRows.length; i++ ){
                     // row index minus i since the table size shrinks by 1
                     // everytime
@@ -833,6 +824,7 @@ public class MainApp extends JFrame {
         
         infos = new JTextField( 15 );
         infos.setBorder( null );
+        infos.setBackground( form.getBackground() );
         infos.setEditable( false );
         form.add( infos );
         // form.setSize( new Dimension(50, 100) );

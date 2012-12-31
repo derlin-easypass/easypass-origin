@@ -8,6 +8,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import models.Exceptions;
 import models.Exceptions.ImportException;
 import models.Exceptions.RefactorException;
@@ -208,6 +210,17 @@ public class SessionManager {
     }// end openSession
     
     
+    /**
+     * imports a session by copying the ginven file to the sessions folder
+     * 
+     * @param sessionPath
+     * @param password
+     * @return
+     * @throws Exceptions.WrongCredentialsException
+     * @throws IOException
+     * @throws SessionFileNotFoundException
+     * @throws ImportException
+     */
     public List<Object[]> importSession( String sessionPath, String password )
             throws Exceptions.WrongCredentialsException, IOException,
             SessionFileNotFoundException, ImportException {
@@ -226,14 +239,22 @@ public class SessionManager {
         this.session = fileIn.getName().substring( 0,
                 fileIn.getName().lastIndexOf( '.' ) );
         
+        //if the session already exist, asks if the user wants to override it
         if( this.sessionExists( this.session ) ){
-            this.closeSession();
-            throw new Exceptions.ImportException( "duplicates existing session" );
+           if( JOptionPane
+                    .showConfirmDialog(
+                            null,
+                            "A session by this name already exists. Do you want to replace it ?",
+                            "import session",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE ) == JOptionPane.NO_OPTION ){
+              throw new ImportException("Importation canceled.");
+           }
         }
         
         try{
             
-            copyFile(sessionPath, this.getDataPath());            
+            copyFile( sessionPath, this.getDataPath() );
             return this.openSession( this.session, password );
             
         }catch( Exception e ){
@@ -245,7 +266,7 @@ public class SessionManager {
         }
         
     }// end openSession
-        
+    
     
     /**************************************************************
      * manages sessions
@@ -288,16 +309,17 @@ public class SessionManager {
     }
     
     
-    
-    public void deleteSession(){
-        if(!this.isOpened()){
+    public void deleteSession() {
+        if( !this.isOpened() ){
             return;
         }
-               
-        File file = new File(this.getDataPath());
+        
+        File file = new File( this.getDataPath() );
         file.delete();
         this.closeSession();
     }
+    
+    
     /**
      * writes the content of the list as proper json in the specified file
      * 
@@ -313,22 +335,23 @@ public class SessionManager {
     
     /**
      * changes the session name and the password of the currently opened session
+     * 
      * @param newName
      * @param newPass
      * @throws RefactorException
      */
-    public void refactorSession(String newName, String newPass) throws RefactorException{
+    public void refactorSession( String newName, String newPass )
+            throws RefactorException {
         
         String oldSessionName = this.session;
         String oldPass = this.password;
         
-        if(this.sessionExists( newName )){
+        if( this.sessionExists( newName ) ){
             throw new Exceptions.RefactorException( "duplicated session name" );
             
-        }else if(this.isOpened() == false){
+        }else if( this.isOpened() == false ){
             return;
         }
-        
         
         String srcFile = this.getDataPath();
         this.session = newName;
@@ -336,9 +359,10 @@ public class SessionManager {
         
         try{
             
-            this.save(new JsonManager().deserialize( CRYPTO_ALGORITHM, srcFile, oldPass ));
-            new File(srcFile).delete();
-                       
+            this.save( new JsonManager().deserialize( CRYPTO_ALGORITHM,
+                    srcFile, oldPass ) );
+            new File( srcFile ).delete();
+            
         }catch( Exception e ){
             
             this.session = oldSessionName;
@@ -363,8 +387,10 @@ public class SessionManager {
         return CRYPTO_ALGORITHM;
     }
     
+    
     /**
      * returns the path to the sessions folder
+     * 
      * @return
      */
     public String getDirectoryPath() {
@@ -376,8 +402,10 @@ public class SessionManager {
         return session;
     }
     
+    
     /**
      * returns the complete path to the current session file
+     * 
      * @return
      */
     public String getDataPath() {
@@ -386,33 +414,36 @@ public class SessionManager {
     }
     
     
-    
     /**************************************************************
      * utilities
-     * @throws IOException 
+     * 
+     * @throws IOException
      ************************************************************/
     
     /**
      * copies a file.
+     * 
      * @param srcFilepath
      * @param destFilepath
      * @throws IOException
      */
-    public static void copyFile(String srcFilepath, String destFilepath) throws IOException{
+    public static void copyFile( String srcFilepath, String destFilepath )
+            throws IOException {
         
-            FileInputStream fin = new FileInputStream( srcFilepath );
-            FileOutputStream fos = new FileOutputStream( destFilepath );
-            
-            byte[] buf = new byte[1024];
-            int len;
-            while( ( len = fin.read( buf ) ) > 0 ){
-                fos.write( buf, 0, len );
-            }
-            
-            fin.close();
-            fos.close();
-            System.out.println( "File copied." );
+        FileInputStream fin = new FileInputStream( srcFilepath );
+        FileOutputStream fos = new FileOutputStream( destFilepath );
+        
+        byte[] buf = new byte[1024];
+        int len;
+        while( ( len = fin.read( buf ) ) > 0 ){
+            fos.write( buf, 0, len );
+        }
+        
+        fin.close();
+        fos.close();
+        System.out.println( "File copied." );
     }
+    
     
     /**
      * private class used to get files in a folder that match a pattern
@@ -426,6 +457,12 @@ public class SessionManager {
         
         public Filter(String str) {
             pattern = str;
+        }
+        
+        
+        public String getDescription() {
+            return "Easypass session file (*." + SessionManager.DATA_EXTENSION
+                    + ")";
         }
         
         
