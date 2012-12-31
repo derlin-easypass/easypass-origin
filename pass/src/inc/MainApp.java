@@ -4,6 +4,7 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
@@ -70,7 +71,9 @@ public class MainApp extends JFrame {
     private JTextField infos; // informations bar (data have been saved, for
                               // example)
     private Timer infosTimer; // used to hide infos after x seconds
-    private final static int INFOS_DISPLAY_TIME = 6000; //in milliseconds, delay before resetting info text
+    private final static int INFOS_DISPLAY_TIME = 6000; // in milliseconds,
+                                                        // delay before
+                                                        // resetting info text
     
     private PassTableModel model; // containing the datas, the object
                                   // serialized
@@ -145,11 +148,9 @@ public class MainApp extends JFrame {
         // adds filter/find menu
         mainContainer.add( this.getDownMenu(), BorderLayout.SOUTH );
         
-        
-        //adds mouselistener to make the table loose focus when click occurs outside
+        // adds mouselistener to make the table loose focus when click occurs
+        // outside
         this.setMouseListener();
-
-        
         
         // updates the GUI and show the window
         mainContainer.updateUI();
@@ -160,7 +161,6 @@ public class MainApp extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
-
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
@@ -237,7 +237,8 @@ public class MainApp extends JFrame {
                 // loads the data and gives it to a new jtable model instance
                 model = new PassTableModel( columnNames, data );
                 
-                this.setTitle( this.getTitle() + ": " + sessionManager.getSessionName() );
+                this.setTitle( this.getTitle() + ": "
+                        + sessionManager.getSessionName() );
                 System.out.println( "deserialization ok" );
                 break;
                 
@@ -364,12 +365,12 @@ public class MainApp extends JFrame {
         this.addWindowListener( new WindowAdapter() {
             public void windowClosing( WindowEvent we ) {
                 
-                //if everything is saved, quits
-                if(!model.isModified()){
+                // if everything is saved, quits
+                if( !model.isModified() ){
                     System.exit( 0 );
                 }
                 
-                //if unsaved modifications, asks to save them
+                // if unsaved modifications, asks to save them
                 if( askSaveData() ){
                     System.exit( 0 );
                 }
@@ -386,20 +387,20 @@ public class MainApp extends JFrame {
         
         Toolkit.getDefaultToolkit().addAWTEventListener(
                 new AWTEventListener() {
-                    //TODO @Override
+                    // TODO @Override
                     public void eventDispatched( AWTEvent evt ) {
                         if( evt.getID() != MouseEvent.MOUSE_CLICKED ){
                             return;
                         }
                         
                         MouseEvent event = (MouseEvent) evt;
-                        int row = table.rowAtPoint( event.getPoint() );
-                        System.out.println("row " + row);
-                        if( row == -1 ){
+                        // if the click was outside the table, clear selection
+                        if( !( event.getSource() instanceof JTable )
+                                || table.rowAtPoint( event.getPoint() ) < 1 ){
                             if( table.isEditing() )
                                 table.getCellEditor().stopCellEditing();
                             table.clearSelection();
-                            System.out.println("clear selection");
+                            System.out.println( "clear selection" );
                             // TODO
                         }
                     }
@@ -426,12 +427,12 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                //if everything was saved, quits
-                if(!model.isModified()){
+                // if everything was saved, quits
+                if( !model.isModified() ){
                     System.exit( 0 );
                 }
                 
-                //if unsaved modifications, asks to save before quitting
+                // if unsaved modifications, asks to save before quitting
                 if( askSaveData() ){
                     System.exit( 0 );
                 }
@@ -460,8 +461,20 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                table.getCellEditor().stopCellEditing();
+                //stops cell editing 
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
+                //adds a new row to the model
                 model.addRow();
+                
+                //sets focus on the new row 
+                int lastRow = model.getRowCount() - 1;
+                
+                //scrolls to the bottom of the table
+                table.getSelectionModel().setSelectionInterval(
+                        lastRow, lastRow );
+                table.scrollRectToVisible( new Rectangle(table.getCellRect( lastRow, 0, true )) );
             }
         } );
         
@@ -569,15 +582,16 @@ public class MainApp extends JFrame {
                 ActionEvent.CTRL_MASK ) );
         saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                //if no modification to save, returns
-                if(!model.isModified()){
-                    showInfos("everything up to date.", INFOS_DISPLAY_TIME);
-                    return;
-                }
                 
                 // stops current editing
                 if( table.isEditing() ){
                     table.getCellEditor().stopCellEditing();
+                }
+                
+                // if no modification to save, returns
+                if( !model.isModified() ){
+                    showInfos( "everything up to date.", INFOS_DISPLAY_TIME );
+                    return;
                 }
                 
                 try{
@@ -685,7 +699,8 @@ public class MainApp extends JFrame {
                 try{
                     sessionManager.refactorSession( dialog.getSessionName(),
                             dialog.getPass() );
-                    showInfos( "refactoring finished successfully.", INFOS_DISPLAY_TIME );
+                    showInfos( "refactoring finished successfully.",
+                            INFOS_DISPLAY_TIME );
                     
                 }catch( Exceptions.RefactorException ex ){
                     showInfos( ex.getMessage(), INFOS_DISPLAY_TIME );

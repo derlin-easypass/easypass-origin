@@ -120,7 +120,7 @@ public class JsonManager {
 			Gson gson = new GsonBuilder().create();
 			fos = new FileOutputStream(filepath);
 			fos.write(OpenSSL.encrypt(algo, password.toCharArray(), gson
-					.toJson(data).getBytes()));
+					.toJson(data).getBytes("UTF-8")));
 			fos.write("\r\n".getBytes());
 			fos.write(System.getProperty("line.separator").getBytes());
 			fos.flush();
