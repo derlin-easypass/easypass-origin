@@ -191,10 +191,9 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         
         // if no change at all, return
         if( ( (String) oldValue ).equals( (String) value ) ){
-            System.out.println( "no change" );
             return;
         }
-        System.out.println( "change" );
+
         UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
         if( undoable == false || listeners == null ){
             data.get( row )[ col ] = value;

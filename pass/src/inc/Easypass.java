@@ -494,8 +494,9 @@ public class Easypass extends JFrame {
         
         this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                
-                table.getCellEditor().stopCellEditing();
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
                 int[] selectedRows = table.getSelectedRows();
                 for( int i = 0; i < selectedRows.length; i++ ){
                     // row index minus i since the table size shrinks by 1
