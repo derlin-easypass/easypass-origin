@@ -2,8 +2,11 @@ package inc;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
@@ -68,6 +71,7 @@ public class Easypass extends JFrame {
                                                    // ("find")
     private JTextField filterText; // text entered by the user, used to filter
                                    // the table cells
+    private JTextField rowCount;
     private JTextField infos; // informations bar (data have been saved, for
                               // example)
     private Timer infosTimer; // used to hide infos after x seconds
@@ -114,8 +118,9 @@ public class Easypass extends JFrame {
         
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
-        mainContainer.add( this.getRowsManipulationMenu(), BorderLayout.NORTH );
-        mainContainer.setOpaque( false );
+        // mainContainer.add( this.getRowsManipulationMenu(), BorderLayout.NORTH
+        // );
+
         
         // creates the jtable
         try{
@@ -309,6 +314,11 @@ public class Easypass extends JFrame {
      */
     public void showInfos( String info, int ms ) {
         infos.setText( info );
+        
+        if( ms <= 0 ){
+            return;
+        }
+        
         if( infosTimer != null && infosTimer.isRunning() )
             infosTimer.stop();
         
@@ -317,6 +327,7 @@ public class Easypass extends JFrame {
                 infos.setText( "" );
             }
         } );
+        
         infosTimer.start();
     }
     
@@ -455,57 +466,60 @@ public class Easypass extends JFrame {
         this.getRootPane().getActionMap().put( "FIND", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
                 filterText.requestFocusInWindow();
+                filterText.selectAll();
             }
         } );
         
-        // CTRL+N to add a new line
-        KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( NewLineKeyStroke, "NEWLINE" );
-        
-        this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                // stops cell editing
-                if( table.isEditing() ){
-                    table.getCellEditor().stopCellEditing();
-                }
-                // adds a new row to the model
-                model.addRow();
-                
-                // sets focus on the new row
-                int lastRow = model.getRowCount() - 1;
-                
-                // scrolls to the bottom of the table
-                table.getSelectionModel().setSelectionInterval( lastRow,
-                        lastRow );
-                table.scrollRectToVisible( new Rectangle( table.getCellRect(
-                        lastRow, 0, true ) ) );
-            }
-        } );
-        
-        // CTRL+D to delete selected rows
-        KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
-        
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( DelLineKeyStroke, "DELLINE" );
-        
-        this.getRootPane().getActionMap().put( "DELLINE", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                if( table.isEditing() ){
-                    table.getCellEditor().stopCellEditing();
-                }
-                int[] selectedRows = table.getSelectedRows();
-                for( int i = 0; i < selectedRows.length; i++ ){
-                    // row index minus i since the table size shrinks by 1
-                    // at each iteration
-                    model.deleteRow( selectedRows[ i ] - i );
-                }
-            }
-        } );
-        
+        // // CTRL+N to add a new line
+        // KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
+        // Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
+        //
+        // this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+        // .put( NewLineKeyStroke, "NEWLINE" );
+        //
+        // this.getRootPane().getActionMap().put( "NEWLINE", new
+        // AbstractAction() {
+        // public void actionPerformed( ActionEvent e ) {
+        // // stops cell editing
+        // if( table.isEditing() ){
+        // table.getCellEditor().stopCellEditing();
+        // }
+        // // adds a new row to the model
+        // model.addRow();
+        //
+        // // sets focus on the new row
+        // int lastRow = model.getRowCount() - 1;
+        //
+        // // scrolls to the bottom of the table
+        // table.getSelectionModel().setSelectionInterval( lastRow,
+        // lastRow );
+        // table.scrollRectToVisible( new Rectangle( table.getCellRect(
+        // lastRow, 0, true ) ) );
+        // }
+        // } );
+        //
+        // // CTRL+D to delete selected rows
+        // KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
+        // Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
+        //
+        // this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
+        // .put( DelLineKeyStroke, "DELLINE" );
+        //
+        // this.getRootPane().getActionMap().put( "DELLINE", new
+        // AbstractAction() {
+        // public void actionPerformed( ActionEvent e ) {
+        // if( table.isEditing() ){
+        // table.getCellEditor().stopCellEditing();
+        // }
+        // int[] selectedRows = table.getSelectedRows();
+        // for( int i = 0; i < selectedRows.length; i++ ){
+        // // row index minus i since the table size shrinks by 1
+        // // at each iteration
+        // model.deleteRow( selectedRows[ i ] - i );
+        // }
+        // }
+        // } );
+        //
     }// end setShortCuts
     
     
@@ -573,7 +587,10 @@ public class Easypass extends JFrame {
         // Where the GUI is created:
         JMenuBar menuBar;
         JMenu optionsMenu, editMenu, sessionMenu;
-        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu, undoSubMenu, redoSubMenu, newSessionSubMenu, deleteSessionSubMenu, refactorSessionSubMenu;
+        Insets inset = new Insets( 2, 7, 2, 7 );
+        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu;
+        JMenuItem newSessionSubMenu, deleteSessionSubMenu, refactorSessionSubMenu;
+        JMenuItem undoSubMenu, redoSubMenu, addRowSubMenu, deleteRowSubMenu;
         
         // Create the menu bar.
         menuBar = new JMenuBar();
@@ -586,6 +603,7 @@ public class Easypass extends JFrame {
         
         // save option
         saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
+        saveSubMenu.setMargin( inset );
         saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         saveSubMenu.addActionListener( new ActionListener() {
@@ -677,8 +695,8 @@ public class Easypass extends JFrame {
         optionsMenu.add( printSubMenu );
         
         // -------------------------build menu to manage session
-        sessionMenu = new JMenu( "manage session" );
-        
+        sessionMenu = new JMenu( "session" );
+        sessionMenu.setMargin( inset );
         // open a new session menu
         newSessionSubMenu = new JMenuItem( "open new session" );
         
@@ -753,6 +771,41 @@ public class Easypass extends JFrame {
         
         // --------------------------- Build edit menu in the menu bar.
         editMenu = new JMenu( "edit" );
+        editMenu.setMargin( inset );
+        
+        // adds the add row subMenu
+        addRowSubMenu = new JMenuItem( "add row" );
+        addRowSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_N,
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
+        addRowSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                model.addRow();
+            }
+        } );
+        
+        editMenu.add( addRowSubMenu );
+        
+        // adds the delete selected rows subMenu
+        deleteRowSubMenu = new JMenuItem( "delete selected rows" );
+        deleteRowSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_D,
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
+        
+        deleteRowSubMenu.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
+                int[] selectedRows = table.getSelectedRows();
+                for( int i = 0; i < selectedRows.length; i++ ){
+                    // row index minus i since the table size shrinks by 1
+                    // everytime. Also converts the row indexes since the table
+                    // can be sorted/filtered
+                    model.deleteRow( table
+                            .convertRowIndexToModel( selectedRows[ i ] - i ) );
+                }
+            }
+        } );
+        editMenu.add( deleteRowSubMenu );
         
         // add undo submenu
         undoSubMenu = new JMenuItem( undoManager.getUndoAction() );
@@ -832,7 +885,7 @@ public class Easypass extends JFrame {
         JLabel l1 = new JLabel( "Find :" );
         form.add( l1 );
         filterText = new JTextField( 30 );
-        // Whenever filterText changes, invoke newFilter.
+        // Whenever filterText changes, invokes newFilter.
         filterText.getDocument().addDocumentListener( new DocumentListener() {
             public void changedUpdate( DocumentEvent e ) {
                 setTableFilter();
@@ -854,10 +907,20 @@ public class Easypass extends JFrame {
         
         infos = new JTextField( 15 );
         infos.setBorder( null );
-        infos.setBackground( form.getBackground() );
+        infos.setOpaque( false );
         infos.setEditable( false );
+        infos.setFocusable( false );
         form.add( infos );
-        // form.setSize( new Dimension(50, 100) );
+        
+        //to display the row count at the bottom of the frame
+        rowCount = new JTextField( 12 );
+        rowCount.setHorizontalAlignment( JTextField.RIGHT );
+        rowCount.setBorder( null );
+        rowCount.setOpaque( true );
+        rowCount.setEditable( false );
+        rowCount.setFocusable( false );
+        updateDisplayedRowCount();
+        form.add( rowCount );
         
         return form;
     }// end getFilterMenu
@@ -866,6 +929,12 @@ public class Easypass extends JFrame {
     /********************************************************************
      * implementation of the "find" filter search bar /
      ********************************************************************/
+    
+    
+    public void updateDisplayedRowCount(){
+        rowCount.setText( "rows: " + sorter.getViewRowCount() + "/"
+                + model.getRowCount() + "  " );
+    }
     
     /**
      * Implements the search bar logic :updates the row filter regular
@@ -891,6 +960,7 @@ public class Easypass extends JFrame {
         }
         
         sorter.setRowFilter( rf );
+        updateDisplayedRowCount();
     }
     
     
@@ -931,7 +1001,7 @@ public class Easypass extends JFrame {
         }
     }// end writeLog
     
-    
+
     /**
      * class used to filter the files selectables in the filechooser window.
      * 
