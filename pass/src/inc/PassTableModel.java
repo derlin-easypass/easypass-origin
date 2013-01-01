@@ -58,6 +58,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     
     /**
      * returns true if a change occurred since the last modification reset
+     * 
      * @return
      */
     public boolean isModified() {
@@ -82,8 +83,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         return columnNames;
     }
     
-
-
+    
     /**
      * returns the header the specified column.
      */
@@ -186,6 +186,15 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * @param undoable
      */
     public void setValueAt( Object value, int row, int col, boolean undoable ) {
+        
+        Object oldValue = getValueAt( row, col );
+        
+        // if no change at all, return
+        if( ( (String) oldValue ).equals( (String) value ) ){
+            System.out.println( "no change" );
+            return;
+        }
+        System.out.println( "change" );
         UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
         if( undoable == false || listeners == null ){
             data.get( row )[ col ] = value;
@@ -194,7 +203,6 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
             return;
         }
         
-        Object oldValue = getValueAt( row, col );
         data.get( row )[ col ] = value;
         fireTableCellUpdated( row, col );
         this.isModified = true;
@@ -216,15 +224,12 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      */
     public void addRow( Object[] row ) {
         
-        data.add( row );
-        this.fireTableRowsInserted( this.getRowCount() - 1,
-                this.getRowCount() - 1 );
-        this.isModified = true;
+        this.addRow( row, -1, false );
     }
     
     
     /**
-     * adds an empty row to the model
+     * adds an empty row to the model, and makes it undoable
      */
     public void addRow() {
         
@@ -232,8 +237,34 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         for( int i = 0; i < row.length; i++ ){
             row[ i ] = "";
         }
-        this.addRow( row );
+        this.addRow( row, -1, true );
         
+    }
+    
+    
+    /**
+     * adds an empty row to the model at the specified index, but does not
+     * record it as undoable
+     */
+    public void addRow( int index ) {
+        
+        Object[] row = new Object[columnNames.length];
+        for( int i = 0; i < row.length; i++ ){
+            row[ i ] = "";
+        }
+        
+        this.addRow( row, index, false );
+    }
+    
+    
+    /**
+     * adds a row to the specified index, but does not record it a undoable
+     * 
+     * @param row
+     * @param index
+     */
+    public void addRow( Object[] row, int index ) {
+        this.addRow( row, index, false );
     }
     
     
@@ -244,16 +275,41 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * @param row
      * @param index
      */
-    public void addRow( Object[] row, int index ) {
+    public void addRow( Object[] row, int index, boolean undoable ) {
+        
+        UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
+        
+        // if the index is valid, adds a row at the index
         if( index >= 0 && index < data.size() ){
             data.add( index, row );
             this.fireTableRowsInserted( index, index );
             this.isModified = true;
             
-        }else{
-            this.addRow( row );
+        }else{ // if the index is out of range, adds a row at the end of the
+               // table
+            data.add( row );
+            index = data.size() - 1;
+            this.fireTableRowsInserted( index, index );
         }
         
+        // finally, adds the undo object to the undo queue
+        if( listeners != null && undoable ){
+            JvRowsAdd rowsEdit = new JvRowsAdd( this, index );
+            UndoableEditEvent editEvent = new UndoableEditEvent( this, rowsEdit );
+            for( UndoableEditListener listener : listeners )
+                listener.undoableEditHappened( editEvent );
+        }
+        
+    }// end addRow
+    
+    
+    /**
+     * deletes the row at the specified index and makes it undoable
+     * 
+     * @param index
+     */
+    public void deleteRow( int index ) {
+        deleteRow( index, true );
     }
     
     
@@ -261,26 +317,27 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * deletes the row at the specified index.
      * 
      * @param index
+     * @param undoable
+     *            specified if the action must be added to the undoable list
      */
-    public void deleteRow( int index ) {
+    public void deleteRow( int index, boolean undoable ) {
         
         if( index >= 0 && index < data.size() ){
             
             UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
-            // if no undoListeners are set, just delete the specified row
-            if( listeners == null ){
-                data.remove( index );
-                this.fireTableDataChanged();
-                return;
+            // if undoListeners are set and the event is undoable, adds it to
+            // the undoManager list
+            if( listeners != null && undoable ){
+                
+                // creates an undoable object and informs the listeners of the
+                // change
+                JvRowsDelete rowsEdit = new JvRowsDelete( this,
+                        data.get( index ), index );
+                UndoableEditEvent editEvent = new UndoableEditEvent( this,
+                        rowsEdit );
+                for( UndoableEditListener listener : listeners )
+                    listener.undoableEditHappened( editEvent );
             }
-            
-            // creates an undoable object and informs the listeners of the
-            // change
-            JvRowsEdit rowsEdit = new JvRowsEdit( this, data.get( index ),
-                    index );
-            UndoableEditEvent editEvent = new UndoableEditEvent( this, rowsEdit );
-            for( UndoableEditListener listener : listeners )
-                listener.undoableEditHappened( editEvent );
             
             // removes the row
             data.remove( index );
@@ -288,7 +345,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
             this.isModified = true;
         }
         
-    }
+    }// end deleteRow
     
     
     /********************************************************************

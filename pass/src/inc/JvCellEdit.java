@@ -54,5 +54,6 @@ class JvCellEdit extends AbstractUndoableEdit {
         super.redo();
         
         tableModel.setValueAt( newValue, row, column, false );
+        
     }
 }

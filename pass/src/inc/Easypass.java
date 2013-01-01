@@ -52,7 +52,7 @@ import models.Exceptions;
 import dialogs.RefactorSessionDialog;
 import dialogs.SessionAndPassFrame2;
 
-public class MainApp extends JFrame {
+public class Easypass extends JFrame {
     
     private String pathToSessionsFolder; // depends on the implementation
                                          // (APPDATA or user.home)
@@ -86,7 +86,7 @@ public class MainApp extends JFrame {
     
     
     public static void main( String[] args ) {
-        new MainApp();
+        new Easypass();
     }
     
     
@@ -94,7 +94,7 @@ public class MainApp extends JFrame {
      * constructor, acts as a main method /
      ********************************************************************/
     
-    public MainApp() {
+    public Easypass() {
         // initializes the main Frame
         super( "accounts and passwords" );
         // sets the listener to save data on quit
@@ -396,7 +396,7 @@ public class MainApp extends JFrame {
                         MouseEvent event = (MouseEvent) evt;
                         // if the click was outside the table, clear selection
                         if( !( event.getSource() instanceof JTable )
-                                || table.rowAtPoint( event.getPoint() ) < 1 ){
+                                || table.rowAtPoint( event.getPoint() ) == -1 ){
                             if( table.isEditing() )
                                 table.getCellEditor().stopCellEditing();
                             table.clearSelection();
@@ -427,6 +427,12 @@ public class MainApp extends JFrame {
         
         this.getRootPane().getActionMap().put( "ESCAPE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
+                
+                // stops editing
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
+                
                 // if everything was saved, quits
                 if( !model.isModified() ){
                     System.exit( 0 );
@@ -441,7 +447,7 @@ public class MainApp extends JFrame {
         
         // CTRL+F to put focus on the filter/find textfield
         KeyStroke ctrlFKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_F,
-                InputEvent.CTRL_DOWN_MASK );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
         
         this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
                 .put( ctrlFKeyStroke, "FIND" );
@@ -454,33 +460,34 @@ public class MainApp extends JFrame {
         
         // CTRL+N to add a new line
         KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
-                InputEvent.CTRL_DOWN_MASK );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
         
         this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
                 .put( NewLineKeyStroke, "NEWLINE" );
         
         this.getRootPane().getActionMap().put( "NEWLINE", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                //stops cell editing 
+                // stops cell editing
                 if( table.isEditing() ){
                     table.getCellEditor().stopCellEditing();
                 }
-                //adds a new row to the model
+                // adds a new row to the model
                 model.addRow();
                 
-                //sets focus on the new row 
+                // sets focus on the new row
                 int lastRow = model.getRowCount() - 1;
                 
-                //scrolls to the bottom of the table
-                table.getSelectionModel().setSelectionInterval(
-                        lastRow, lastRow );
-                table.scrollRectToVisible( new Rectangle(table.getCellRect( lastRow, 0, true )) );
+                // scrolls to the bottom of the table
+                table.getSelectionModel().setSelectionInterval( lastRow,
+                        lastRow );
+                table.scrollRectToVisible( new Rectangle( table.getCellRect(
+                        lastRow, 0, true ) ) );
             }
         } );
         
         // CTRL+D to delete selected rows
         KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
-                InputEvent.CTRL_DOWN_MASK );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
         
         this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
                 .put( DelLineKeyStroke, "DELLINE" );
@@ -579,7 +586,7 @@ public class MainApp extends JFrame {
         // save option
         saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
         saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
-                ActionEvent.CTRL_MASK ) );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         saveSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 
@@ -619,10 +626,17 @@ public class MainApp extends JFrame {
         // save as json menu
         jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
         jsonSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_E,
-                ActionEvent.CTRL_MASK ) );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         jsonSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 
+                if( table.isEditing() ){
+                    table.getCellEditor().stopCellEditing();
+                }
+                
+                if( table.getSelectedRowCount() > 0 ){
+                    table.clearSelection();
+                }
                 File file = showTxtFileChooser();
                 
                 if( file != null ){
@@ -647,7 +661,7 @@ public class MainApp extends JFrame {
         printSubMenu = new JMenuItem( "print" );
         printSubMenu.setMnemonic( KeyEvent.VK_P );
         printSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P,
-                ActionEvent.CTRL_MASK ) );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         
         printSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
@@ -685,7 +699,7 @@ public class MainApp extends JFrame {
         sessionMenu.add( newSessionSubMenu );
         
         // refactor current session
-        refactorSessionSubMenu = new JMenuItem( "refactor session" );
+        refactorSessionSubMenu = new JMenuItem( "rename session" );
         refactorSessionSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 
@@ -743,13 +757,13 @@ public class MainApp extends JFrame {
         undoSubMenu = new JMenuItem( undoManager.getUndoAction() );
         undoSubMenu.setMnemonic( KeyEvent.VK_Z );
         undoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Z,
-                ActionEvent.CTRL_MASK ) );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         
         // add redo submenu
         redoSubMenu = new JMenuItem( undoManager.getRedoAction() );
         redoSubMenu.setMnemonic( KeyEvent.VK_Y );
         redoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Y,
-                ActionEvent.CTRL_MASK ) );
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         editMenu.add( undoSubMenu );
         editMenu.add( redoSubMenu );
         

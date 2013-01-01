@@ -46,7 +46,7 @@ public class PassTable extends JTable {
         // so when the user clicks on delete rows for example, there is no
         // editing ghost cell hanging in the void !
         this.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
-        this.setKeyBindings();
+        //this.setKeyBindings();
         
     }// end constructor
     
@@ -78,17 +78,25 @@ public class PassTable extends JTable {
      * selected cell
      */
     public void setKeyBindings() {
+        //TODO
+//        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
+//                KeyStroke.getKeyStroke( KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, false ),
+//                "exitEditMode" );
+//        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
+//                KeyStroke.getKeyStroke( KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK, false ),
+//                "exitEditMode" );
         
-        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
-                KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, 0, false ),
-                "enterEditMode" );
         
-        this.getActionMap().put( "enterEditMode", new AbstractAction() {
+        this.getActionMap().put( "exitEditMode", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                if( !isEditing() ){
-                    editCellAt( getSelectedRow(), getSelectedColumn() );
-                    
-                }
+//                if( !isEditing() ){
+//                    editCellAt( getSelectedRow(), getSelectedColumn() );
+//                    
+//                }
+            	
+            	if(isEditing()){
+            		getCellEditor().stopCellEditing();
+            	}
             }
         } );
     }// end set keyBindings

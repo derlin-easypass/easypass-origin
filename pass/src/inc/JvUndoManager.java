@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JTable;
 import javax.swing.undo.*;
 
 /**
@@ -16,6 +17,7 @@ import javax.swing.undo.*;
 class JvUndoManager extends UndoManager {
 
     private static final long serialVersionUID = -8283248203575191285L;
+    protected JTable table;
     protected Action undoAction;
 	protected Action redoAction;
 
@@ -25,7 +27,7 @@ class JvUndoManager extends UndoManager {
 	public JvUndoManager() {
 		this.undoAction = new JvUndoAction(this);
 		this.redoAction = new JvRedoAction(this);
-
+		this.table = table;
 
 		synchronizeActions(); // to set initial names
 	}
