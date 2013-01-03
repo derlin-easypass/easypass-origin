@@ -163,7 +163,7 @@ public class JsonManager {
             fin = new FileInputStream( filepath );
             ArrayList<Object[]> data = ( new GsonBuilder().create().fromJson(
                     new InputStreamReader( OpenSSL.decrypt( algo,
-                            password.toCharArray(), fin ) ),
+                            password.toCharArray(), fin ), "UTF-8" ),
                     new TypeToken<List<Object[]>>() {
                     }.getType() ) );
             if( data == null ){

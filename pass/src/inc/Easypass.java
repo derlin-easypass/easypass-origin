@@ -57,10 +57,12 @@ import dialogs.SessionAndPassFrame2;
 
 public class Easypass extends JFrame {
     
-    private String pathToSessionsFolder; // depends on the implementation
-                                         // (APPDATA or user.home)
+    private String pathToSessionFolder; // depends on the implementation
+                                        // (APPDATA or user.home)
+    private String sessionFolderName = "sessions";
+    private String configFileName = "config.xml";
     private String appName = "easypass";
-    private String logFile = appName + ".log";
+    private String logFilePath = appName + ".log"; //application path + filename
     
     private int winHeight = 300; // dimensions of the main frame
     private int winWidth = 480;
@@ -111,16 +113,26 @@ public class Easypass extends JFrame {
         int winX = ( screensize.width - winWidth ) / 2;
         this.setLocation( winX, winY );
         
-        // get the path to the current .class folder
-        pathToSessionsFolder = this.getSessionPath();
+        //gets the path to the logfile
+        this.logFilePath = getApplicationPath() + File.separator + this.logFilePath;
         
+        // gets the path to the session folder
+        //TODO
+        try{
+            pathToSessionFolder = new ConfigFileManager(
+                    this.getApplicationPath() + File.separator
+                            + this.configFileName ).getProperty( "sessionPath" );
+        }catch( Exception e ){
+            e.printStackTrace();
+            pathToSessionFolder = this.getSessionPath();
+        }
+        System.out.println( pathToSessionFolder );
         handleCredentialsAndLoadSession();
         
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
         // mainContainer.add( this.getRowsManipulationMenu(), BorderLayout.NORTH
         // );
-
         
         // creates the jtable
         try{
@@ -192,7 +204,7 @@ public class Easypass extends JFrame {
     public void handleCredentialsAndLoadSession() {
         
         SessionAndPassFrame2 modal = null;
-        sessionManager = new SessionManager( this.pathToSessionsFolder );
+        sessionManager = new SessionManager( this.pathToSessionFolder );
         
         try{
             
@@ -251,22 +263,19 @@ public class Easypass extends JFrame {
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "open error", JOptionPane.ERROR_MESSAGE );
-                writeLog( "info: " + e.toString(), pathToSessionsFolder
-                        + File.separator + logFile );
+                writeLog( "info: " + e.getMessage(), this.logFilePath );
                 continue;
             }catch( Exceptions.ImportException e ){
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "import error", JOptionPane.ERROR_MESSAGE );
-                writeLog( "info: " + e.toString(), pathToSessionsFolder + "\\"
-                        + logFile );
+                writeLog( "info: " + e.toString(), this.logFilePath );
                 continue;
             }catch( Exception e ){
                 // otherwise, writes the exception to the log file and quit
                 System.out.println( "unplanned exception" );
                 e.printStackTrace();
-                writeLog( "severe: " + e.toString(), pathToSessionsFolder
-                        + File.separator + logFile );
+                writeLog( "severe: " + e.toString(), this.logFilePath );
                 System.exit( 0 );
             }
         }// end while
@@ -293,7 +302,7 @@ public class Easypass extends JFrame {
             }catch( Exception e ){
                 System.out
                         .println( "error in serialization. Possible data loss" );
-                e.printStackTrace();
+                writeLog( "ERROR: " + e.getMessage(), this.logFilePath );
             }// end try
             
             return true;
@@ -528,6 +537,34 @@ public class Easypass extends JFrame {
      ********************************************************************/
     
     /**
+     * gets the path to the application folder, i.e. 
+     * <user>/AppData/<appliName> under windows and
+     * <user.home>/.<appliName> under Linux. 
+     * 
+     * @return
+     */
+    public String getApplicationPath() {
+        
+        String os = System.getProperty( "os.name" );
+        
+        // depending on the os system, choose the best location to store session
+        // data
+        if( os.contains( "Linux" ) || os.contains( "Mac" ) ){
+            return System.getProperty( "user.home" ) + File.separator + "."
+                    + appName;
+        }else if( os.contains( "Windows" ) ){
+            return System.getenv( "APPDATA" ) + File.separator + appName;
+            
+        }else{
+            System.out.println( "os " + os + " not supported." );
+            System.exit( 0 );
+            return null;
+            //TODO
+        }
+    }
+    
+    
+    /**
      * gets the path to the sessions folder stored in
      * <user>/AppData/<appliName>/sessions under windows and
      * <user.home>/.<appliName>/sessions under Linux. Note : a new folder will
@@ -537,21 +574,7 @@ public class Easypass extends JFrame {
      */
     public String getSessionPath() {
         
-        String os = System.getProperty( "os.name" );
-        String path = "";
-        
-        // depending on the os system, choose the best location to store session
-        // data
-        if( os.contains( "Linux" ) || os.contains( "Mac" ) ){
-            path = System.getProperty( "user.home" ) + File.separator + "."
-                    + appName;
-        }else if( os.contains( "Windows" ) ){
-            path = System.getenv( "APPDATA" ) + File.separator + appName;
-            
-        }else{
-            System.out.println( "os " + os + " not supported." );
-            System.exit( 0 );
-        }
+        String path = getApplicationPath();
         
         File sessionDir = new File( path );
         
@@ -568,7 +591,7 @@ public class Easypass extends JFrame {
             return "";
             
         }else{ // the session folder exists, return its path
-            return path + File.separator + "sessions";
+            return path + File.separator + sessionFolderName;
         }
     }
     
@@ -780,6 +803,15 @@ public class Easypass extends JFrame {
         addRowSubMenu.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
                 model.addRow();
+                
+                // sets focus on the new row
+                int lastRow = model.getRowCount() - 1;
+                
+                // scrolls to the bottom of the table
+                table.getSelectionModel().setSelectionInterval( lastRow,
+                        lastRow );
+                table.scrollRectToVisible( new Rectangle( table.getCellRect(
+                        lastRow, 0, true ) ) );
             }
         } );
         
@@ -912,7 +944,7 @@ public class Easypass extends JFrame {
         infos.setFocusable( false );
         form.add( infos );
         
-        //to display the row count at the bottom of the frame
+        // to display the row count at the bottom of the frame
         rowCount = new JTextField( 12 );
         rowCount.setHorizontalAlignment( JTextField.RIGHT );
         rowCount.setBorder( null );
@@ -930,11 +962,11 @@ public class Easypass extends JFrame {
      * implementation of the "find" filter search bar /
      ********************************************************************/
     
-    
-    public void updateDisplayedRowCount(){
+    public void updateDisplayedRowCount() {
         rowCount.setText( "rows: " + sorter.getViewRowCount() + "/"
                 + model.getRowCount() + "  " );
     }
+    
     
     /**
      * Implements the search bar logic :updates the row filter regular
@@ -1001,7 +1033,7 @@ public class Easypass extends JFrame {
         }
     }// end writeLog
     
-
+    
     /**
      * class used to filter the files selectables in the filechooser window.
      * 

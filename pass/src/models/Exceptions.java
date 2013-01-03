@@ -13,6 +13,18 @@ public class Exceptions {
         
     }
     
+    public static class ConfigFileNotFoundException extends Exception {
+        public ConfigFileNotFoundException() { super(); }
+        public ConfigFileNotFoundException(String message) { super( message ); }
+        
+    }
+    
+    public static class ConfigFileWrongSyntaxException extends Exception {
+        public ConfigFileWrongSyntaxException() { super(); }
+        public ConfigFileWrongSyntaxException(String message) { super( message ); }
+        
+    }
+    
     public static class WrongCredentialsException extends Exception {
         public WrongCredentialsException() { super(); }
         public WrongCredentialsException(String message) { super( message ); }

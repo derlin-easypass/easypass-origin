@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.EventObject;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class PassTable extends JTable {
         // so when the user clicks on delete rows for example, there is no
         // editing ghost cell hanging in the void !
         this.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
-        //this.setKeyBindings();
+        this.setKeyBindings();
         
     }// end constructor
     
@@ -86,19 +87,44 @@ public class PassTable extends JTable {
 //                KeyStroke.getKeyStroke( KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK, false ),
 //                "exitEditMode" );
         
+
+//        this.addKeyListener( new KeyListener(){
+//
+//            @Override
+//            public void keyPressed( KeyEvent e ) {
+//                if(e.isControlDown()){
+//                    System.out.println("control down");
+//                }
+//                
+//            }
+//
+//            @Override
+//            public void keyReleased( KeyEvent arg0 ) {
+//                // TODO Auto-generated method stub
+//                
+//            }
+//
+//            @Override
+//            public void keyTyped( KeyEvent arg0 ) {
+//                // TODO Auto-generated method stub
+//                
+//            }
+//            
+//        } );
         
-        this.getActionMap().put( "exitEditMode", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
+        
+//        this.getActionMap().put( "exitEditMode", new AbstractAction() {
+//            public void actionPerformed( ActionEvent e ) {
 //                if( !isEditing() ){
 //                    editCellAt( getSelectedRow(), getSelectedColumn() );
 //                    
 //                }
-            	
-            	if(isEditing()){
-            		getCellEditor().stopCellEditing();
-            	}
-            }
-        } );
+//            	
+//            	if(isEditing()){
+//            		getCellEditor().stopCellEditing();
+//            	}
+//            }
+//        } );
     }// end set keyBindings
     
     
