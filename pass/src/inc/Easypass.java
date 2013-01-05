@@ -178,6 +178,8 @@ public class Easypass extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
+        
+        PassExcelAdapter adapter = new PassExcelAdapter(table);
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
