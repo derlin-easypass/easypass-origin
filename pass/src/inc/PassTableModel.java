@@ -1,8 +1,16 @@
 package inc;
 
+import java.awt.HeadlessException;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.StringTokenizer;
 
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
@@ -193,7 +201,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         if( ( (String) oldValue ).equals( (String) value ) ){
             return;
         }
-
+        
         UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
         if( undoable == false || listeners == null ){
             data.get( row )[ col ] = value;
@@ -345,6 +353,154 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         }
         
     }// end deleteRow
+    
+    
+    /********************************************************************
+     * manages copy and paste - Excel style
+     ********************************************************************/
+    
+    /**
+     * copies the selected content of the table using the excel style, i.e. :<br>
+     * <ul>
+     * <li>the new line character \n delimits the rows
+     * <li>the tab character \t (tab) delimits the columns
+     * </ul>
+     * <br>
+     * A string consisting of the rows and columns selected is then copied to
+     * the clipboard
+     * 
+     * @param selectedRows
+     *            the contiguous rows to copy
+     * @param selectedCols
+     *            the contiguous columns to copy
+     */
+    public void copy( int[] selectedRows, int[] selectedCols ) {
+        
+        StringSelection strSelection;
+        
+        // if nothing selected, returns
+        if( selectedRows.length == 0 && selectedCols.length == 0 ){
+            return;
+            
+            // if only one cell is selected, just copies its content
+        }else if( selectedRows.length == 1 && selectedCols.length == 1 ){
+            strSelection = new StringSelection( (String) this.getValueAt(
+                    selectedRows[ 0 ], selectedCols[ 0 ] ) );
+            
+            // if more than one cell is selected, constructs a string with \n
+            // and \t to delimit the rows and cols
+        }else{
+            StringBuffer buffer = new StringBuffer();
+            for( int row : selectedRows ){
+                for( int col : selectedCols ){
+                    buffer.append( this.getValueAt( row, col ) + "\t" );
+                }
+                buffer.append( "\n" );
+            }
+            
+            strSelection = new StringSelection( buffer.toString() );
+            
+        }// end if
+        
+        // copies the content (as a string) to the clipboard
+        Toolkit.getDefaultToolkit().getSystemClipboard()
+                .setContents( strSelection, strSelection );
+    }// end copy
+    
+    
+    /**
+     * pastes the specified content to the table using the excel style, i.e. :<br>
+     * <ul>
+     * <li>the new line character \n delimits the rows
+     * <li>the tab character \t (tab) delimits the columns
+     * </ul>
+     * <br>
+     * <br>
+     * 
+     * Note that if the row or column indexes are out of range, an exception is thrown. No check is done !<br>
+     * @param clipboardContent  the content to paste 
+     * @param startRow  the row of the table in which to begin pasting
+     * @param startCol  the column of the table in which to begin pasting
+     * @param undoable  true if the pasting is undoable, false otherwise
+     */
+    
+    //TODO : problem  when some cells are empty
+    public void paste( String clipboardContent, int startRow, int startCol,
+            boolean undoable ) {
+        
+        try{
+            // Stringbuilder to gather the old data into a string
+            // using \n and \t to delimit the rows and cols respectively
+            StringBuilder builder = new StringBuilder();
+            
+            // splits the clipboard contents into rows
+            Scanner stLines = new Scanner( clipboardContent );
+            stLines.useDelimiter( "\n" );
+            
+            for( int i = 0; stLines.hasNext(); i++ ){
+                // if it is not the first row, adds a delimiter to the old
+                // values String
+                if( i != 0 ){
+                    builder.append( "\n" );
+                }
+                // gets next row
+                String line = stLines.next();
+                
+                // splits the current row into columns
+                Scanner stCols = new Scanner( line );
+                stCols.useDelimiter( "\t" );
+                
+                for( int j = 0; stCols.hasNext(); j++ ){
+                    // if we are in the boundaries of the table, pastes the new
+                    // value
+                    if( startRow + i < this.getRowCount()
+                            && startCol + j < this.getColumnCount() ){
+                        // if not the first col, adds a delimiter to the
+                        // oldValues string
+                        if( j != 0 )
+                            builder.append( "\t" );
+                        
+                        // records the old value
+                        String oldValue = (String) this.getValueAt( startRow
+                                + i, startCol + j );
+                        builder.append( oldValue );
+                        
+                        // gets the new values and updates the table
+                        String newValue = stCols.next();
+                        System.out.println("newvalue " + newValue);
+                        this.setValueAt( newValue, startRow + i, startCol + j,
+                                false );
+                    }else{ // if outreached the table boudaries, just skips to
+                           // the next row
+                        break;
+                    }// end if
+                }// end for cols
+                
+                stCols.close();
+            }// end for lines
+            
+            // if the paste is undoable, creates an undoable event of type
+            // JvPaste
+            UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
+            
+            if( listeners != null && undoable ){
+                JvPaste rowsPaste = new JvPaste( this, builder.toString(),
+                        clipboardContent, startRow, startCol );
+                UndoableEditEvent pasteEvent = new UndoableEditEvent( this,
+                        rowsPaste );
+                for( UndoableEditListener listener : listeners )
+                    listener.undoableEditHappened( pasteEvent );
+            }// end if
+            
+            // spreads the changes
+            this.fireTableDataChanged();
+            
+        }catch( HeadlessException e1 ){
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
+    }// end paste
     
     
     /********************************************************************

@@ -4,7 +4,7 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 
 /**
- * This class is used to records the modifications made by the user in order to
+ * This class is used to record the modifications made by the user in order to
  * implement undo/redo actions.
  * 
  * See the UndoManager class and the PassTableModel setValue method for more

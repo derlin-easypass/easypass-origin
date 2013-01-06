@@ -3,12 +3,19 @@ package inc;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.HeadlessException;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 import java.util.EventObject;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -75,56 +82,63 @@ public class PassTable extends JTable {
      ********************************************************************/
     
     /**
-     * adds a listener in order to enter edit mode when pressing enter over a
-     * selected cell
+     * adds a listener in order to enable copy/paste actions (Excel compatible)
+     * with the common 'command'+C and 'command'+V shortcuts
      */
     public void setKeyBindings() {
-        //TODO
-//        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
-//                KeyStroke.getKeyStroke( KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, false ),
-//                "exitEditMode" );
-//        this.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT ).put(
-//                KeyStroke.getKeyStroke( KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK, false ),
-//                "exitEditMode" );
         
-
-//        this.addKeyListener( new KeyListener(){
-//
-//            @Override
-//            public void keyPressed( KeyEvent e ) {
-//                if(e.isControlDown()){
-//                    System.out.println("control down");
-//                }
-//                
-//            }
-//
-//            @Override
-//            public void keyReleased( KeyEvent arg0 ) {
-//                // TODO Auto-generated method stub
-//                
-//            }
-//
-//            @Override
-//            public void keyTyped( KeyEvent arg0 ) {
-//                // TODO Auto-generated method stub
-//                
-//            }
-//            
-//        } );
+        KeyStroke copy = KeyStroke.getKeyStroke( KeyEvent.VK_C, Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false );
         
+        KeyStroke paste = KeyStroke.getKeyStroke( KeyEvent.VK_V, Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false );
         
-//        this.getActionMap().put( "exitEditMode", new AbstractAction() {
-//            public void actionPerformed( ActionEvent e ) {
-//                if( !isEditing() ){
-//                    editCellAt( getSelectedRow(), getSelectedColumn() );
-//                    
-//                }
-//            	
-//            	if(isEditing()){
-//            		getCellEditor().stopCellEditing();
-//            	}
-//            }
-//        } );
+        // copy listener
+        this.registerKeyboardAction( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( isEditing() ){
+                    getCellEditor().stopCellEditing();
+                }
+                
+                ( (PassTableModel) getModel() ).copy(
+                        getSelectedRowsConvertedToModel(),
+                        getSelectedColumnsConvertedToModel() );
+            }
+        }, "Copy", copy, JComponent.WHEN_FOCUSED );
+        
+        // paste listener
+        this.registerKeyboardAction( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( isEditing() ){
+                    getCellEditor().stopCellEditing();
+                }
+                
+                try{
+                    // gets the content of the clipboard
+                    String clipboardContent = (String) ( Toolkit
+                            .getDefaultToolkit().getSystemClipboard()
+                            .getContents( this )
+                            .getTransferData( DataFlavor.stringFlavor ) );
+                    
+                    ( (PassTableModel) getModel() ).paste( clipboardContent,
+                            convertRowIndexToModel( getSelectedRow() ),
+                            convertColumnIndexToModel( getSelectedColumn() ),
+                            true );
+                    
+                }catch( HeadlessException e1 ){
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }catch( UnsupportedFlavorException e1 ){
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }catch( IOException e1 ){
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        }, "Paste", paste, JComponent.WHEN_FOCUSED );
     }// end set keyBindings
     
     
@@ -202,15 +216,16 @@ public class PassTable extends JTable {
             
             // sets the text of selected rows in bold and draws a blue border
             // around the selected/focused cell
-        }else{
-            c.setBackground( new Color( 232, 242, 254 ) );
-            c.setForeground( Color.BLACK );
-            c.setFont( getFont().deriveFont( Font.BOLD ) );
-            if( getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
-                    && isRowSelected( row ) && isColumnSelected( column ) ){
-                c.setBackground( new Color( 184, 202, 238 ) );
-            }
         }
+//        else{
+//            c.setBackground( new Color( 232, 242, 254 ) );
+//            c.setForeground( Color.BLACK );
+//            c.setFont( getFont().deriveFont( Font.BOLD ) );
+//            if( getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
+//                    && isRowSelected( row ) && isColumnSelected( column ) ){
+//                c.setBackground( new Color( 184, 202, 238 ) );
+//            }
+//        }
         return c;
     }
     
@@ -232,13 +247,42 @@ public class PassTable extends JTable {
      * this method customs the rendering of currently edited cells. It mainly
      * sets the text in bold and draws a blue border around it
      */
-    @Override
-    public Component prepareEditor( TableCellEditor editor, int row, int column ) {
-        JComponent c = (JComponent) super.prepareEditor( editor, row, column );
-        c.setFont( c.getFont().deriveFont( Font.BOLD ) );
-        c.setBorder( BorderFactory.createLineBorder( new Color( 52, 153, 255 ),
-                1 ) );
-        return c;
+//    @Override
+//    public Component prepareEditor( TableCellEditor editor, int row, int column ) {
+//        JComponent c = (JComponent) super.prepareEditor( editor, row, column );
+//        c.setFont( c.getFont().deriveFont( Font.BOLD ) );
+//        c.setBorder( BorderFactory.createLineBorder( new Color( 52, 153, 255 ),
+//                1 ) );
+//        return c;
+//    }
+    
+    
+    /********************************************************************
+     * utilities
+     ********************************************************************/
+    
+    public int[] getSelectedRowsConvertedToModel() {
+        
+        int[] rows = this.getSelectedRows();
+        int[] convertedRows = new int[rows.length];
+        
+        for( int i = 0; i < rows.length; i++ ){
+            convertedRows[ i ] = this.convertRowIndexToModel( rows[ i ] );
+        }
+        
+        return convertedRows;
     }
     
+    
+    public int[] getSelectedColumnsConvertedToModel() {
+        
+        int[] cols = this.getSelectedColumns();
+        int[] convertedCols = new int[cols.length];
+        
+        for( int i = 0; i < cols.length; i++ ){
+            convertedCols[ i ] = this.convertColumnIndexToModel( cols[ i ] );
+        }
+        
+        return convertedCols;
+    }
 }// end MyTable

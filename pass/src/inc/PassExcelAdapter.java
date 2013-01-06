@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.awt.datatransfer.*;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -13,14 +14,14 @@ import java.util.*;
  * enabled JTables and Excel.
  */
 public class PassExcelAdapter implements ActionListener {
-    private JTable table;
+    private PassTable table;
     
     
     /**
      * The Excel Adapter is constructed with a JTable on which it enables
      * Copy-Paste and acts as a Clipboard listener.
      */
-    public PassExcelAdapter(JTable myJTable) {
+    public PassExcelAdapter(PassTable myJTable) {
         table = myJTable;
         KeyStroke copy = KeyStroke.getKeyStroke( KeyEvent.VK_C,
                 ActionEvent.CTRL_MASK, false );
@@ -46,7 +47,7 @@ public class PassExcelAdapter implements ActionListener {
     }
     
     
-    public void setJTable( JTable jTable1 ) {
+    public void setJTable( PassTable jTable1 ) {
         this.table = jTable1;
     }
     
@@ -74,7 +75,7 @@ public class PassExcelAdapter implements ActionListener {
                 strSelection = new StringSelection( (String) table.getValueAt(
                         table.getSelectedRow(), table.getSelectedColumn() ) );
                 
-            }else{               
+            }else{
                 StringBuffer buffer = new StringBuffer();
                 for( int row : table.getSelectedRows() ){
                     for( int col : table.getSelectedColumns() ){
@@ -88,8 +89,72 @@ public class PassExcelAdapter implements ActionListener {
             Toolkit.getDefaultToolkit().getSystemClipboard()
                     .setContents( strSelection, strSelection );
             
-        }else if(e.getActionCommand().equals( "Paste" )){
+        }else if( e.getActionCommand().equals( "Paste" ) ){
             
+            int startRow, currentRow;
+            startRow = currentRow = table.getSelectedRow();
+            int startCol, currentCol;
+            startCol = currentCol = table.getSelectedColumn();
+            
+            ArrayList<String> oldValues = new ArrayList<String>(), newValues = new ArrayList<String>();
+            
+            try{
+                String clipboardContent = (String) ( Toolkit
+                        .getDefaultToolkit().getSystemClipboard()
+                        .getContents( this )
+                        .getTransferData( DataFlavor.stringFlavor ) );
+                
+                // StringTokenizer stLines = new StringTokenizer(
+                // clipboardContent, "\n" );
+                //
+                // while( stLines.hasMoreTokens()
+                // && currentRow < table.getRowCount() ){
+                //
+                // StringTokenizer stCells = new StringTokenizer(
+                // stLines.nextToken(), "\t" );
+                //
+                // while( stCells.hasMoreTokens()
+                // && currentCol < table.getColumnCount() ){
+                //
+                // table.setValueAt( stCells.nextToken(), currentRow,
+                // currentCol );
+                //
+                // currentCol++;
+                // }// end while cols
+                // currentCol = 0;
+                // currentRow++;
+                // }// end while lines
+                //
+                StringTokenizer stLines = new StringTokenizer(
+                        clipboardContent, "\n" );
+                
+                for( int i = 0; stLines.hasMoreTokens(); i++ ){
+                    StringTokenizer stCols = new StringTokenizer(
+                            stLines.nextToken(), "\t" );
+                    
+                    for( int j = 0; stCols.hasMoreTokens(); j++ ){
+                        if( startRow + i < table.getRowCount()
+                                && startCol + j < table.getColumnCount() ){
+                            oldValues.add( (String)table.getValueAt( startRow + i, startCol + j ) );
+                            String newValue = stCols.nextToken();
+                            ((PassTableModel)table.getModel()).setValueAt( newValue, startRow + i, startCol + j, false );
+                            newValues.add(newValue);
+                        }//end if
+                    }//end for cols
+                    
+                }//end for lines
+                
+                
+            }catch( HeadlessException e1 ){
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }catch( UnsupportedFlavorException e1 ){
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }catch( IOException e1 ){
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
         }
         
         // if( e.getActionCommand().compareTo( "Paste" ) == 0 ){

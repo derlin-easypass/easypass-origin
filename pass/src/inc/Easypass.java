@@ -62,7 +62,8 @@ public class Easypass extends JFrame {
     private String sessionFolderName = "sessions";
     private String configFileName = "config.xml";
     private String appName = "easypass";
-    private String logFilePath = appName + ".log"; //application path + filename
+    private String logFilePath = appName + ".log"; // application path +
+                                                   // filename
     
     private int winHeight = 300; // dimensions of the main frame
     private int winWidth = 480;
@@ -113,18 +114,34 @@ public class Easypass extends JFrame {
         int winX = ( screensize.width - winWidth ) / 2;
         this.setLocation( winX, winY );
         
-        //gets the path to the logfile
-        this.logFilePath = getApplicationPath() + File.separator + this.logFilePath;
+        // gets the path to the logfile
+        this.logFilePath = getApplicationPath() + File.separator
+                + this.logFilePath;
         
         // gets the path to the session folder
-        //TODO
+        // TODO
         try{
             pathToSessionFolder = new ConfigFileManager(
                     this.getApplicationPath() + File.separator
                             + this.configFileName ).getProperty( "sessionPath" );
+            if( !new File( pathToSessionFolder ).isDirectory() ){
+                JOptionPane
+                        .showMessageDialog(
+                                this,
+                                
+                                "parsing error :\n     \""
+                                        + pathToSessionFolder
+                                        + "\"     \nis not a valid directory.\n\nCheck the configuration file (or erase it) :\n    \""
+                                        + this.getApplicationPath()
+                                        + File.separator + this.configFileName
+                                        + "\"    \nand try again.", 
+                                        "configuration error",
+                                JOptionPane.ERROR_MESSAGE );
+            }
         }catch( Exception e ){
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             pathToSessionFolder = this.getSessionPath();
+            System.out.println( "Could not read config file. Using default session path : " + pathToSessionFolder );
         }
         System.out.println( pathToSessionFolder );
         handleCredentialsAndLoadSession();
@@ -178,8 +195,7 @@ public class Easypass extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
-        
-        PassExcelAdapter adapter = new PassExcelAdapter(table);
+        //PassExcelAdapter adapter = new PassExcelAdapter( table );
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
@@ -539,9 +555,8 @@ public class Easypass extends JFrame {
      ********************************************************************/
     
     /**
-     * gets the path to the application folder, i.e. 
-     * <user>/AppData/<appliName> under windows and
-     * <user.home>/.<appliName> under Linux. 
+     * gets the path to the application folder, i.e. <user>/AppData/<appliName>
+     * under windows and <user.home>/.<appliName> under Linux.
      * 
      * @return
      */
@@ -561,7 +576,7 @@ public class Easypass extends JFrame {
             System.out.println( "os " + os + " not supported." );
             System.exit( 0 );
             return null;
-            //TODO
+            // TODO
         }
     }
     
