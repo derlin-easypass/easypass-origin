@@ -417,14 +417,20 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * <br>
      * <br>
      * 
-     * Note that if the row or column indexes are out of range, an exception is thrown. No check is done !<br>
-     * @param clipboardContent  the content to paste 
-     * @param startRow  the row of the table in which to begin pasting
-     * @param startCol  the column of the table in which to begin pasting
-     * @param undoable  true if the pasting is undoable, false otherwise
+     * Note that if the row or column indexes are out of range, an exception is
+     * thrown. No check is done !<br>
+     * 
+     * @param clipboardContent
+     *            the content to paste
+     * @param startRow
+     *            the row of the table in which to begin pasting
+     * @param startCol
+     *            the column of the table in which to begin pasting
+     * @param undoable
+     *            true if the pasting is undoable, false otherwise
      */
     
-    //TODO : problem  when some cells are empty
+    // TODO : problem when some cells are empty
     public void paste( String clipboardContent, int startRow, int startCol,
             boolean undoable ) {
         
@@ -443,14 +449,15 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
                 if( i != 0 ){
                     builder.append( "\n" );
                 }
-                // gets next row
-                String line = stLines.next();
+                // gets next row. we need to add smthing at the end of the line
+                // for the split method to function properly, even if there are
+                // only tabs
+                String line = stLines.next() + "\0";
+                System.out.println( "line length " + line.length() );
+                String[] tabs = line.split( "\t" );
+                System.out.println( "tabs length " + tabs.length );
                 
-                // splits the current row into columns
-                Scanner stCols = new Scanner( line );
-                stCols.useDelimiter( "\t" );
-                
-                for( int j = 0; stCols.hasNext(); j++ ){
+                for( int j = 0; j < tabs.length; j++ ){
                     // if we are in the boundaries of the table, pastes the new
                     // value
                     if( startRow + i < this.getRowCount()
@@ -466,8 +473,8 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
                         builder.append( oldValue );
                         
                         // gets the new values and updates the table
-                        String newValue = stCols.next();
-                        System.out.println("newvalue " + newValue);
+                        String newValue = tabs[ j ];
+                        System.out.println( "newvalue " + newValue );
                         this.setValueAt( newValue, startRow + i, startCol + j,
                                 false );
                     }else{ // if outreached the table boudaries, just skips to
@@ -476,7 +483,37 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
                     }// end if
                 }// end for cols
                 
-                stCols.close();
+                // splits the current row into columns
+                // Scanner stCols = new Scanner( line );
+                // stCols.useDelimiter( "\t" );
+                //
+                // for( int j = 0; stCols.hasNext(); j++ ){
+                // // if we are in the boundaries of the table, pastes the new
+                // // value
+                // if( startRow + i < this.getRowCount()
+                // && startCol + j < this.getColumnCount() ){
+                // // if not the first col, adds a delimiter to the
+                // // oldValues string
+                // if( j != 0 )
+                // builder.append( "\t" );
+                //
+                // // records the old value
+                // String oldValue = (String) this.getValueAt( startRow
+                // + i, startCol + j );
+                // builder.append( oldValue );
+                //
+                // // gets the new values and updates the table
+                // String newValue = stCols.next();
+                // System.out.println("newvalue " + newValue);
+                // this.setValueAt( newValue, startRow + i, startCol + j,
+                // false );
+                // }else{ // if outreached the table boudaries, just skips to
+                // // the next row
+                // break;
+                // }// end if
+                // }// end for cols
+                //
+                // stCols.close();
             }// end for lines
             
             // if the paste is undoable, creates an undoable event of type

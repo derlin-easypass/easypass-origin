@@ -14,6 +14,9 @@ public class PasswordCellRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent( JTable table, Object data,
             boolean isSelected, boolean hasFocus, int row, int column ) {
         
+        super.getTableCellRendererComponent( table, data, isSelected, hasFocus,
+                row, column );
+        
         int length = 0;
         
         if( data instanceof String ){
@@ -22,7 +25,7 @@ public class PasswordCellRenderer extends DefaultTableCellRenderer {
             length = ( (char[]) data ).length;
         }
         
-        if(isSelected){
+        if( isSelected ){
             setBackground( super.getBackground() );
         }
         setText( ASTERISKS.substring( 0, length ) );
