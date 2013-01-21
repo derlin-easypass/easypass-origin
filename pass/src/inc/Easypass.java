@@ -49,6 +49,8 @@ import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.TableRowSorter;
 
 import models.Exceptions;
@@ -134,14 +136,16 @@ public class Easypass extends JFrame {
                                         + "\"     \nis not a valid directory.\n\nCheck the configuration file (or erase it) :\n    \""
                                         + this.getApplicationPath()
                                         + File.separator + this.configFileName
-                                        + "\"    \nand try again.", 
-                                        "configuration error",
+                                        + "\"    \nand try again.",
+                                "configuration error",
                                 JOptionPane.ERROR_MESSAGE );
             }
         }catch( Exception e ){
-            System.out.println(e.getMessage());
+            System.out.println( e.getMessage() );
             pathToSessionFolder = this.getSessionPath();
-            System.out.println( "Could not read config file. Using default session path : " + pathToSessionFolder );
+            System.out
+                    .println( "Could not read config file. Using default session path : "
+                            + pathToSessionFolder );
         }
         System.out.println( pathToSessionFolder );
         handleCredentialsAndLoadSession();
@@ -186,6 +190,17 @@ public class Easypass extends JFrame {
         // outside
         this.setMouseListener();
         
+        //adds a listener to update the displayed row count when the table changes
+        table.getModel().addTableModelListener( new TableModelListener() {
+            
+            @Override
+            public void tableChanged( TableModelEvent e ) {
+                updateDisplayedRowCount();
+                
+            }
+        });
+        
+        
         // updates the GUI and show the window
         mainContainer.updateUI();
         try{
@@ -195,7 +210,7 @@ public class Easypass extends JFrame {
             System.out.println( "problem loading default UIManager" );
         }
         
-        //PassExcelAdapter adapter = new PassExcelAdapter( table );
+        // PassExcelAdapter adapter = new PassExcelAdapter( table );
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
         this.setJMenuBar( this.getJFrameMenu() );
@@ -206,7 +221,7 @@ public class Easypass extends JFrame {
     
     
     /********************************************************************
-     * interaction with the user (save data, load session, show infos) /
+     * interaction with the user (save data, load session, show infos) 
      ********************************************************************/
     
     /**
@@ -438,8 +453,6 @@ public class Easypass extends JFrame {
                             if( table.isEditing() )
                                 table.getCellEditor().stopCellEditing();
                             table.clearSelection();
-                            System.out.println( "clear selection" );
-                            // TODO
                         }
                     }
                     
@@ -676,6 +689,8 @@ public class Easypass extends JFrame {
                 }catch( Exception ee ){
                     System.out
                             .println( "error in serialization. Possible data loss" );
+                    showInfos( "an error occurred! Data not saved...",
+                            INFOS_DISPLAY_TIME );
                     ee.printStackTrace();
                 }// end try
             }
