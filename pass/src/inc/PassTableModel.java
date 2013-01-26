@@ -51,12 +51,8 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    public PassTableModel(String[] columnNames) {
-        
-        super();
-        this.columnNames = columnNames;
-        this.data = new ArrayList<Object[]>();
-        this.isModified = false;
+    public PassTableModel(String[] columnNames) {       
+        this( columnNames, new ArrayList<Object[]>() );
     }
     
     

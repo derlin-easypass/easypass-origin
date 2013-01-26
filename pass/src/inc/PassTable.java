@@ -55,6 +55,7 @@ public class PassTable extends JTable {
         // editing ghost cell hanging in the void !
         this.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
         this.setKeyBindings();
+        this.setCellSelectionEnabled( true );
         
     }// end constructor
     
@@ -208,24 +209,22 @@ public class PassTable extends JTable {
         JComponent c = (JComponent) super.prepareRenderer( renderer, row,
                 column );
         
-        // sets a light gray background to every non-selected odd row
-        if( !isRowSelected( row ) ){
-            c.setBackground( row % 2 == 0 ? getBackground() : new Color( 250,
-                    250, 250 ) );
+        // sets a light gray background to every non-selected odd row      
+        if( !isCellSelected( row, column ) ){
+            c.setBackground( row % 2 == 0 ? Color.WHITE : new Color( 240,
+                    240, 240 ) );
             c.setForeground( Color.BLACK );
-            
-            // sets the text of selected rows in bold and draws a blue border
-            // around the selected/focused cell
         }
-//        else{
-//            c.setBackground( new Color( 232, 242, 254 ) );
-//            c.setForeground( Color.BLACK );
-//            c.setFont( getFont().deriveFont( Font.BOLD ) );
-//            if( getSelectedRowCount() == 1 && getSelectedColumnCount() == 1
-//                    && isRowSelected( row ) && isColumnSelected( column ) ){
-//                c.setBackground( new Color( 184, 202, 238 ) );
-//            }
+        
+       // sets the text of selected rows in bold 
+       if( isRowSelected( row ) ){
+            c.setFont( getFont().deriveFont( Font.BOLD ) );
+        }
+        
+//        }else if(!isCellSelected(row, column)){
+//            c.setBackground( UIManager.getColor( "Table.selectionBackground" ).brighter() );
 //        }
+
         return c;
     }
     
