@@ -51,7 +51,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    public PassTableModel(String[] columnNames) {       
+    public PassTableModel(String[] columnNames) {
         this( columnNames, new ArrayList<Object[]>() );
     }
     
@@ -405,6 +405,45 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     
     
     /**
+     * cuts data from the model and copies them to the clipboard.
+     * @param selectedRows
+     * @param selectedCols
+     * @param undoable
+     */
+    public void cut( int[] selectedRows, int[] selectedCols, boolean undoable ) {
+        
+        if( undoable )
+            this.copy( selectedRows, selectedCols );
+        
+        ArrayList<String> oldValues = new ArrayList<String>();
+        
+        for( int row : selectedRows ){
+            for( int col : selectedCols ){
+                String oldValue = (String) this.getValueAt( row, col );
+                oldValues.add( oldValue );
+                this.setValueAt( "", row, col, false );
+            }
+        }
+        
+        // if the cut is undoable, creates an undoable event of type
+        // JvPaste
+        UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
+        
+        if( listeners != null && undoable ){
+            JvCut rowsCut = new JvCut( this, oldValues.toArray(), selectedRows,
+                    selectedCols );
+            
+            UndoableEditEvent cutEvent = new UndoableEditEvent( this, rowsCut );
+            for( UndoableEditListener listener : listeners )
+                listener.undoableEditHappened( cutEvent );
+        }// end if
+        
+        // spreads the changes
+        this.fireTableDataChanged();
+    }
+    
+    
+    /**
      * pastes the specified content to the table using the excel style, i.e. :<br>
      * <ul>
      * <li>the new line character \n delimits the rows
@@ -466,10 +505,10 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
                         // records the old value
                         String oldValue = (String) this.getValueAt( startRow
                                 + i, startCol + j );
-                        builder.append( oldValue );
+                        builder.append(  oldValue );
                         
                         // gets the new values and updates the table
-                        String newValue = tabs[ j ];
+                        String newValue = tabs[ j ].trim();
                         System.out.println( "newvalue " + newValue );
                         this.setValueAt( newValue, startRow + i, startCol + j,
                                 false );

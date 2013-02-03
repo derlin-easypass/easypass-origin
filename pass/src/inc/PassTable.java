@@ -88,10 +88,15 @@ public class PassTable extends JTable {
      */
     public void setKeyBindings() {
         
+        //copy key
         KeyStroke copy = KeyStroke.getKeyStroke( KeyEvent.VK_C, Toolkit
                 .getDefaultToolkit().getMenuShortcutKeyMask(), false );
-        
+        //paste key
         KeyStroke paste = KeyStroke.getKeyStroke( KeyEvent.VK_V, Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false );
+        
+      //cut key
+        KeyStroke cut = KeyStroke.getKeyStroke( KeyEvent.VK_X, Toolkit
                 .getDefaultToolkit().getMenuShortcutKeyMask(), false );
         
         // copy listener
@@ -140,6 +145,20 @@ public class PassTable extends JTable {
                 }
             }
         }, "Paste", paste, JComponent.WHEN_FOCUSED );
+        
+     // cut listener
+        this.registerKeyboardAction( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                
+                if( isEditing() ){
+                    getCellEditor().stopCellEditing();
+                }
+                
+                ( (PassTableModel) getModel() ).cut(
+                        getSelectedRowsConvertedToModel(),
+                        getSelectedColumnsConvertedToModel(), true );
+            }
+        }, "Cut", cut, JComponent.WHEN_FOCUSED );
     }// end set keyBindings
     
     

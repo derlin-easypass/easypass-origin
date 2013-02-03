@@ -836,6 +836,9 @@ public class Easypass extends JFrame {
             public void actionPerformed( ActionEvent e ) {
                 model.addRow();
                 
+                //resets the filters --> shows all rows (global view)
+                filterText.setText( "" );
+                
                 // sets focus on the new row
                 int lastRow = model.getRowCount() - 1;
                 
