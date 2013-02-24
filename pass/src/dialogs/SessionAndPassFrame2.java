@@ -49,11 +49,11 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
         }
         
         // sets close operation
-        this.setDefaultCloseOperation( javax.swing.JDialog.DISPOSE_ON_CLOSE );
+        this.setDefaultCloseOperation( javax.swing.JDialog.HIDE_ON_CLOSE );
         addWindowListener( new WindowAdapter() {
             @Override
             public void windowClosing( WindowEvent e ) {
-                status = false;
+                System.exit( 0 );
             }
         } );
         
@@ -405,12 +405,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
     
     
     private void okButtonActionPerformed( java.awt.event.ActionEvent evt ) {
-        
-//        if( this.passTF.getPassword().length < 3
-//                || ( this.sessionCombo.getSelectedIndex() == 0 && this.imported == false ) ){
-//            return;
-//        }
-        
+                
         this.pass = new String( this.passTF.getPassword() );
         if( this.imported ){
             this.session = this.importTF.getText();

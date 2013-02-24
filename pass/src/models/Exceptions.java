@@ -25,6 +25,12 @@ public class Exceptions {
         
     }
     
+    public static class NoSuchSettingException extends RuntimeException {
+        public NoSuchSettingException() { super(); }
+        public NoSuchSettingException(String message) { super( message ); }
+        
+    }
+    
     public static class WrongCredentialsException extends Exception {
         public WrongCredentialsException() { super(); }
         public WrongCredentialsException(String message) { super( message ); }

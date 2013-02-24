@@ -2,17 +2,14 @@ package inc;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -22,7 +19,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -45,8 +41,6 @@ import javax.swing.RowFilter;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.Timer;
 import javax.swing.UIManager;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
@@ -54,24 +48,21 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableRowSorter;
 
 import models.Exceptions;
+import models.Exceptions.ConfigFileNotFoundException;
+import models.Exceptions.NoSuchSettingException;
 import dialogs.RefactorSessionDialog;
 import dialogs.SessionAndPassFrame2;
 
 public class Easypass extends JFrame {
     
-    private String pathToSessionFolder; // depends on the implementation
-                                        // (APPDATA or user.home)
-    private String sessionFolderName = "sessions";
-    private String configFileName = "config.xml";
-    private String appName = "easypass";
-    private String logFilePath = appName + ".log"; // application path +
-                                                   // filename
+    boolean debug = false;
+    protected static final String APPLICATION_NAME = "easypass";
     
-    private int winHeight = 300; // dimensions of the main frame
-    private int winWidth = 480;
+    // filename
     
     private JPanel mainContainer; // main container (BorderLayout)
     private JvUndoManager undoManager;
+    private PassConfigManager configManager;
     private TableRowSorter<PassTableModel> sorter; // used for the search bar
                                                    // ("find")
     private JTextField filterText; // text entered by the user, used to filter
@@ -90,8 +81,8 @@ public class Easypass extends JFrame {
     private JScrollPane scrollPane; // scrollPane for the JTable
     private SessionManager sessionManager;
     
-    private String[] columnNames = { "account", "pseudo", "email address",
-            "password", "notes" }; // the headers for the jtable
+    private int winWidth, winHeight;
+    private String[] columnNames;
     
     
     public static void main( String[] args ) {
@@ -109,51 +100,22 @@ public class Easypass extends JFrame {
         // sets the listener to save data on quit
         this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         this.setWindowClosingListener();
+        
+        // get config
+        initConfigManager();
+        checkConfig();
+        
         // sets position, size, etc
         this.setSize( new Dimension( winWidth, winHeight ) );
         Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
-        int winY = ( screensize.height - winHeight ) / 2;
         int winX = ( screensize.width - winWidth ) / 2;
+        int winY = ( screensize.height - winHeight ) / 2;
         this.setLocation( winX, winY );
         
-        // gets the path to the logfile
-        this.logFilePath = getApplicationPath() + File.separator
-                + this.logFilePath;
-        
-        // gets the path to the session folder
-        // TODO
-        try{
-            pathToSessionFolder = new ConfigFileManager(
-                    this.getApplicationPath() + File.separator
-                            + this.configFileName ).getProperty( "sessionPath" );
-            if( !new File( pathToSessionFolder ).isDirectory() ){
-                JOptionPane
-                        .showMessageDialog(
-                                this,
-                                
-                                "parsing error :\n     \""
-                                        + pathToSessionFolder
-                                        + "\"     \nis not a valid directory.\n\nCheck the configuration file (or erase it) :\n    \""
-                                        + this.getApplicationPath()
-                                        + File.separator + this.configFileName
-                                        + "\"    \nand try again.",
-                                "configuration error",
-                                JOptionPane.ERROR_MESSAGE );
-            }
-        }catch( Exception e ){
-            System.out.println( e.getMessage() );
-            pathToSessionFolder = this.getSessionPath();
-            System.out
-                    .println( "Could not read config file. Using default session path : "
-                            + pathToSessionFolder );
-        }
-        System.out.println( pathToSessionFolder );
         handleCredentialsAndLoadSession();
         
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
-        // mainContainer.add( this.getRowsManipulationMenu(), BorderLayout.NORTH
-        // );
         
         // creates the jtable
         try{
@@ -161,7 +123,7 @@ public class Easypass extends JFrame {
             table = new PassTable( model );
             
         }catch( Exception e ){
-            System.out.println( "problem while filling the table with data" );
+            writeLog( "problem while filling the table with data" );
             e.printStackTrace();
         }// end try
         
@@ -170,6 +132,7 @@ public class Easypass extends JFrame {
         table.setFillsViewportHeight( true );
         table.setRowHeight( 30 );
         table.setStyle();
+        settableColSizes();
         
         // sets the undo manager for CTRL Z
         undoManager = new JvUndoManager();
@@ -190,7 +153,8 @@ public class Easypass extends JFrame {
         // outside
         this.setMouseListener();
         
-        //adds a listener to update the displayed row count when the table changes
+        // adds a listener to update the displayed row count when the table
+        // changes
         table.getModel().addTableModelListener( new TableModelListener() {
             
             @Override
@@ -198,8 +162,7 @@ public class Easypass extends JFrame {
                 updateDisplayedRowCount();
                 
             }
-        });
-        
+        } );
         
         // updates the GUI and show the window
         mainContainer.updateUI();
@@ -207,7 +170,7 @@ public class Easypass extends JFrame {
             UIManager
                     .setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         }catch( Exception e ){
-            System.out.println( "problem loading default UIManager" );
+            writeLog( "problem loading default UIManager" );
         }
         
         // PassExcelAdapter adapter = new PassExcelAdapter( table );
@@ -220,8 +183,114 @@ public class Easypass extends JFrame {
     }// end constructor
     
     
+    private void initConfigManager() {
+        
+        try{
+            this.configManager = new PassConfigManager();
+        }catch( ConfigFileNotFoundException e ){
+            JOptionPane.showMessageDialog( this,
+            
+            "Default settings not found. Exiting...", "configuration error",
+                    JOptionPane.ERROR_MESSAGE );
+            System.exit( 1 );
+        }// end try
+        
+        File appfolder = new File(
+                this.configManager.getProperty( "application path" ) );
+        
+        // if the session folder does not exist, creates it
+        if( !appfolder.exists() || !appfolder.isDirectory() )
+            appfolder.mkdir();
+        
+    }// end initConfigManager
+    
     /********************************************************************
-     * interaction with the user (save data, load session, show infos) 
+     * handle configuration files
+     ********************************************************************/
+    
+    private void checkConfig() {
+        
+        try{
+            // ---------- checks that the application folder exists, or creates
+            // it
+            File appfolder = new File(
+                    this.configManager.getProperty( "application path" ) );
+            
+            if( ( !appfolder.exists() || !appfolder.isDirectory() )
+                    && !appfolder.mkdir() )
+                throw new Exception( "application path could not be found" );
+            
+            // ----------- checks the session path
+            File sessionfolder = new File(
+                    this.configManager.getProperty( "session path" ) );
+            
+            if( ( !sessionfolder.exists() || !sessionfolder.isDirectory() )
+                    && !sessionfolder.mkdir() )
+                throw new Exception( "session path could not be found" );
+            
+            // ----------- checks the logfile path
+            File logfile = new File( configManager.getProperty( "log filepath" ) );
+            // if file doesn't exists, creates it
+            if( ( !logfile.exists() || !logfile.isFile() )
+                    && !logfile.createNewFile() )
+                throw new Exception( "log filepath could not be found" );
+            
+            // ------------checks the window width and height
+            try{
+                winWidth = Integer.parseInt( configManager
+                        .getProperty( "window width" ) );
+                winHeight = Integer.parseInt( configManager
+                        .getProperty( "window height" ) );
+            }catch( Exception e ){
+                throw new Exception(
+                        "error parsing 'window height' and 'window width' properties" );
+            }
+            
+            // ------------checks the column names
+            try{
+                this.columnNames = configManager.getProperty( "column names" )
+                        .split( "," );
+                for( int i = 0; i < this.columnNames.length; i++ ){
+                    this.columnNames[ i ] = this.columnNames[ i ].trim();
+                }// end for
+            }catch( Exception e ){
+                throw new Exception(
+                        "'column names' property could not be found" );
+            }
+            
+        }catch( Exception e ){
+            JOptionPane
+                    .showMessageDialog(
+                            this,
+                            "Error in configuration file : \n       "
+                                    + e.getMessage()
+                                    + "\nplease verify your settings or delete your custom configuration file",
+                            "configuration error", JOptionPane.ERROR_MESSAGE );
+            System.exit( 1 );
+        }// end try
+    }// end checkConfig
+    
+    
+    private void settableColSizes() {
+        
+        try{
+            String[] dims = configManager.getProperty( "dimensions" ).split(
+                    "," );
+            int[] dimensions = new int[dims.length];
+            
+            for( int i = 0; i < dims.length; i++ ){
+                dimensions[ i ] = Integer.parseInt( dims[ i ].trim() );
+            }// end for
+            table.setColSizes( dimensions );
+        }catch( Exception e ){
+            return;
+        }// end try
+        
+    }// end proper
+    
+    
+    /********************************************************************
+     * interaction with the user (save data, load session, show infos)
      ********************************************************************/
     
     /**
@@ -237,7 +306,8 @@ public class Easypass extends JFrame {
     public void handleCredentialsAndLoadSession() {
         
         SessionAndPassFrame2 modal = null;
-        sessionManager = new SessionManager( this.pathToSessionFolder );
+        sessionManager = new SessionManager(
+                configManager.getProperty( "session path" ) );
         
         try{
             
@@ -258,7 +328,8 @@ public class Easypass extends JFrame {
             modal.setVisible( true );
             
             if( modal.getStatus() == false ){ // checks if user clicked cancel
-                                              // or closed
+                                             // or closed
+                modal.dispose();
                 System.exit( 0 );
             }
             // get pass and salt
@@ -276,6 +347,7 @@ public class Easypass extends JFrame {
                 }else if( !sessionManager.sessionExists( session ) ){
                     model = new PassTableModel( columnNames );
                     sessionManager.createSession( session, pass );
+                    modal.dispose();
                     return;
                 }else{
                     
@@ -296,22 +368,24 @@ public class Easypass extends JFrame {
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "open error", JOptionPane.ERROR_MESSAGE );
-                writeLog( "info: " + e.getMessage(), this.logFilePath );
+                writeLog( "info: " + e.getMessage() );
                 continue;
             }catch( Exceptions.ImportException e ){
                 // if the pass was wrong, loops again
                 JOptionPane.showMessageDialog( this, e.getMessage(),
                         "import error", JOptionPane.ERROR_MESSAGE );
-                writeLog( "info: " + e.toString(), this.logFilePath );
+                writeLog( "info: " + e.toString() );
                 continue;
             }catch( Exception e ){
                 // otherwise, writes the exception to the log file and quit
                 System.out.println( "unplanned exception" );
                 e.printStackTrace();
-                writeLog( "severe: " + e.toString(), this.logFilePath );
+                writeLog( "severe: " + e.toString() );
                 System.exit( 0 );
             }
         }// end while
+        
+        modal.dispose();
     }// end handleCredentials
     
     
@@ -335,7 +409,7 @@ public class Easypass extends JFrame {
             }catch( Exception e ){
                 System.out
                         .println( "error in serialization. Possible data loss" );
-                writeLog( "ERROR: " + e.getMessage(), this.logFilePath );
+                writeLog( "ERROR: " + e.getMessage() );
             }// end try
             
             return true;
@@ -510,89 +584,12 @@ public class Easypass extends JFrame {
             }
         } );
         
-        // // CTRL+N to add a new line
-        // KeyStroke NewLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_N,
-        // Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
-        //
-        // this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-        // .put( NewLineKeyStroke, "NEWLINE" );
-        //
-        // this.getRootPane().getActionMap().put( "NEWLINE", new
-        // AbstractAction() {
-        // public void actionPerformed( ActionEvent e ) {
-        // // stops cell editing
-        // if( table.isEditing() ){
-        // table.getCellEditor().stopCellEditing();
-        // }
-        // // adds a new row to the model
-        // model.addRow();
-        //
-        // // sets focus on the new row
-        // int lastRow = model.getRowCount() - 1;
-        //
-        // // scrolls to the bottom of the table
-        // table.getSelectionModel().setSelectionInterval( lastRow,
-        // lastRow );
-        // table.scrollRectToVisible( new Rectangle( table.getCellRect(
-        // lastRow, 0, true ) ) );
-        // }
-        // } );
-        //
-        // // CTRL+D to delete selected rows
-        // KeyStroke DelLineKeyStroke = KeyStroke.getKeyStroke( KeyEvent.VK_D,
-        // Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() );
-        //
-        // this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-        // .put( DelLineKeyStroke, "DELLINE" );
-        //
-        // this.getRootPane().getActionMap().put( "DELLINE", new
-        // AbstractAction() {
-        // public void actionPerformed( ActionEvent e ) {
-        // if( table.isEditing() ){
-        // table.getCellEditor().stopCellEditing();
-        // }
-        // int[] selectedRows = table.getSelectedRows();
-        // for( int i = 0; i < selectedRows.length; i++ ){
-        // // row index minus i since the table size shrinks by 1
-        // // at each iteration
-        // model.deleteRow( selectedRows[ i ] - i );
-        // }
-        // }
-        // } );
-        //
     }// end setShortCuts
     
     
     /********************************************************************
      * getters (menus, sessionPath) /
      ********************************************************************/
-    
-    /**
-     * gets the path to the application folder, i.e. <user>/AppData/<appliName>
-     * under windows and <user.home>/.<appliName> under Linux.
-     * 
-     * @return
-     */
-    public String getApplicationPath() {
-        
-        String os = System.getProperty( "os.name" );
-        
-        // depending on the os system, choose the best location to store session
-        // data
-        if( os.contains( "Linux" ) || os.contains( "Mac" ) ){
-            return System.getProperty( "user.home" ) + File.separator + "."
-                    + appName;
-        }else if( os.contains( "Windows" ) ){
-            return System.getenv( "APPDATA" ) + File.separator + appName;
-            
-        }else{
-            System.out.println( "os " + os + " not supported." );
-            System.exit( 0 );
-            return null;
-            // TODO
-        }
-    }
-    
     
     /**
      * gets the path to the sessions folder stored in
@@ -604,26 +601,30 @@ public class Easypass extends JFrame {
      */
     public String getSessionPath() {
         
-        String path = getApplicationPath();
+        String path;
         
-        File sessionDir = new File( path );
+        // try to retrieve the sessionpath from the config file
+        path = this.configManager.getProperty( "session path" );
         
-        // if the session folder does not exist, creates it
-        if( !sessionDir.exists() || !sessionDir.isDirectory() ){
-            if( sessionDir.mkdir() ){
-                path += File.separator + "sessions";
-                if( new File( path ).mkdir() ){
-                    return path;
-                }
-            }
-            // an error occurred
-            System.out.println( "error retrieving sessions folder path" );
-            return "";
-            
-        }else{ // the session folder exists, return its path
-            return path + File.separator + sessionFolderName;
-        }
-    }
+        File sessionfolder = new File( path );
+        
+        if( sessionfolder.exists() && sessionfolder.isDirectory() )
+            return path;
+        
+        // ------------if does not exists, creates the session folder in default
+        // location
+        
+        sessionfolder = new File(
+                this.configManager.getProperty( "application path" )
+                        + File.separator + "sessions" );
+        
+        if( !sessionfolder.exists() || !sessionfolder.isDirectory() )
+            sessionfolder.mkdir();
+        
+        // the session folder exists, return its path
+        return sessionfolder.getAbsolutePath();
+        
+    }// end getSessionPath
     
     
     /**
@@ -836,7 +837,7 @@ public class Easypass extends JFrame {
             public void actionPerformed( ActionEvent e ) {
                 model.addRow();
                 
-                //resets the filters --> shows all rows (global view)
+                // resets the filters --> shows all rows (global view)
                 filterText.setText( "" );
                 
                 // sets focus on the new row
@@ -1042,18 +1043,12 @@ public class Easypass extends JFrame {
      *            the path to the file
      */
     
-    public static void writeLog( String message, String logFilePath ) {
+    public void writeLog( String message ) {
         try{
-            File file = new File( logFilePath );
-            
-            // if file doesn't exists, creates it
-            if( !file.exists() ){
-                file.createNewFile();
-            }
             
             // true = append to file
-            BufferedWriter writer = new BufferedWriter( new FileWriter( file,
-                    true ) );
+            BufferedWriter writer = new BufferedWriter( new FileWriter(
+                    configManager.getProperty( "log filepath" ), true ) );
             
             // adds the date and the message at the end of the file
             writer.newLine();
@@ -1065,7 +1060,7 @@ public class Easypass extends JFrame {
             
         }catch( IOException e ){
             e.printStackTrace();
-        }
+        }// end try
     }// end writeLog
     
     

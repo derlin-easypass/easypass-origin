@@ -44,6 +44,7 @@ public class SessionManager {
     private static String CRYPTO_ALGORITHM = "aes-128-cbc";
     private static String DATA_EXTENSION = ".data_ser";
     
+    private PassJsonManager jsonManager;
     private String directoryPath;
     private String session;
     private String password;
@@ -76,6 +77,8 @@ public class SessionManager {
             throw new Exceptions.NotInitializedException( directoryPath
                     + "is not a valid directory" );
         }
+        
+        this.jsonManager = new PassJsonManager();
     }// end constructor
     
     
@@ -199,7 +202,7 @@ public class SessionManager {
             
             this.session = session;
             this.password = password;
-            return new JsonManager().deserialize( CRYPTO_ALGORITHM,
+            return this.jsonManager.deserialize( CRYPTO_ALGORITHM,
                     this.getDataPath(), this.password );
             
         }catch( Exceptions.WrongCredentialsException e ){
@@ -289,7 +292,7 @@ public class SessionManager {
         
         try{
             
-            new JsonManager().serialize( data, CRYPTO_ALGORITHM,
+            this.jsonManager.serialize( data, CRYPTO_ALGORITHM,
                     this.getDataPath(), this.password );
             return true;
             
@@ -329,7 +332,7 @@ public class SessionManager {
      */
     public void writeAsJson( List<Object[]> data, File file )
             throws IOException {
-        new JsonManager().writeToFile( data, file );
+        new PassJsonManager().writeToFile( data, file );
     }
     
     
@@ -359,7 +362,7 @@ public class SessionManager {
         
         try{
             
-            this.save( new JsonManager().deserialize( CRYPTO_ALGORITHM,
+            this.save( this.jsonManager.deserialize( CRYPTO_ALGORITHM,
                     srcFile, oldPass ) );
             new File( srcFile ).delete();
             
