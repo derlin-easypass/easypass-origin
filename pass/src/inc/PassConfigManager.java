@@ -3,10 +3,10 @@ package inc;
 import java.io.File;
 import java.util.Map;
 
-import models.ConfigFileManager_try;
+import models.ConfigFileManager;
 import models.Exceptions;
 
-public class PassConfigManager extends ConfigFileManager_try {
+public class PassConfigManager extends ConfigFileManager {
     
     private boolean areUserSettings = false;
     private boolean debug = false;
@@ -40,15 +40,43 @@ public class PassConfigManager extends ConfigFileManager_try {
      * } //
      */
     
+    /**
+     * creates a configFileManager which holds a <code>Map<string,string></code>
+     * of all the settings for the application.<br>
+     * The constructor will first load a default (not customizable)
+     * settings.json from the root of the jar. If the latter is not found, an
+     * exception is thrown.<br>
+     * <br>
+     * It will then try to find a user config file at the path(s) indicated in
+     * the <code>user configfile</code> entry of the default
+     * <code>settings.json</code>. If one is found, the default and custom
+     * settings will be merged (custom ones having the priority).<br>
+     * <br>
+     * Notes :
+     * <ul>
+     * <li>this class will only check for correct json syntax. The validity of
+     * the settings must be checked by the caller.</li>
+     * <li>each option is parsed and the following patterns will be replaced :
+     * <ul>
+     * <li>%APPDIR% => the application directory, ~/.easypass in linux and
+     * user.home/appdata/easypass in windows</li>
+     * <li>%PARENTOFJAR% => the parent directory of the jar file</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * 
+     * @throws Exceptions.ConfigFileNotFoundException
+     */
     public PassConfigManager() throws Exceptions.ConfigFileNotFoundException {
-        
+        // loads default settings
         super( PassConfigManager.class.getClassLoader().getResourceAsStream(
                 "settings.json" ) );
         
+        // replaces patterns by correct paths
         updateSettings();
         
         Map<String, String> userSettings = null;
-        
+        // try to find user defined settings
         for( String filepath : this.settings.get( "user configfile" ).split(
                 "," ) ){
             
@@ -65,11 +93,12 @@ public class PassConfigManager extends ConfigFileManager_try {
             }// end if
             
         }// end for
-        
+         // if user settings found, merge + replace patterns by paths
         if( areUserSettings ){
-            mergeSettings( userSettings );           
+            mergeSettings( userSettings );
             updateSettings();
         }
+        // if debug enabled, prints the final settings
         if( debug ){
             for( String key : this.settings.keySet() ){
                 System.out.println( key + ": " + settings.get( key ) );
@@ -79,11 +108,27 @@ public class PassConfigManager extends ConfigFileManager_try {
     }// end constructor
     
     
+    /**
+     * changes the specified property stored into the map.<br>
+     * Note : this will not update the settings file !!When the program exits,
+     * the modification will be lost.
+     * 
+     * @param key
+     *            the key of the property to change
+     * @param value
+     *            the new value
+     */
     protected void setProperty( String key, String value ) {
         this.settings.put( key, value );
     }// end setProperty
     
     
+    /**
+     * merges the default settings with the settings held into the specified
+     * map. The latter has the priority.
+     * 
+     * @param userSettings
+     */
     private void mergeSettings( Map<String, String> userSettings ) {
         
         for( String key : userSettings.keySet() ){
@@ -95,20 +140,27 @@ public class PassConfigManager extends ConfigFileManager_try {
     }// end mergeSettings
     
     
+    /**
+     * updates the entries of the map by replacing the following patterns
+     * <ul>
+     * <li>%APPDIR% => the application directory, ~/.easypass in linux and
+     * user.home/appdata/easypass in windows</li>
+     * <li>%PARENTOFJAR% => the parent directory of the jar file</li>
+     * </ul>
+     */
     private void updateSettings() {
         
-        //gets the path to the parent dir of the jar file
+        // gets the path to the parent dir of the jar file
         String pattern = File.separator + "[^" + File.separator + "]+\\.jar.*";
         String pathToParentOfJar = this.getClass().getProtectionDomain()
                 .getCodeSource().getLocation().getPath()
                 .replaceAll( pattern, "" );
         
-        //replaces keywords with accurate paths
+        // replaces keywords with accurate paths
         for( String key : this.settings.keySet() ){
             String value = this.settings.get( key );
-            value = value
-                    .replace( "%APPDIR%", getApplicationPath() )
-                    .replace( "%PARENTOFJAR%", pathToParentOfJar );
+            value = value.replace( "%APPDIR%", getApplicationPath() ).replace(
+                    "%PARENTOFJAR%", pathToParentOfJar );
             this.settings.put( key, value );
         }// end for
     }// end updateSettings
