@@ -1,7 +1,13 @@
 package inc;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import sun.text.normalizer.Replaceable;
 
 import models.ConfigFileManager;
 import models.Exceptions;
@@ -9,7 +15,7 @@ import models.Exceptions;
 public class PassConfigManager extends ConfigFileManager {
     
     private boolean areUserSettings = false;
-    private boolean debug = false;
+    private boolean debug = true;
     
     
     /*
@@ -86,6 +92,9 @@ public class PassConfigManager extends ConfigFileManager {
                     // try to read json from file
                     userSettings = getJsonFromFile( configFile );
                     this.areUserSettings = true;
+                    if( debug )
+                        System.out.println( "\nuser configfile '" + filepath
+                                + "' loaded\n" );
                     break;
                 }catch( Exception e ){
                     continue;
@@ -100,6 +109,8 @@ public class PassConfigManager extends ConfigFileManager {
         }
         // if debug enabled, prints the final settings
         if( debug ){
+            System.out.println( "user config file "
+                    + ( areUserSettings ? "found." : "not found." ) );
             for( String key : this.settings.keySet() ){
                 System.out.println( key + ": " + settings.get( key ) );
                 
@@ -147,20 +158,37 @@ public class PassConfigManager extends ConfigFileManager {
      * user.home/appdata/easypass in windows</li>
      * <li>%PARENTOFJAR% => the parent directory of the jar file</li>
      * </ul>
+     * 
+     * @throws URISyntaxException
      */
     private void updateSettings() {
         
-        // gets the path to the parent dir of the jar file
-        String pattern = File.separator + "[^" + File.separator + "]+\\.jar.*";
-        String pathToParentOfJar = this.getClass().getProtectionDomain()
-                .getCodeSource().getLocation().getPath()
-                .replaceAll( pattern, "" );
+        // String pathToParentOfJar = "";
+        // try{
+        // pathToParentOfJar =
+        // URLDecoder.decode(this.getClass().getProtectionDomain()
+        // .getCodeSource().getLocation().getPath(), "UTF-8");
+        // }catch( UnsupportedEncodingException e ){
+        // e.printStackTrace();
+        // }
+        //
+        // pathToParentOfJar = pathToParentOfJar.replaceAll( "/[^/]+\\.jar.*",
+        // "" );
+        
+        String jarDir = new File( PassConfigManager.class.getProtectionDomain()
+                .getCodeSource().getLocation().getPath() ).getParentFile()
+                .getPath();
+        
+        if( debug )
+            System.out.println( "\njarDir: " + jarDir );
         
         // replaces keywords with accurate paths
         for( String key : this.settings.keySet() ){
             String value = this.settings.get( key );
-            value = value.replace( "%APPDIR%", getApplicationPath() ).replace(
-                    "%PARENTOFJAR%", pathToParentOfJar );
+            value = value.replace( "%APPDIR%", getApplicationPath() )
+                    .replace( "%PARENTOFJAR%", jarDir )
+                    .replace( "\\", File.separator )
+                    .replace( "/", File.separator );
             this.settings.put( key, value );
         }// end for
     }// end updateSettings

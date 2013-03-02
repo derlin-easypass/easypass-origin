@@ -36,6 +36,7 @@ public class ConfigFileManager {
     
     protected Map<String, String> settings;
     
+    boolean debug = true;
     
     /*
      * public static void main(String[] args) throws

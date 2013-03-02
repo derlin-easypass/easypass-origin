@@ -94,8 +94,7 @@ public class JsonManager {
 	 *             If a problem occurs while opening/reading the file
 	 */
 	public List<?> deserialize(String algo, String filepath,
-			String password, Type type) throws WrongCredentialsException,
-			IOException {
+			String password, Type type) throws WrongCredentialsException, IOException {
 
 		FileInputStream fin = null;
 

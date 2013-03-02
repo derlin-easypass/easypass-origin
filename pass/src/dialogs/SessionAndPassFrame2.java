@@ -49,13 +49,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
         }
         
         // sets close operation
-        this.setDefaultCloseOperation( javax.swing.JDialog.HIDE_ON_CLOSE );
-        addWindowListener( new WindowAdapter() {
-            @Override
-            public void windowClosing( WindowEvent e ) {
-                System.exit( 0 );
-            }
-        } );
+        this.setDefaultCloseOperation( javax.swing.JDialog.DO_NOTHING_ON_CLOSE );
         
         UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         initComponents();
