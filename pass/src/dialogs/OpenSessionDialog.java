@@ -4,27 +4,18 @@
  */
 package dialogs;
 
-import inc.SessionManager;
+import manager.SessionManager_old;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
-
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  * 
  * @author lucy
  */
-public class SessionAndPassFrame2 extends javax.swing.JDialog {
+public class OpenSessionDialog extends javax.swing.JDialog {
     
     private String[] sessionList;
     private String pass = "", session = "";
@@ -37,7 +28,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
     /**
      * Creates new form SessionAndPassFrame
      */
-    public SessionAndPassFrame2(javax.swing.JFrame parent, String[] sessions)
+    public OpenSessionDialog( javax.swing.JFrame parent, String[] sessions )
             throws ClassNotFoundException, IllegalAccessException,
             InstantiationException, UnsupportedLookAndFeelException {
         super( parent, "session and credentials", true );
@@ -584,19 +575,19 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
             }
         }catch( ClassNotFoundException ex ){
             java.util.logging.Logger.getLogger(
-                    SessionAndPassFrame2.class.getName() ).log(
+                    OpenSessionDialog.class.getName() ).log(
                     java.util.logging.Level.SEVERE, null, ex );
         }catch( InstantiationException ex ){
             java.util.logging.Logger.getLogger(
-                    SessionAndPassFrame2.class.getName() ).log(
+                    OpenSessionDialog.class.getName() ).log(
                     java.util.logging.Level.SEVERE, null, ex );
         }catch( IllegalAccessException ex ){
             java.util.logging.Logger.getLogger(
-                    SessionAndPassFrame2.class.getName() ).log(
+                    OpenSessionDialog.class.getName() ).log(
                     java.util.logging.Level.SEVERE, null, ex );
         }catch( javax.swing.UnsupportedLookAndFeelException ex ){
             java.util.logging.Logger.getLogger(
-                    SessionAndPassFrame2.class.getName() ).log(
+                    OpenSessionDialog.class.getName() ).log(
                     java.util.logging.Level.SEVERE, null, ex );
         }
         // </editor-fold>
@@ -605,7 +596,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
         java.awt.EventQueue.invokeLater( new Runnable() {
             public void run() {
                 try{
-                    new SessionAndPassFrame2( null, null ).setVisible( true );
+                    new OpenSessionDialog( null, null ).setVisible( true );
                 }catch( Exception e ){
                     e.printStackTrace();
                     ;
@@ -649,7 +640,7 @@ public class SessionAndPassFrame2 extends javax.swing.JDialog {
         public boolean accept( File file ) {
             return file.isDirectory()
                     || file.getName().endsWith(
-                            SessionManager.getDataExtension() );
+                            SessionManager_old.DATA_EXTENSION );
         }
     }// end private class
 }

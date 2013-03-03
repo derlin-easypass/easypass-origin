@@ -1,28 +1,19 @@
 package models;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import models.Exceptions;
-import models.Exceptions.WrongCredentialsException;
-
-import org.apache.commons.ssl.OpenSSL;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
+import models.Exceptions.WrongCredentialsException;
+import org.apache.commons.ssl.OpenSSL;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.security.GeneralSecurityException;
+import java.util.List;
 
 
 /**
@@ -46,8 +37,6 @@ public class JsonManager {
 	 * initialized for encryption
 	 * 
 	 * @param data
-	 * @param cipher
-	 *            the cipher previously initialized for encryption
 	 * @param filepath
 	 * @return
 	 * @throws IOException

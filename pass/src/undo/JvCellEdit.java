@@ -1,4 +1,6 @@
-package inc;
+package undo;
+
+import table.PassTableModel;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
@@ -14,7 +16,7 @@ import javax.swing.undo.CannotUndoException;
  * @date Dec 21, 2012
  *
  */
-class JvCellEdit extends AbstractUndoableEdit {
+public class JvCellEdit extends AbstractUndoableEdit {
 
     private static final long serialVersionUID = 3227903502002101373L;
     

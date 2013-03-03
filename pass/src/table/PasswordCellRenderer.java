@@ -1,4 +1,4 @@
-package inc;
+package table;
 
 import java.awt.Component;
 

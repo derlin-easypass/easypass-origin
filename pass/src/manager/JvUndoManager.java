@@ -1,4 +1,4 @@
-package inc;
+package manager;
 
 import java.awt.event.ActionEvent;
 
@@ -14,7 +14,7 @@ import javax.swing.undo.*;
  * @date Dec 21, 2012
  *
  */
-class JvUndoManager extends UndoManager {
+public class JvUndoManager extends UndoManager {
 
     private static final long serialVersionUID = -8283248203575191285L;
     protected JTable table;

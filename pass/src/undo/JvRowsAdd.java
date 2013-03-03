@@ -1,11 +1,13 @@
-package inc;
+package undo;
+
+import table.PassTableModel;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 
 /**
- * this class is used to implement the undoManager. It stores the index and the
- * data of a deleted row, enabling a undo/redo action to be performed.
+ * this class is used to implement the undoManager. It stores the index of an
+ * added row, enabling a undo/redo action to be performed.
  * 
  * Note that it is managed by the undoManager, but it uses a method implemented
  * in the PassTableModel class. See the deleteRow(int index) and addRow methods of the
@@ -15,17 +17,15 @@ import javax.swing.undo.CannotUndoException;
  * @date Dec 21, 2012
  * 
  */
-class JvRowsDelete extends AbstractUndoableEdit {
+public class JvRowsAdd extends AbstractUndoableEdit {
     private static final long serialVersionUID = 5470678378853711947L;
     
     protected PassTableModel tableModel;
-    protected Object[] deletedRow;
     protected int rowIndex;
     
     
-    public JvRowsDelete(PassTableModel tableModel, Object[] deletedRow, int index) {
+    public JvRowsAdd(PassTableModel tableModel, int index) {
         this.tableModel = tableModel;
-        this.deletedRow = deletedRow;
         this.rowIndex = index;
     }
     
@@ -35,20 +35,20 @@ class JvRowsDelete extends AbstractUndoableEdit {
      */
     @Override
     public String getPresentationName() {
-        return "delete";
+        return "add";
     }
     
     
     @Override
     public void undo() throws CannotUndoException {
         super.undo();
-        tableModel.addRow( deletedRow, rowIndex, false );
+        tableModel.deleteRow( rowIndex, false );
     }
     
     
     @Override
     public void redo() throws CannotUndoException {
         super.redo();
-        tableModel.deleteRow( rowIndex, false );
+        tableModel.addRow( rowIndex );
     }
-}// end class
+}

@@ -1,14 +1,10 @@
-package inc;
+package manager;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.util.Map;
-import java.util.regex.Pattern;
 
-import sun.text.normalizer.Replaceable;
-
+import main.Easypass;
 import models.ConfigFileManager;
 import models.Exceptions;
 
@@ -119,6 +115,9 @@ public class PassConfigManager extends ConfigFileManager {
     }// end constructor
     
     
+    public Map<String,String> getMap() {
+        return this.settings;
+    }//end getMap
     /**
      * changes the specified property stored into the map.<br>
      * Note : this will not update the settings file !!When the program exits,
@@ -129,7 +128,7 @@ public class PassConfigManager extends ConfigFileManager {
      * @param value
      *            the new value
      */
-    protected void setProperty( String key, String value ) {
+    public void setProperty( String key, String value ) {
         this.settings.put( key, value );
     }// end setProperty
     
