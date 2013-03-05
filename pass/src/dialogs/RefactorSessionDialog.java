@@ -5,8 +5,8 @@ package dialogs;
  * and open the template in the editor.
  */
 
-import java.awt.Dimension;
-import javax.swing.JFrame;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *
@@ -94,6 +94,7 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
 
         introTextL.setEditable(false);
         introTextL.setText("Be careful, there is no way to undo these changes.");
+        introTextL.setOpaque( false );
         introTextL.setBorder(null);
         introTextL.setRequestFocusEnabled(false);
 

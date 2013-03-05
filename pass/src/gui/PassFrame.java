@@ -1,9 +1,8 @@
-package main;
+package gui;
 
-import dialogs.RefactorSessionDialog;
+import main.thread.PassLock;
 import manager.JvUndoManager;
 import manager.SessionManager.Session;
-import models.Exceptions;
 import table.PassTable;
 import table.PassTableModel;
 
@@ -15,7 +14,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.PrinterException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -27,25 +25,27 @@ public class PassFrame extends JFrame {
 
     boolean debug = true;
 
-    // filename
-    private Session session;
-    private Object lock;
-    private JPanel mainContainer; // main container (BorderLayout)
-    private JvUndoManager undoManager;
 
-    private TableRowSorter<PassTableModel> sorter; // used for the search bar
+    // filename
+    Session session;
+    PassLock lock;
+
+    private JPanel mainContainer; // main container (BorderLayout)
+    JvUndoManager undoManager;
+
+    TableRowSorter<PassTableModel> sorter; // used for the search bar
     // ("find")
-    private JTextField filterText; // text entered by the user, used to filter
+    JTextField filterText; // text entered by the user, used to filter
     // the table cells
     private JTextField rowCount;
-    private JTextField infos; // informations bar (data have been saved, for
+    JTextField infos; // informations bar (data have been saved, for
     // example)
     private Timer infosTimer; // used to hide infos after x seconds
-    private final static int INFOS_DISPLAY_TIME = 6000; // in milliseconds,
+    final static int INFOS_DISPLAY_TIME = 6000; // in milliseconds,
     // delay before
     // resetting info text
 
-    private PassTable table; // the jtable
+    PassTable table; // the jtable
     private JScrollPane scrollPane; // scrollPane for the JTable
 
 
@@ -55,9 +55,10 @@ public class PassFrame extends JFrame {
      * ******************************************************************
      */
 
-    public PassFrame( Session session, Object lock ) {
+    public PassFrame( Session session, PassLock lock ) {
         // initializes the main Frame
-        super( "accounts and passwords" );
+        super( "Easypass / " + System.getProperty( "user.name" ) + " / " + session
+                .getSessionName()  );
         this.session = session;
         this.lock = lock;
 
@@ -66,7 +67,6 @@ public class PassFrame extends JFrame {
         this.setWindowClosingListener();
 
         // sets position, size, etc
-        this.setTitle( this.getTitle() + ": " + session.getSessionName() );
         int winWidth = Integer.parseInt( session.getConfigProperty( "window width" ) );
         int winHeight = Integer.parseInt( session.getConfigProperty( "window height" ) );
 
@@ -142,7 +142,8 @@ public class PassFrame extends JFrame {
         // PassExcelAdapter adapter = new PassExcelAdapter( table );
         this.pack();
         this.setMinimumSize( new Dimension( winWidth, winHeight ) );
-        this.setJMenuBar( this.getJFrameMenu() );
+        //this.setJMenuBar( this.getJFrameMenu() );
+        this.setJMenuBar( new PassMenuBar( this ) );
         this.setKeyboardShortcuts();
         this.setVisible( true );
 
@@ -179,7 +180,7 @@ public class PassFrame extends JFrame {
      * it prompts the user to enter them again - or the problem is somewhere
      * else and the program exits (after logging the cause of the exception)
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( "unchecked" )
     /**
      * creates a JDialog asking the user if he wants to save before quit. The
      * method will return false only if the user clicked cancel.
@@ -285,6 +286,7 @@ public class PassFrame extends JFrame {
                 }
                 synchronized( lock ) {
                     setVisible( false );
+                    lock.setMessage( PassLock.Message.DO_CLOSE );
                     lock.notify();
                 }
             }
@@ -324,7 +326,7 @@ public class PassFrame extends JFrame {
      * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
      * bar; CTRL+N - new row; DEL - delete selected rows;
      */
-    @SuppressWarnings("serial")
+    @SuppressWarnings( "serial" )
     public void setKeyboardShortcuts() {
 
         // escape event closes window
@@ -373,254 +375,6 @@ public class PassFrame extends JFrame {
     /********************************************************************
      * getters (menus, sessionPath) /
      ********************************************************************/
-
-    /**
-     * returns the window menu. Menus :
-     * <p/>
-     * options : save, save as json, print, open a new session
-     * <p/>
-     * edit : undo, redo
-     *
-     * @return
-     */
-    public JMenuBar getJFrameMenu() {
-
-        // Where the GUI is created:
-        JMenuBar menuBar;
-        JMenu optionsMenu, editMenu, sessionMenu;
-        Insets inset = new Insets( 2, 7, 2, 7 );
-        JMenuItem saveSubMenu, jsonSubMenu, printSubMenu;
-        JMenuItem newSessionSubMenu, deleteSessionSubMenu, refactorSessionSubMenu;
-        JMenuItem undoSubMenu, redoSubMenu, addRowSubMenu, deleteRowSubMenu;
-
-        // Create the menu bar.
-        menuBar = new JMenuBar();
-
-        // --------------------------- Build the option menu.
-        optionsMenu = new JMenu( "options" );
-        optionsMenu.setMnemonic( KeyEvent.VK_A );
-        optionsMenu.getAccessibleContext().setAccessibleDescription( "The only menu in this " +
-                "program that has menu items" );
-
-        // save option
-        saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
-        saveSubMenu.setMargin( inset );
-        saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        saveSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-
-                // stops current editing
-                if( table.isEditing() ) {
-                    table.getCellEditor().stopCellEditing();
-                }
-
-                // if no modification to save, returns
-                if( !session.getModel().isModified() ) {
-                    showInfos( "everything up to date.", INFOS_DISPLAY_TIME );
-                    return;
-                }
-
-                try {
-                    // saves data
-                    if( session.save() ) {
-                        System.out.println( "datas serialized" );
-                        showInfos( "data saved.", INFOS_DISPLAY_TIME );
-                        session.getModel().resetModified();
-
-                    } else {
-                        System.out.println( "data not saved" );
-                        showInfos( "an error occurred! Data not saved...", INFOS_DISPLAY_TIME );
-                    }
-                } catch( Exception ee ) {
-                    System.out.println( "error in serialization. Possible data loss" );
-                    showInfos( "an error occurred! Data not saved...", INFOS_DISPLAY_TIME );
-                    ee.printStackTrace();
-                }// end try
-            }
-        } );
-        optionsMenu.add( saveSubMenu );
-
-        // save as json menu
-        jsonSubMenu = new JMenuItem( "export as Json", KeyEvent.VK_E );
-        jsonSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_E,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        jsonSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-
-                if( table.isEditing() ) {
-                    table.getCellEditor().stopCellEditing();
-                }
-
-                if( table.getSelectedRowCount() > 0 ) {
-                    table.clearSelection();
-                }
-                File file = showTxtFileChooser();
-
-                if( file != null ) {
-                    try {
-                        session.writeAsJson( file );
-                        JOptionPane.showMessageDialog( null, "data saved to " + file.getName(),
-                                "export complete", JOptionPane.PLAIN_MESSAGE );
-                    } catch( IOException ee ) {
-                        ee.printStackTrace();
-                        JOptionPane.showMessageDialog( null, "an error occurred during export",
-                                "export error", JOptionPane.ERROR_MESSAGE );
-                    }
-                }// end if
-            }
-        } );
-        optionsMenu.add( jsonSubMenu );
-
-        // print subMenu
-        optionsMenu.addSeparator();
-        printSubMenu = new JMenuItem( "print" );
-        printSubMenu.setMnemonic( KeyEvent.VK_P );
-        printSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-
-        printSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                try {
-                    table.print( JTable.PrintMode.NORMAL );
-                } catch( PrinterException pe ) {
-                    System.err.println( "Error printing: " + pe.getMessage() );
-                }
-            }
-        } );
-
-        optionsMenu.add( printSubMenu );
-
-        // -------------------------build menu to manage session
-        sessionMenu = new JMenu( "session" );
-        sessionMenu.setMargin( inset );
-        // open a new session menu
-        newSessionSubMenu = new JMenuItem( "open new session" );
-
-        newSessionSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-
-                // TODO
-            }
-        } );
-        sessionMenu.add( newSessionSubMenu );
-
-        // refactor current session
-        refactorSessionSubMenu = new JMenuItem( "rename session" );
-        refactorSessionSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-
-                RefactorSessionDialog dialog = new RefactorSessionDialog( null );
-                // if the user closed the dialog or clicked cancel, simply
-                // returns
-                if( dialog.getStatus() == false ) {
-                    return;
-                }
-
-                try {
-                    session.refactor( dialog.getSessionName(), dialog.getPass() );
-                    setTitle( getTitle() + ": " + session.getSessionName() );
-                    showInfos( "refactoring done.", INFOS_DISPLAY_TIME );
-
-                } catch( Exceptions.RefactorException ex ) {
-                    showInfos( ex.getMessage(), INFOS_DISPLAY_TIME );
-                }
-
-            }
-        } );
-        sessionMenu.add( refactorSessionSubMenu );
-
-        // delete session
-        // TODO
-        deleteSessionSubMenu = new JMenuItem( "delete session" );
-
-        deleteSessionSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-
-                if( JOptionPane.showConfirmDialog( null, "are you sure you want to permanently " +
-                        "delete session \"" + session.getSessionName() + "\" ?",
-                        "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
-
-                    session.delete();
-
-                    setVisible( false );
-
-                    // TODO
-                }
-            }
-        } );
-        sessionMenu.add( deleteSessionSubMenu );
-
-        // --------------------------- Build edit menu in the menu bar.
-        editMenu = new JMenu( "edit" );
-        editMenu.setMargin( inset );
-
-        // adds the add row subMenu
-        addRowSubMenu = new JMenuItem( "add row" );
-        addRowSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_N,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        addRowSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                session.getModel().addRow();
-
-                // resets the filters --> shows all rows (global view)
-                filterText.setText( "" );
-
-                // sets focus on the new row
-                int lastRow = session.getModel().getRowCount() - 1;
-
-                // scrolls to the bottom of the table
-                table.getSelectionModel().setSelectionInterval( lastRow, lastRow );
-                table.scrollRectToVisible( new Rectangle( table.getCellRect( lastRow, 0, true ) ) );
-            }
-        } );
-
-        editMenu.add( addRowSubMenu );
-
-        // adds the delete selected rows subMenu
-        deleteRowSubMenu = new JMenuItem( "delete selected rows" );
-        deleteRowSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_D,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-
-        deleteRowSubMenu.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                if( table.isEditing() ) {
-                    table.getCellEditor().stopCellEditing();
-                }
-                int[] selectedRows = table.getSelectedRows();
-                for( int i = 0; i < selectedRows.length; i++ ) {
-                    // row index minus i since the table size shrinks by 1
-                    // everytime. Also converts the row indexes since the table
-                    // can be sorted/filtered
-                    session.getModel().deleteRow( table.convertRowIndexToModel( selectedRows[ i ]
-                            - i ) );
-                }
-            }
-        } );
-        editMenu.add( deleteRowSubMenu );
-
-        // add undo submenu
-        undoSubMenu = new JMenuItem( undoManager.getUndoAction() );
-        undoSubMenu.setMnemonic( KeyEvent.VK_Z );
-        undoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Z,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-
-        // add redo submenu
-        redoSubMenu = new JMenuItem( undoManager.getRedoAction() );
-        redoSubMenu.setMnemonic( KeyEvent.VK_Y );
-        redoSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_Y,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        editMenu.add( undoSubMenu );
-        editMenu.add( redoSubMenu );
-
-        // adds the menu to the menubar
-        menuBar.add( optionsMenu );
-        menuBar.add( sessionMenu );
-        menuBar.add( editMenu );
-
-        return menuBar;
-
-    }// end getJFrameMenu
 
 
     /**

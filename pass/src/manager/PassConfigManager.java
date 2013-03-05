@@ -1,12 +1,12 @@
 package manager;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.util.Map;
-
 import main.Easypass;
 import models.ConfigFileManager;
 import models.Exceptions;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 public class PassConfigManager extends ConfigFileManager {
     
@@ -161,19 +161,7 @@ public class PassConfigManager extends ConfigFileManager {
      * @throws URISyntaxException
      */
     private void updateSettings() {
-        
-        // String pathToParentOfJar = "";
-        // try{
-        // pathToParentOfJar =
-        // URLDecoder.decode(this.getClass().getProtectionDomain()
-        // .getCodeSource().getLocation().getPath(), "UTF-8");
-        // }catch( UnsupportedEncodingException e ){
-        // e.printStackTrace();
-        // }
-        //
-        // pathToParentOfJar = pathToParentOfJar.replaceAll( "/[^/]+\\.jar.*",
-        // "" );
-        
+
         String jarDir = new File( PassConfigManager.class.getProtectionDomain()
                 .getCodeSource().getLocation().getPath() ).getParentFile()
                 .getPath();

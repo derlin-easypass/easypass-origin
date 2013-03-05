@@ -1,10 +1,9 @@
 package table;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.HeadlessException;
-import java.awt.Toolkit;
+import javax.swing.*;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
@@ -12,13 +11,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.List;
-
-import javax.swing.JComponent;
-import javax.swing.JTable;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 
 /**
  * This class is an extension of the basic JTable, adapted in order to use a
@@ -46,7 +38,7 @@ public class PassTable extends JTable {
 		// so when the user clicks on delete rows for example, there is no
 		// editing ghost cell hanging in the void !
 		this.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-		this.setKeyBindings();
+		//this.setKeyBindings();
 		this.setCellSelectionEnabled(true);
 
 	}// end constructor

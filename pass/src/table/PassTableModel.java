@@ -2,17 +2,15 @@ package table;
 
 import undo.*;
 
-import java.awt.HeadlessException;
-import java.awt.Toolkit;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
-import javax.swing.table.AbstractTableModel;
 
 /**
  * This class is at the core of the application. It is a custom implementation
@@ -45,6 +43,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         super();
         this.columnNames = columnNames;
         this.data = data;
+        //TODO : check that the data and the colnames are the same length
         this.isModified = false;
     }
     
@@ -135,11 +134,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     public boolean isCellEditable( int row, int col ) {
         // Note that the data/cell address is constant,
         // no matter where the cell appears onscreen.
-        if( row < 0 ){
-            return false;
-        }else{
-            return true;
-        }
+        return ( row >= 0 );
     }
     
     
@@ -195,23 +190,18 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         if( ( (String) oldValue ).equals( (String) value ) ){
             return;
         }
-        
-        UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
-        if( undoable == false || listeners == null ){
-            data.get( row )[ col ] = value;
-            fireTableCellUpdated( row, col );
-            this.isModified = true;
-            return;
-        }
-        
+
         data.get( row )[ col ] = value;
-        fireTableCellUpdated( row, col );
         this.isModified = true;
-        JvCellEdit cellEdit = new JvCellEdit( this, oldValue, value, row, col );
-        UndoableEditEvent editEvent = new UndoableEditEvent( this, cellEdit );
-        for( UndoableEditListener listener : listeners )
-            listener.undoableEditHappened( editEvent );
-    }
+
+        if( areUndoListenersRegistered() && undoable ){
+            JvCellEdit cellEdit = new JvCellEdit( this, oldValue, value, row, col );
+            notifyUndoableActionHappened( new UndoableEditEvent( this,
+                    cellEdit ) );
+        }//end if
+
+        fireTableCellUpdated( row, col );
+    }//end setValueAt
     
     
     /********************************************************************
@@ -277,9 +267,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * @param index
      */
     public void addRow( Object[] row, int index, boolean undoable ) {
-        
-        UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
-        
+
         // if the index is valid, adds a row at the index
         if( index >= 0 && index < data.size() ){
             data.add( index, row );
@@ -294,12 +282,11 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         }
         
         // finally, adds the undo object to the undo queue
-        if( listeners != null && undoable ){
+        if( areUndoListenersRegistered() && undoable ){
             JvRowsAdd rowsEdit = new JvRowsAdd( this, index );
-            UndoableEditEvent editEvent = new UndoableEditEvent( this, rowsEdit );
-            for( UndoableEditListener listener : listeners )
-                listener.undoableEditHappened( editEvent );
-        }
+            notifyUndoableActionHappened( new UndoableEditEvent( this,
+                    rowsEdit ) );
+        }//end if
         
     }// end addRow
     
@@ -325,20 +312,14 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         
         if( index >= 0 && index < data.size() ){
             
-            UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
             // if undoListeners are set and the event is undoable, adds it to
             // the undoManager list
-            if( listeners != null && undoable ){
-                
-                // creates an undoable object and informs the listeners of the
-                // change
-                JvRowsDelete rowsEdit = new JvRowsDelete( this,
+            if( areUndoListenersRegistered() && undoable ){
+                JvRowsDelete rowsDelete = new JvRowsDelete( this,
                         data.get( index ), index );
-                UndoableEditEvent editEvent = new UndoableEditEvent( this,
-                        rowsEdit );
-                for( UndoableEditListener listener : listeners )
-                    listener.undoableEditHappened( editEvent );
-            }
+                notifyUndoableActionHappened( new UndoableEditEvent( this,
+                        rowsDelete ) );
+            }//end if
             
             // removes the row
             data.remove( index );
@@ -424,18 +405,14 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         }
         
         // if the cut is undoable, creates an undoable event of type
-        // JvPaste
-        UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
-        
-        if( listeners != null && undoable ){
+        // JvCut
+        if( areUndoListenersRegistered() && undoable ){
             JvCut rowsCut = new JvCut( this, oldValues.toArray(), selectedRows,
                     selectedCols );
-            
-            UndoableEditEvent cutEvent = new UndoableEditEvent( this, rowsCut );
-            for( UndoableEditListener listener : listeners )
-                listener.undoableEditHappened( cutEvent );
-        }// end if
-        
+            notifyUndoableActionHappened( new UndoableEditEvent( this,
+                    rowsCut ) );
+        }//end if
+
         // spreads the changes
         this.fireTableDataChanged();
     }
@@ -516,50 +493,16 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
                     }// end if
                 }// end for cols
                 
-                // splits the current row into columns
-                // Scanner stCols = new Scanner( line );
-                // stCols.useDelimiter( "\t" );
-                //
-                // for( int j = 0; stCols.hasNext(); j++ ){
-                // // if we are in the boundaries of the table, pastes the new
-                // // value
-                // if( startRow + i < this.getRowCount()
-                // && startCol + j < this.getColumnCount() ){
-                // // if not the first col, adds a delimiter to the
-                // // oldValues string
-                // if( j != 0 )
-                // builder.append( "\t" );
-                //
-                // // records the old value
-                // String oldValue = (String) this.getValueAt( startRow
-                // + i, startCol + j );
-                // builder.append( oldValue );
-                //
-                // // gets the new values and updates the table
-                // String newValue = stCols.next();
-                // System.out.println("newvalue " + newValue);
-                // this.setValueAt( newValue, startRow + i, startCol + j,
-                // false );
-                // }else{ // if outreached the table boudaries, just skips to
-                // // the next row
-                // break;
-                // }// end if
-                // }// end for cols
-                //
-                // stCols.close();
-            }// end for lines
+            }//end forLines
+
             
             // if the paste is undoable, creates an undoable event of type
             // JvPaste
-            UndoableEditListener listeners[] = getListeners( UndoableEditListener.class );
-            
-            if( listeners != null && undoable ){
+            if( areUndoListenersRegistered() && undoable ){
                 JvPaste rowsPaste = new JvPaste( this, builder.toString(),
                         clipboardContent, startRow, startCol );
-                UndoableEditEvent pasteEvent = new UndoableEditEvent( this,
-                        rowsPaste );
-                for( UndoableEditListener listener : listeners )
-                    listener.undoableEditHappened( pasteEvent );
+                notifyUndoableActionHappened( new UndoableEditEvent( this,
+                        rowsPaste ) );
             }// end if
             
             // spreads the changes
@@ -583,7 +526,18 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
      * @param listener
      */
     public void addUndoableEditListener( UndoableEditListener listener ) {
-        listenerList.add( UndoableEditListener.class, listener );
-    }
-    
+        this.listenerList.add( UndoableEditListener.class, listener );
+    }//end addUndoableEditListener
+
+
+    public boolean areUndoListenersRegistered() {
+        return getListeners( UndoableEditListener.class ) != null;
+    }//end areUndoListenersRegistered
+
+
+    public void notifyUndoableActionHappened( UndoableEditEvent edit ){
+        for( UndoableEditListener listener : getListeners( UndoableEditListener.class ) )
+            listener.undoableEditHappened( edit );
+    }//end notifyUndoableActionHappened
+
 }// end class

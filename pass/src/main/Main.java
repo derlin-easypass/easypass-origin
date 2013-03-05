@@ -1,6 +1,8 @@
 package main;
 
 import dialogs.OpenSessionDialog;
+import gui.PassFrame;
+import main.thread.PassLock;
 import manager.PassConfigManager;
 import manager.SessionManager;
 import manager.SessionManager.Session;
@@ -21,7 +23,7 @@ public class Main {
     private SessionManager sessionManager;
     private int runningWindowsCount;
     private boolean running = true;
-    private Object lock;
+    private PassLock lock;
     private boolean debug = true;
 
 
@@ -39,24 +41,32 @@ public class Main {
             checkConfig();
             this.sessionManager = new SessionManager( this.configManager.getMap() );
             this.runningWindowsCount = 0;
-            this.lock = new Object();
+            this.lock = new PassLock();
 
             while( running ) {
                 PassFrame frame = new SessionWindow().launchGUI();
                 if( debug ) System.out.printf( "launchGUI returned." );
-                    try {
-                        synchronized( lock ) {
-                            lock.wait();
-                        }
-                    } catch( InterruptedException e ) {
-                        if( debug ) System.out.println( "main thread interrupted" );
-                        System.out.println("interrupt");
+                try {
+                    synchronized( lock ) {
+                        lock.wait();
                     }
-                    frame.dispose();
+                } catch( InterruptedException e ) {
+                    if( debug ) System.out.println( "main thread interrupted" );
+                    System.out.println( "interrupt" );
                 }
+
+                switch( lock.getMessage() ) {
+                    case DO_CLOSE:
+                        this.running = false;
+
+                    case DO_OPEN_SESSION:
+                        frame.dispose();
+
+                }
+            }
         } catch( Exceptions.ConfigFileNotFoundException e ) {
             if( debug ) {
-                System.out.println("config file not found");
+                System.out.println( "config file not found" );
                 e.printStackTrace();
             }
             // TODO
@@ -105,7 +115,7 @@ public class Main {
 
         try {
 
-            modal = new OpenSessionDialog( null, sessionManager.availableSessions() );
+            modal = new OpenSessionDialog( null, sessionManager );
             modal.addWindowListener( new WindowAdapter() {
 
                 @Override

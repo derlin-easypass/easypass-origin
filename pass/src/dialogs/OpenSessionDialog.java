@@ -5,68 +5,71 @@
 package dialogs;
 
 import manager.SessionManager_old;
+import passinterface.AbstractSessionChecker;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
- * 
  * @author lucy
  */
 public class OpenSessionDialog extends javax.swing.JDialog {
-    
+
     private String[] sessionList;
+    private AbstractSessionChecker sessionChecker;
     private String pass = "", session = "";
     private boolean imported = false; // set to true if a session file was
-                                      // imported
+    // imported
     private boolean status = true; // set to false if window closed or cancel
-                                   // button pressed
-    
-    
+    // button pressed
+
+
     /**
      * Creates new form SessionAndPassFrame
      */
-    public OpenSessionDialog( javax.swing.JFrame parent, String[] sessions )
-            throws ClassNotFoundException, IllegalAccessException,
-            InstantiationException, UnsupportedLookAndFeelException {
+    public OpenSessionDialog( javax.swing.JFrame parent, AbstractSessionChecker sessionChecker )
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException,
+            UnsupportedLookAndFeelException, FileNotFoundException {
         super( parent, "session and credentials", true );
-        
-        if( sessions == null ){
-            this.sessionList = new String[0];
-        }else{
-            this.sessionList = sessions;
+
+        this.sessionChecker = sessionChecker;
+        this.sessionList = this.sessionChecker.availableSessions();
+
+        if( this.sessionList == null){
+            this.sessionList = new String[ 0 ];
         }
-        
+
         // sets close operation
         this.setDefaultCloseOperation( javax.swing.JDialog.DO_NOTHING_ON_CLOSE );
-        
+
         UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         initComponents();
-        
+
         // press ENTER to activate the ok button
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW )
-                .put( KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, 0 ), "OK" );
-        
+        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke
+                .getKeyStroke( KeyEvent.VK_ENTER, 0 ), "OK" );
+
         this.getRootPane().getActionMap().put( "OK", new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
                 okButton.doClick();
             }
         } );
-        
+
         // removes the new button from the togglePolicy (ignored when using tabs
         // to navigate through inputs)
         browseButton.setFocusable( false );
         newSessionButton.setFocusable( false );
-        
+
         importRB.setFocusable( false );
         selectSessionRB.setFocusable( false );
-        
+
         importTF.setFocusable( false );
     }
-    
-    
+
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -75,14 +78,13 @@ public class OpenSessionDialog extends javax.swing.JDialog {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
-        
+
         buttonGroupImportOrSelect = new javax.swing.ButtonGroup();
         mainPanel = new javax.swing.JPanel();
         sessionL = new javax.swing.JLabel();
-        if( this.sessionList == null ){
-            this.sessionCombo = new javax.swing.JComboBox<String>(
-                    new String[]{ "choose..." } );
-        }else{
+        if( this.sessionList == null ) {
+            this.sessionCombo = new javax.swing.JComboBox<String>( new String[]{ "choose..." } );
+        } else {
             sessionCombo = new javax.swing.JComboBox<String>( sessionList );
             this.sessionCombo.insertItemAt( "choose...", 0 );
             this.sessionCombo.setSelectedIndex( 0 );
@@ -96,25 +98,25 @@ public class OpenSessionDialog extends javax.swing.JDialog {
         browseButton = new javax.swing.JButton();
         importRB = new javax.swing.JRadioButton();
         selectSessionRB = new javax.swing.JRadioButton();
-        
+
         setTitle( "EasyPass - open session" );
         setResizable( false );
-        
+
         sessionL.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         sessionL.setLabelFor( sessionCombo );
         sessionL.setText( "Choose your session :" );
         sessionL.setFocusable( false );
-        
+
         sessionCombo.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         sessionCombo.addActionListener( new java.awt.event.ActionListener() {
             public void actionPerformed( java.awt.event.ActionEvent evt ) {
                 sessionComboActionPerformed( evt );
             }
         } );
-        
+
         passL.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         passL.setText( "Password:" );
-        
+
         okButton.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         okButton.setText( "Launch" );
         okButton.setEnabled( false );
@@ -123,7 +125,7 @@ public class OpenSessionDialog extends javax.swing.JDialog {
                 okButtonActionPerformed( evt );
             }
         } );
-        
+
         cancelButton.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         cancelButton.setText( "Cancel" );
         cancelButton.addActionListener( new java.awt.event.ActionListener() {
@@ -131,25 +133,24 @@ public class OpenSessionDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed( evt );
             }
         } );
-        
+
         passTF.setEnabled( false );
         passTF.addKeyListener( new java.awt.event.KeyAdapter() {
             public void keyTyped( java.awt.event.KeyEvent evt ) {
                 passTFKeyTyped( evt );
             }
         } );
-        
+
         newSessionButton.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         newSessionButton.setText( "New..." );
-        newSessionButton
-                .addActionListener( new java.awt.event.ActionListener() {
-                    public void actionPerformed( java.awt.event.ActionEvent evt ) {
-                        newSessionButtonActionPerformed( evt );
-                    }
-                } );
-        
+        newSessionButton.addActionListener( new java.awt.event.ActionListener() {
+            public void actionPerformed( java.awt.event.ActionEvent evt ) {
+                newSessionButtonActionPerformed( evt );
+            }
+        } );
+
         importTF.setEditable( false );
-        
+
         browseButton.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         browseButton.setText( "Browse" );
         browseButton.setEnabled( false );
@@ -158,7 +159,7 @@ public class OpenSessionDialog extends javax.swing.JDialog {
                 browseButtonActionPerformed( evt );
             }
         } );
-        
+
         buttonGroupImportOrSelect.add( importRB );
         importRB.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         importRB.setText( "Import" );
@@ -167,314 +168,202 @@ public class OpenSessionDialog extends javax.swing.JDialog {
                 importRBStateChanged( evt );
             }
         } );
-        
+
         buttonGroupImportOrSelect.add( selectSessionRB );
         selectSessionRB.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         selectSessionRB.setSelected( true );
         selectSessionRB.setText( "Open" );
-        
-        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(
-                mainPanel );
+
+        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout( mainPanel );
         mainPanel.setLayout( mainPanelLayout );
-        mainPanelLayout
-                .setHorizontalGroup( mainPanelLayout
-                        .createParallelGroup(
-                                javax.swing.GroupLayout.Alignment.LEADING )
-                        .addGroup(
-                                javax.swing.GroupLayout.Alignment.TRAILING,
-                                mainPanelLayout
-                                        .createSequentialGroup()
-                                        .addContainerGap()
-                                        .addGroup(
-                                                mainPanelLayout
-                                                        .createParallelGroup(
-                                                                javax.swing.GroupLayout.Alignment.TRAILING )
-                                                        .addGroup(
-                                                                mainPanelLayout
-                                                                        .createSequentialGroup()
-                                                                        .addGap(
-                                                                                0,
-                                                                                0,
-                                                                                Short.MAX_VALUE )
-                                                                        .addComponent(
-                                                                                okButton )
-                                                                        .addPreferredGap(
-                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED )
-                                                                        .addComponent(
-                                                                                cancelButton )
-                                                                        .addGap(
-                                                                                20,
-                                                                                20,
-                                                                                20 ) )
-                                                        .addGroup(
-                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                mainPanelLayout
-                                                                        .createSequentialGroup()
-                                                                        .addGroup(
-                                                                                mainPanelLayout
-                                                                                        .createParallelGroup(
-                                                                                                javax.swing.GroupLayout.Alignment.TRAILING )
-                                                                                        .addGroup(
-                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                                                mainPanelLayout
-                                                                                                        .createSequentialGroup()
-                                                                                                        .addComponent(
-                                                                                                                passL )
-                                                                                                        .addPreferredGap(
-                                                                                                                javax.swing.LayoutStyle.ComponentPlacement.UNRELATED )
-                                                                                                        .addComponent(
-                                                                                                                passTF,
-                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                                249,
-                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE ) )
-                                                                                        .addComponent(
-                                                                                                sessionL,
-                                                                                                javax.swing.GroupLayout.Alignment.LEADING )
-                                                                                        .addGroup(
-                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                                                mainPanelLayout
-                                                                                                        .createSequentialGroup()
-                                                                                                        .addGroup(
-                                                                                                                mainPanelLayout
-                                                                                                                        .createParallelGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.LEADING )
-                                                                                                                        .addComponent(
-                                                                                                                                importRB )
-                                                                                                                        .addComponent(
-                                                                                                                                selectSessionRB ) )
-                                                                                                        .addGroup(
-                                                                                                                mainPanelLayout
-                                                                                                                        .createParallelGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.TRAILING )
-                                                                                                                        .addGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                                                                                mainPanelLayout
-                                                                                                                                        .createSequentialGroup()
-                                                                                                                                        .addPreferredGap(
-                                                                                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED )
-                                                                                                                                        .addComponent(
-                                                                                                                                                sessionCombo,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                                                                170,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                                                                                                        .addPreferredGap(
-                                                                                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED )
-                                                                                                                                        .addComponent(
-                                                                                                                                                newSessionButton,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                                                                73,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE ) )
-                                                                                                                        .addGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                                                                                mainPanelLayout
-                                                                                                                                        .createSequentialGroup()
-                                                                                                                                        .addGap(
-                                                                                                                                                2,
-                                                                                                                                                2,
-                                                                                                                                                2 )
-                                                                                                                                        .addComponent(
-                                                                                                                                                importTF,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                                                                170,
-                                                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                                                                                                        .addPreferredGap(
-                                                                                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED )
-                                                                                                                                        .addComponent(
-                                                                                                                                                browseButton ) ) ) ) )
-                                                                        .addGap(
-                                                                                0,
-                                                                                20,
-                                                                                Short.MAX_VALUE ) ) ) ) );
-        mainPanelLayout
-                .setVerticalGroup( mainPanelLayout
-                        .createParallelGroup(
-                                javax.swing.GroupLayout.Alignment.LEADING )
-                        .addGroup(
-                                mainPanelLayout
-                                        .createSequentialGroup()
-                                        .addContainerGap()
-                                        .addComponent( sessionL )
-                                        .addPreferredGap(
-                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                9, Short.MAX_VALUE )
-                                        .addGroup(
-                                                mainPanelLayout
-                                                        .createParallelGroup(
-                                                                javax.swing.GroupLayout.Alignment.BASELINE )
-                                                        .addComponent( importRB )
-                                                        .addComponent(
-                                                                importTF,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                        .addComponent(
-                                                                browseButton,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                23,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE ) )
-                                        .addPreferredGap(
-                                                javax.swing.LayoutStyle.ComponentPlacement.UNRELATED )
-                                        .addGroup(
-                                                mainPanelLayout
-                                                        .createParallelGroup(
-                                                                javax.swing.GroupLayout.Alignment.BASELINE )
-                                                        .addComponent(
-                                                                selectSessionRB )
-                                                        .addComponent(
-                                                                sessionCombo,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                        .addComponent(
-                                                                newSessionButton,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                23,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE ) )
-                                        .addGap( 18, 18, 18 )
-                                        .addGroup(
-                                                mainPanelLayout
-                                                        .createParallelGroup(
-                                                                javax.swing.GroupLayout.Alignment.BASELINE )
-                                                        .addComponent(
-                                                                passTF,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                20,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                        .addComponent( passL ) )
-                                        .addGap( 18, 18, 18 )
-                                        .addGroup(
-                                                mainPanelLayout
-                                                        .createParallelGroup(
-                                                                javax.swing.GroupLayout.Alignment.BASELINE )
-                                                        .addComponent(
-                                                                okButton,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                34,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                        .addComponent(
-                                                                cancelButton,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                34,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE ) )
-                                        .addContainerGap() ) );
-        
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(
-                getContentPane() );
+        mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup( javax.swing
+                .GroupLayout.Alignment.LEADING ).addGroup( javax.swing.GroupLayout.Alignment
+                .TRAILING, mainPanelLayout.createSequentialGroup().addContainerGap().addGroup(
+                mainPanelLayout.createParallelGroup( javax.swing.GroupLayout.Alignment.TRAILING )
+                        .addGroup( mainPanelLayout.createSequentialGroup().addGap( 0, 0,
+                                Short.MAX_VALUE ).addComponent( okButton ).addPreferredGap( javax
+                                .swing.LayoutStyle.ComponentPlacement.RELATED ).addComponent(
+                                cancelButton ).addGap( 20, 20, 20 ) ).addGroup( javax.swing
+                        .GroupLayout.Alignment.LEADING, mainPanelLayout.createSequentialGroup()
+                        .addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
+                                .Alignment.TRAILING ).addGroup( javax.swing.GroupLayout.Alignment
+                                .LEADING, mainPanelLayout.createSequentialGroup().addComponent(
+                                passL ).addPreferredGap( javax.swing.LayoutStyle
+                                .ComponentPlacement.UNRELATED ).addComponent( passTF,
+                                javax.swing.GroupLayout.PREFERRED_SIZE, 249,
+                                javax.swing.GroupLayout.PREFERRED_SIZE ) ).addComponent(
+                                sessionL, javax.swing.GroupLayout.Alignment.LEADING ).addGroup(
+                                javax.swing.GroupLayout.Alignment.LEADING,
+                                mainPanelLayout.createSequentialGroup().addGroup( mainPanelLayout
+                                        .createParallelGroup( javax.swing.GroupLayout.Alignment
+                                                .LEADING ).addComponent( importRB ).addComponent(
+                                                selectSessionRB ) ).addGroup( mainPanelLayout
+                                        .createParallelGroup( javax.swing.GroupLayout.Alignment
+                                                .TRAILING ).addGroup( javax.swing.GroupLayout
+                                                .Alignment.LEADING,
+                                                mainPanelLayout.createSequentialGroup()
+                                                        .addPreferredGap( javax.swing.LayoutStyle
+                                                                .ComponentPlacement.RELATED )
+                                                        .addComponent( sessionCombo,
+                                                                javax.swing.GroupLayout
+                                                                        .PREFERRED_SIZE, 170,
+                                                                javax.swing.GroupLayout
+                                                                        .PREFERRED_SIZE )
+                                                        .addPreferredGap( javax.swing.LayoutStyle
+                                                                .ComponentPlacement.RELATED )
+                                                        .addComponent( newSessionButton,
+                                                                javax.swing.GroupLayout
+                                                                        .PREFERRED_SIZE, 73,
+                                                                javax.swing.GroupLayout
+                                                                        .PREFERRED_SIZE ) )
+                                        .addGroup( javax.swing.GroupLayout.Alignment.LEADING,
+                                                mainPanelLayout.createSequentialGroup().addGap(
+                                                        2, 2, 2 ).addComponent( importTF,
+                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                        170,
+                                                        javax.swing.GroupLayout.PREFERRED_SIZE )
+                                                        .addPreferredGap( javax.swing.LayoutStyle
+                                                                .ComponentPlacement.RELATED )
+                                                        .addComponent( browseButton ) ) ) ) )
+                        .addGap( 0, 20, Short.MAX_VALUE ) ) ) ) );
+        mainPanelLayout.setVerticalGroup( mainPanelLayout.createParallelGroup( javax.swing
+                .GroupLayout.Alignment.LEADING ).addGroup( mainPanelLayout.createSequentialGroup
+                ().addContainerGap().addComponent( sessionL ).addPreferredGap( javax.swing
+                .LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE ).addGroup(
+                mainPanelLayout.createParallelGroup( javax.swing.GroupLayout.Alignment.BASELINE )
+                        .addComponent( importRB ).addComponent( importTF,
+                        javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE,
+                        javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( browseButton,
+                        javax.swing.GroupLayout.PREFERRED_SIZE, 23,
+                        javax.swing.GroupLayout.PREFERRED_SIZE ) ).addPreferredGap( javax.swing
+                .LayoutStyle.ComponentPlacement.UNRELATED ).addGroup( mainPanelLayout
+                .createParallelGroup( javax.swing.GroupLayout.Alignment.BASELINE ).addComponent(
+                        selectSessionRB ).addComponent( sessionCombo,
+                        javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE,
+                        javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( newSessionButton,
+                        javax.swing.GroupLayout.PREFERRED_SIZE, 23,
+                        javax.swing.GroupLayout.PREFERRED_SIZE ) ).addGap( 18, 18,
+                18 ).addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
+                .Alignment.BASELINE ).addComponent( passTF,
+                javax.swing.GroupLayout.PREFERRED_SIZE, 20,
+                javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( passL ) ).addGap( 18, 18,
+                18 ).addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
+                .Alignment.BASELINE ).addComponent( okButton,
+                javax.swing.GroupLayout.PREFERRED_SIZE, 34,
+                javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( cancelButton,
+                javax.swing.GroupLayout.PREFERRED_SIZE, 34,
+                javax.swing.GroupLayout.PREFERRED_SIZE ) ).addContainerGap() ) );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout( getContentPane() );
         getContentPane().setLayout( layout );
-        layout.setHorizontalGroup( layout.createParallelGroup(
-                javax.swing.GroupLayout.Alignment.LEADING ).addGroup(
-                javax.swing.GroupLayout.Alignment.TRAILING,
-                layout.createSequentialGroup()
-                        .addGap( 0, 4, Short.MAX_VALUE )
-                        .addComponent( mainPanel,
-                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                javax.swing.GroupLayout.PREFERRED_SIZE ) ) );
-        layout.setVerticalGroup( layout.createParallelGroup(
-                javax.swing.GroupLayout.Alignment.LEADING ).addGroup(
-                layout.createSequentialGroup()
-                        .addComponent( mainPanel,
-                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                javax.swing.GroupLayout.PREFERRED_SIZE )
-                        .addGap( 0, 1, Short.MAX_VALUE ) ) );
-        
+        layout.setHorizontalGroup( layout.createParallelGroup( javax.swing.GroupLayout.Alignment
+                .LEADING ).addGroup( javax.swing.GroupLayout.Alignment.TRAILING,
+                layout.createSequentialGroup().addGap( 0, 4, Short.MAX_VALUE ).addComponent(
+                        mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE,
+                        javax.swing.GroupLayout.PREFERRED_SIZE ) ) );
+        layout.setVerticalGroup( layout.createParallelGroup( javax.swing.GroupLayout.Alignment
+                .LEADING ).addGroup( layout.createSequentialGroup().addComponent( mainPanel,
+                javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+                javax.swing.GroupLayout.PREFERRED_SIZE ).addGap( 0, 1, Short.MAX_VALUE ) ) );
+
         pack();
     }// </editor-fold>
-    
-    
+
+
     private void sessionComboActionPerformed( java.awt.event.ActionEvent evt ) {
         setOkButtonState();
         setPassTFState();
     }
-    
-    
+
+
     private void okButtonActionPerformed( java.awt.event.ActionEvent evt ) {
-                
+
         this.pass = new String( this.passTF.getPassword() );
-        if( this.imported ){
+        if( this.imported ) {
             this.session = this.importTF.getText();
-        }else{
-            this.session = (String) this.sessionCombo.getSelectedItem();
+        } else {
+            this.session = ( String ) this.sessionCombo.getSelectedItem();
         }
-        
-        // reset the form for later use and dispose
-        this.reset();
-        this.setVisible( false );
+
+        if(this.sessionChecker.areCredentialsValid( session, pass )){
+            this.reset();
+            this.setVisible( false );
+        }else{
+            this.passTF.setText( "" );
+            setOkButtonState();
+        }
+
     }
-    
-    
+
+
     private void cancelButtonActionPerformed( java.awt.event.ActionEvent evt ) {
         this.status = false;
         this.setVisible( false );
     }
-    
-    
+
+
     private void newSessionButtonActionPerformed( java.awt.event.ActionEvent evt ) {
-        String s = (String) JOptionPane.showInputDialog( this,
-                "New session name : ", "" );
+        String s = ( String ) JOptionPane.showInputDialog( this, "New session name : ", "" );
         // the (?i) makes everything on the right case-insensitive
-        if( s != null && s.matches( "^(?i)[a-z][a-z1-9\\._-]{4,}$" ) ){
+        if( s != null && s.matches( "^(?i)[a-z][a-z1-9\\._-]{4,}$" ) ) {
             this.sessionCombo.addItem( s );
-            this.sessionCombo.setSelectedIndex( this.sessionCombo
-                    .getItemCount() - 1 );
-        }else{
-            JOptionPane
-                    .showMessageDialog(
-                            this,
-                            "A session name must start with a letter \n and "
-                                    + "contain only letters and digits. \nDelimiters accepted : _.-",
-                            "error", JOptionPane.WARNING_MESSAGE );
+            this.sessionCombo.setSelectedIndex( this.sessionCombo.getItemCount() - 1 );
+        } else {
+            JOptionPane.showMessageDialog( this, "A session name must start with a letter \n and " +
+                    "" + "contain only letters and digits. \nDelimiters accepted : _.-", "error",
+                    JOptionPane.WARNING_MESSAGE );
         }
     }
-    
-    
+
+
     private void browseButtonActionPerformed( java.awt.event.ActionEvent evt ) {
         JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory( new File( this.imported ? this.importTF
-                .getText() : "." ) );
+        chooser.setCurrentDirectory( new File( this.imported ? this.importTF.getText() : "." ) );
         chooser.setDialogTitle( "Import session file..." );
         chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
         chooser.setFileFilter( new ImportSessionFilter() );
-        
-        if( chooser.showOpenDialog( this ) == JFileChooser.APPROVE_OPTION ){
-            
+
+        if( chooser.showOpenDialog( this ) == JFileChooser.APPROVE_OPTION ) {
+
             this.imported = true;
             this.importTF.setText( chooser.getSelectedFile().getAbsolutePath() );
             this.sessionCombo.setEnabled( false );
             this.newSessionButton.setEnabled( false );
         }
-        
+
         setOkButtonState();
         setPassTFState();
-        
+
     }
-    
-    
+
+
     private void importRBStateChanged( javax.swing.event.ChangeEvent evt ) {
-        if( this.importRB.isSelected() ){
+        if( this.importRB.isSelected() ) {
             this.imported = true;
             this.sessionCombo.setEnabled( false );
             this.newSessionButton.setEnabled( false );
             this.browseButton.setEnabled( true );
-            
-        }else if(this.selectSessionRB.isSelected()){
+
+        } else if( this.selectSessionRB.isSelected() ) {
             this.imported = false;
             this.sessionCombo.setEnabled( true );
             this.newSessionButton.setEnabled( true );
             this.browseButton.setEnabled( false );
         }
-        
+
         setOkButtonState();
         setPassTFState();
     }
-    
-    
+
+
     private void passTFKeyTyped( java.awt.event.KeyEvent evt ) {
         setOkButtonState();
     }
-    
-    
+
+
     /**
      * resets the textareas to empty values
      */
@@ -483,77 +372,75 @@ public class OpenSessionDialog extends javax.swing.JDialog {
         this.importTF.setText( "" );
         this.sessionCombo.setSelectedIndex( 0 );
     }
-    
-    
+
+
     private void setPassTFState() {
-        if( ( this.imported && !this.importTF.getText().isEmpty() )
-                || ( !this.imported && this.sessionCombo.getSelectedIndex() != 0 ) ){
+        if( ( this.imported && !this.importTF.getText().isEmpty() ) || ( !this.imported && this
+                .sessionCombo.getSelectedIndex() != 0 ) ) {
             this.passTF.setEnabled( true );
-        }else{
+        } else {
             this.passTF.setEnabled( false );
         }
     }
-    
-    
+
+
     private void setOkButtonState() {
-        if( this.passTF.getPassword().length > 3
-                && ( ( this.imported && !this.importTF.getText().isEmpty() ) || ( !this.imported && this.sessionCombo
-                        .getSelectedIndex() != 0 ) ) ){
+        if( this.passTF.getPassword().length > 3 && ( ( this.imported && !this.importTF.getText()
+                .isEmpty() ) || ( !this.imported && this.sessionCombo.getSelectedIndex() != 0 ) )
+                ) {
             this.okButton.setEnabled( true );
-        }else{
+        } else {
             this.okButton.setEnabled( false );
         }
     }
-    
-    
+
+
     /**
      * ******************************************** getters and setters
      * *******************************************
-     * 
      */
     public String getSession() {
         return session;
     }
-    
-    
+
+
     public void setSession( String session ) {
         this.session = session;
     }
-    
-    
+
+
     public String getPass() {
         return pass;
     }
-    
-    
+
+
     public void setPass( String pass ) {
         this.pass = pass;
     }
-    
-    
+
+
     public boolean isImported() {
         return imported;
     }
-    
-    
+
+
     public void setImported( boolean imported ) {
         this.imported = imported;
     }
-    
-    
+
+
     public Boolean getStatus() {
         return this.status;
     }
-    
-    
+
+
     public void setStatus( boolean status ) {
         this.status = status;
     }
-    
-    
+
+
     /**
-     * @param args
-     *            the command line arguments
+     * @param args the command line arguments
      */
     public static void main( String args[] ) {
         /* Set the Nimbus look and feel */
@@ -565,47 +452,38 @@ public class OpenSessionDialog extends javax.swing.JDialog {
          * http://download.oracle.com/javase
          * /tutorial/uiswing/lookandfeel/plaf.html
          */
-        try{
-            for( javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager
-                    .getInstalledLookAndFeels() ){
-                if( "Nimbus".equals( info.getName() ) ){
+        try {
+            for( javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels() ) {
+                if( "Nimbus".equals( info.getName() ) ) {
                     javax.swing.UIManager.setLookAndFeel( info.getClassName() );
                     break;
                 }
             }
-        }catch( ClassNotFoundException ex ){
-            java.util.logging.Logger.getLogger(
-                    OpenSessionDialog.class.getName() ).log(
-                    java.util.logging.Level.SEVERE, null, ex );
-        }catch( InstantiationException ex ){
-            java.util.logging.Logger.getLogger(
-                    OpenSessionDialog.class.getName() ).log(
-                    java.util.logging.Level.SEVERE, null, ex );
-        }catch( IllegalAccessException ex ){
-            java.util.logging.Logger.getLogger(
-                    OpenSessionDialog.class.getName() ).log(
-                    java.util.logging.Level.SEVERE, null, ex );
-        }catch( javax.swing.UnsupportedLookAndFeelException ex ){
-            java.util.logging.Logger.getLogger(
-                    OpenSessionDialog.class.getName() ).log(
-                    java.util.logging.Level.SEVERE, null, ex );
+        } catch( ClassNotFoundException ex ) {
+            java.util.logging.Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
+        } catch( InstantiationException ex ) {
+            java.util.logging.Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
+        } catch( IllegalAccessException ex ) {
+            java.util.logging.Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
+        } catch( javax.swing.UnsupportedLookAndFeelException ex ) {
+            java.util.logging.Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
         }
         // </editor-fold>
         
         /* Create and display the form */
         java.awt.EventQueue.invokeLater( new Runnable() {
             public void run() {
-                try{
+                try {
                     new OpenSessionDialog( null, null ).setVisible( true );
-                }catch( Exception e ){
+                } catch( Exception e ) {
                     e.printStackTrace();
                     ;
                 }
             }
         } );
     }
-    
-    
+
+
     // Variables declaration - do not modify
     private javax.swing.JButton browseButton;
     private javax.swing.ButtonGroup buttonGroupImportOrSelect;
@@ -620,27 +498,24 @@ public class OpenSessionDialog extends javax.swing.JDialog {
     private javax.swing.JRadioButton selectSessionRB;
     private javax.swing.JComboBox sessionCombo;
     private javax.swing.JLabel sessionL;
-    
-    
+
+
     // End of variables declaration
-    
+
     /**
      * class used to filter the files selectables in the filechooser window.
-     * 
+     *
      * @author lucy
-     * 
      */
     class ImportSessionFilter extends javax.swing.filechooser.FileFilter {
-        
+
         public String getDescription() {
             return "Plain text document (*.txt)";
         }
-        
-        
+
+
         public boolean accept( File file ) {
-            return file.isDirectory()
-                    || file.getName().endsWith(
-                            SessionManager_old.DATA_EXTENSION );
+            return file.isDirectory() || file.getName().endsWith( SessionManager_old.DATA_EXTENSION );
         }
     }// end private class
 }
