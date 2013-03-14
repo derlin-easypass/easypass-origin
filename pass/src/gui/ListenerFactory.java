@@ -8,7 +8,6 @@ import table.PassTableModel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.print.PrinterException;
@@ -55,10 +54,10 @@ public class ListenerFactory {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
+                System.out.println("paste");
                 if( frame.table.isEditing() ) {
                     frame.table.getCellEditor().stopCellEditing();
                 }
-
                 try {
                     // gets the content of the clipboard
                     String clipboardContent = ( String ) ( Toolkit.getDefaultToolkit()
@@ -70,15 +69,9 @@ public class ListenerFactory {
                             frame.table.convertColumnIndexToModel( frame.table.getSelectedColumn
                                     () ), true );
 
-                } catch( HeadlessException e1 ) {
+                } catch( Exception ex ) {
                     // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                } catch( UnsupportedFlavorException e1 ) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                } catch( IOException e1 ) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
+                    System.out.println( ex.getMessage() );
                 }
             }
         };

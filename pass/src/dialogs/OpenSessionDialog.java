@@ -4,7 +4,7 @@
  */
 package dialogs;
 
-import manager.SessionManager_old;
+import manager.SessionManager;
 import passinterface.AbstractSessionChecker;
 
 import javax.swing.*;
@@ -477,7 +477,6 @@ public class OpenSessionDialog extends javax.swing.JDialog {
                     new OpenSessionDialog( null, null ).setVisible( true );
                 } catch( Exception e ) {
                     e.printStackTrace();
-                    ;
                 }
             }
         } );
@@ -515,7 +514,7 @@ public class OpenSessionDialog extends javax.swing.JDialog {
 
 
         public boolean accept( File file ) {
-            return file.isDirectory() || file.getName().endsWith( SessionManager_old.DATA_EXTENSION );
+            return file.isDirectory() || file.getName().endsWith( SessionManager.DATA_EXTENSION );
         }
     }// end private class
 }

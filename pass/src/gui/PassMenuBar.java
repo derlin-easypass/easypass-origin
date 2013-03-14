@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 /**
@@ -46,7 +47,7 @@ public class PassMenuBar extends JMenuBar {
         deleteRowSubMenu = new JMenuItem( "delete selected rows" );
         deleteRowSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_D,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-
+        deleteRowSubMenu.setMnemonic( KeyEvent.VK_D );
         deleteRowSubMenu.addActionListener( listfactory.createDelRowListener() );
 
 
@@ -54,21 +55,36 @@ public class PassMenuBar extends JMenuBar {
         copySubMenu = new JMenuItem( "copy" );
         copySubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_C,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
+        copySubMenu.setMnemonic( KeyEvent.VK_C );
         copySubMenu.addActionListener( listfactory.createCopyListener() );
 
 
         //adds the cut submenu
         cutSubMenu = new JMenuItem( "cut" );
-        copySubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_X,
+        ActionListener cutlistener = listfactory.createCutListener();
+        cutSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_X,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        copySubMenu.addActionListener( listfactory.createCutListener() );
+        cutSubMenu.setMnemonic( KeyEvent.VK_X );
+        cutSubMenu.addActionListener( cutlistener );
+
+        // adds the cut listener to the jtable
+        frame.table.registerKeyboardAction( cutlistener, "Paste",
+                KeyStroke.getKeyStroke( KeyEvent.VK_X, Toolkit.getDefaultToolkit()
+                        .getMenuShortcutKeyMask(), false ), JComponent.WHEN_FOCUSED );
 
 
         //adds the paste submenu
         pasteSubMenu = new JMenuItem( "paste" );
-        copySubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_V,
+        ActionListener pastelistener = listfactory.createPasteListener();
+        pasteSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_V,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
-        copySubMenu.addActionListener( listfactory.createPasteListener() );
+        pasteSubMenu.setMnemonic( KeyEvent.VK_V );
+        pasteSubMenu.addActionListener( pastelistener );
+
+        // adds the paste listener to the jtable
+        frame.table.registerKeyboardAction( pastelistener, "Paste",
+                KeyStroke.getKeyStroke( KeyEvent.VK_V, Toolkit.getDefaultToolkit()
+                        .getMenuShortcutKeyMask(), false ), JComponent.WHEN_FOCUSED );
 
 
         // add undo submenu
@@ -105,11 +121,11 @@ public class PassMenuBar extends JMenuBar {
 
         // --------------------------- Build the option menu.
         fileMenu = new JMenu( "file" );
+        fileMenu.setMargin( inset );
         //TODO fileMenu.setMnemonic( KeyEvent.VK_A );
 
         // save option
         saveSubMenu = new JMenuItem( "save", KeyEvent.VK_T );
-        saveSubMenu.setMargin( inset );
         saveSubMenu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
         saveSubMenu.addActionListener( listfactory.createSaveListener() );

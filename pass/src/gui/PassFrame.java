@@ -1,7 +1,7 @@
 package gui;
 
 import main.thread.PassLock;
-import manager.JvUndoManager;
+import manager.UndoManager;
 import manager.SessionManager.Session;
 import table.PassTable;
 import table.PassTableModel;
@@ -31,7 +31,7 @@ public class PassFrame extends JFrame {
     PassLock lock;
 
     private JPanel mainContainer; // main container (BorderLayout)
-    JvUndoManager undoManager;
+    UndoManager undoManager;
 
     TableRowSorter<PassTableModel> sorter; // used for the search bar
     // ("find")
@@ -89,14 +89,13 @@ public class PassFrame extends JFrame {
         }// end try
 
         // sets the sizes of the JTable
-        table.setAutoCreateRowSorter( true );
-        table.setFillsViewportHeight( true );
-        table.setRowHeight( 30 );
+
+        //table.setRowHeight( 30 );
         table.setStyle();
         settableColSizes();
 
         // sets the undo manager for CTRL Z
-        undoManager = new JvUndoManager();
+        undoManager = new UndoManager(table);
         this.session.getModel().addUndoableEditListener( undoManager );
         this.session.getModel().addTableModelListener( new TableModelListener() {
 
@@ -105,6 +104,7 @@ public class PassFrame extends JFrame {
                 updateDisplayedRowCount();
             }
         } );
+
 
         // adds scrollpane and JTable
         scrollPane = new JScrollPane( table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,

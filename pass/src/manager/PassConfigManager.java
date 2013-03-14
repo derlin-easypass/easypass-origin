@@ -1,6 +1,6 @@
 package manager;
 
-import main.Easypass;
+import main.Main;
 import models.ConfigFileManager;
 import models.Exceptions;
 
@@ -195,10 +195,10 @@ public class PassConfigManager extends ConfigFileManager {
         // data
         if( os.contains( "Linux" ) || os.contains( "Mac" ) ){
             return System.getProperty( "user.home" ) + File.separator + "."
-                    + Easypass.APPLICATION_NAME;
+                    + Main.APPLICATION_NAME;
         }else if( os.contains( "Windows" ) ){
             return System.getenv( "APPDATA" ) + File.separator
-                    + Easypass.APPLICATION_NAME;
+                    + Main.APPLICATION_NAME;
             
         }else{
             System.out.println( "os " + os + " not supported." );

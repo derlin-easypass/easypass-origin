@@ -33,7 +33,7 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
      */
     public RefactorSessionDialog(JFrame parent) {
         super(parent, "informations", true);
-        this.setPreferredSize(new Dimension(200, 300));
+        this.setPreferredSize(new Dimension(250, 300));
         initComponents();
         this.setVisible(true);
     }

@@ -24,7 +24,7 @@ public class Main {
     private int runningWindowsCount;
     private boolean running = true;
     private PassLock lock;
-    private boolean debug = true;
+    public static boolean debug = true;
 
 
     public static void main( String[] args ) {
@@ -111,7 +111,7 @@ public class Main {
     public Session handleSessionDialog() throws Exceptions.NotInitializedException {
 
         OpenSessionDialog modal = null;
-        Session session;
+        Session session = null;
 
         try {
 
@@ -124,13 +124,6 @@ public class Main {
                 }
             } );
 
-        } catch( Exception e ) {
-            e.printStackTrace();
-            // TODO
-            System.exit( 0 );
-        }
-
-        while( true ) {
 
             // asks for pass with a dialog and loads the serialized datas
             // if the pass is wrong, ask again. If the user cancels, quits the
@@ -138,51 +131,45 @@ public class Main {
 
             modal.setVisible( true );
 
-            if( modal.getStatus() == false ) { // checks if user clicked cancel
-                // or closed
-                modal.dispose();
-                System.exit( 0 );
-            }
             // get pass and salt
             String pass = modal.getPass();
             String name = modal.getSession();
 
-            try {
 
-                if( modal.isImported() ) {
-                    session = sessionManager.importSession( name, pass );
+            if( modal.isImported() ) {
+                session = sessionManager.importSession( name, pass );
 
-                } else if( !sessionManager.sessionExists( name ) ) {
-                    session = sessionManager.createSession( name, pass );
-                    modal.dispose();
-                    return session;
+            } else if( !sessionManager.sessionExists( name ) ) {
+                session = sessionManager.createSession( name, pass );
 
-                } else {
-                    // try to open the session and loads the encrypted data
-                    session = sessionManager.openSession( name, pass );
-                    modal.dispose();
-                    return session;
-                }
 
-            } catch( Exceptions.WrongCredentialsException e ) {
-                // if the pass was wrong, loops again
-                JOptionPane.showMessageDialog( null, e.getMessage(), "open error",
-                        JOptionPane.ERROR_MESSAGE );
-                // writeLog( "info: " + e.getMessage() );
-            } catch( Exceptions.ImportException e ) {
-                // if the pass was wrong, loops again
-                JOptionPane.showMessageDialog( null, e.getMessage(), "import error",
-                        JOptionPane.ERROR_MESSAGE );
-                // writeLog( "info: " + e.toString() );
-            } catch( Exception e ) {
-                // otherwise, writes the exception to the log file and quit
-                System.out.println( "unplanned exception" );
-                e.printStackTrace();
-                // writeLog( "severe: " + e.toString() );
-                // TODO
-                System.exit( 0 );
+            } else {
+                // try to open the session and loads the encrypted data
+                session = sessionManager.openSession( name, pass );
+
             }
-        }// end while
+
+        } catch( Exceptions.WrongCredentialsException e ) {
+            // if the pass was wrong, loops again
+            JOptionPane.showMessageDialog( null, e.getMessage(), "open error",
+                    JOptionPane.ERROR_MESSAGE );
+            // writeLog( "info: " + e.getMessage() );
+        } catch( Exceptions.ImportException e ) {
+            // if the pass was wrong, loops again
+            JOptionPane.showMessageDialog( null, e.getMessage(), "import error",
+                    JOptionPane.ERROR_MESSAGE );
+            // writeLog( "info: " + e.toString() );
+        } catch( Exception e ) {
+            // otherwise, writes the exception to the log file and quit
+            System.out.println( "unplanned exception" );
+            e.printStackTrace();
+            // writeLog( "severe: " + e.toString() );
+            // TODO
+            System.exit( 0 );
+        }
+
+        modal.dispose();
+        return session;
 
     }// end handleCredentials
 

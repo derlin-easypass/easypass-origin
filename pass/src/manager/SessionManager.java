@@ -378,7 +378,7 @@ public class SessionManager implements AbstractSessionChecker {
         private Session( String path, String password ) {
             this.path = path;
             this.name = path.substring( path.lastIndexOf( File.separator ) + 1,
-                    path.indexOf( SessionManager_old.DATA_EXTENSION ) );
+                    path.indexOf( DATA_EXTENSION ) );
             this.password = password;
             this.jsonManager = new PassJsonManager();
 
@@ -401,8 +401,7 @@ public class SessionManager implements AbstractSessionChecker {
         private void loadModel() throws WrongCredentialsException {
             try {
                 this.model = new PassTableModel( config.get( "column names" ).split( "," ),
-                        this.jsonManager.deserialize( SessionManager_old.CRYPTO_ALGORITHM, path,
-                                password ) );
+                        this.jsonManager.deserialize( CRYPTO_ALGORITHM, path, password ) );
                 this.isActive = true;
             } catch( Exception e ) {
                 throw new Exceptions.WrongCredentialsException( "session \"" + path + "\" : wrong" +
@@ -427,8 +426,8 @@ public class SessionManager implements AbstractSessionChecker {
 
             try {
 
-                this.jsonManager.serialize( this.model.getData(),
-                        SessionManager_old.CRYPTO_ALGORITHM, this.path, this.password );
+                this.jsonManager.serialize( this.model.getData(), CRYPTO_ALGORITHM, this.path,
+                        this.password );
                 return true;
 
             } catch( IOException e ) {
@@ -484,9 +483,8 @@ public class SessionManager implements AbstractSessionChecker {
             this.path = getSessionFilePath( newName );
 
             try {
-                this.jsonManager.serialize( this.jsonManager.deserialize( SessionManager_old
-                        .CRYPTO_ALGORITHM, oldPath, oldPass ),
-                        SessionManager_old.CRYPTO_ALGORITHM, this.path, this.password );
+                this.jsonManager.serialize( this.jsonManager.deserialize( CRYPTO_ALGORITHM,
+                        oldPath, oldPass ), CRYPTO_ALGORITHM, this.path, this.password );
 
                 new File( oldPath ).delete();
 
