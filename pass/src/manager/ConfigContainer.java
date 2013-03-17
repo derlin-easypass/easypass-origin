@@ -1,8 +1,8 @@
 package manager;
 
-import main.Main;
 import models.AbstractGsonContainer;
 import models.ConfigFileManager2;
+import passinterface.PathToRefactor;
 
 import java.io.File;
 
@@ -13,11 +13,14 @@ import java.io.File;
  */
 public class ConfigContainer extends AbstractGsonContainer {
 
-    public String appPath;
-    public String sessionPath;
-    public String[] colNames;
-    public int[] colDimensions;
-    public int windowHeight, windowWidth;
+    @PathToRefactor
+    public String application$path;
+    @PathToRefactor
+    public String session$path;
+    public String[] column$names;
+    public int[] column$dimensions;
+    public int window$height, window$width;
+    private static boolean debug = true;
 
 
     public static void main( String[] args ) {
@@ -34,7 +37,7 @@ public class ConfigContainer extends AbstractGsonContainer {
 
             System.out.println( conf );
 
-            conf.update( conf.getApplicationPath() );
+            conf.updatePaths();
             System.out.println( conf );
         } catch( Exception e ) {
             e.printStackTrace();
@@ -42,55 +45,35 @@ public class ConfigContainer extends AbstractGsonContainer {
     }//end main
 
 
-    /**
-     * gets the path to the application folder, i.e. <user>/AppData/<appliName>
-     * under windows and <user.home>/.<appliName> under Linux.
-     *
-     * @return
-     */
-    protected String getApplicationPath() {
-
-        String os = System.getProperty( "os.name" );
-
-        // depending on the os system, choose the best location to store session
-        // data
-        if( os.contains( "Linux" ) || os.contains( "Mac" ) ) {
-            return System.getProperty( "user.home" ) + File.separator + "." + Main.APPLICATION_NAME;
-        } else if( os.contains( "Windows" ) ) {
-            return System.getenv( "APPDATA" ) + File.separator + Main.APPLICATION_NAME;
-
-        } else {
-            System.out.println( "os " + os + " not supported." );
-            System.exit( 0 );
-            return null;
-            // TODO
-        }
-    }// end getApplicationPath
+    @Override
+    public Object getProperty( String key ) {
+        return super.getProperty( key.trim().replace( ' ', '$' ) );
+    }//end getProperty
 
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append( "apppath: " + this.appPath );
-        builder.append( "\n" );
-        builder.append( "sessionPath: " + this.sessionPath );
-        builder.append( "\n" );
+        builder.append( "apppath: ").append( this.application$path ).append( "\n" );
+        builder.append( "sessionpath: ").append( this.session$path ).append( "\n" );
+
         builder.append( "coldimensions: " );
-        if( colDimensions != null ) {
-            for( int i : colDimensions ) {
-                builder.append( " " + i );
+        if( column$dimensions != null ) {
+            for( int i : column$dimensions ) {
+                builder.append( " ").append(  i );
             }//end for
         }
         builder.append( "\n" );
+
         builder.append( "colnames: " );
-        if( colNames != null ) {
-            for( String colName : colNames ) {
-                builder.append( " " + colName );
+        if( column$names != null ) {
+            for( String colName : column$names ) {
+                builder.append( " ").append( colName );
             }//end for
         }
-        builder.append( "winheight: " + this.windowHeight );
         builder.append( "\n" );
-        builder.append( "winhwidth: " + this.windowWidth );
-        builder.append( "\n" );
+
+        builder.append( "winheight: ").append( this.window$height ).append( "\n" );
+        builder.append( "winhwidth: ").append( this.window$width ).append( "\n" );
         return builder.toString();
     }
 

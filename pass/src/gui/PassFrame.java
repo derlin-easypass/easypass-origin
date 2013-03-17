@@ -373,7 +373,7 @@ public class PassFrame extends JFrame {
 
 
     /********************************************************************
-     * getters (menus, sessionPath) /
+     * getters (menus, session$path) /
      ********************************************************************/
 
 
