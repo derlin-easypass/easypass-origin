@@ -239,7 +239,7 @@ public class ListenerFactory {
 
                 try {
                     frame.session.refactor( dialog.getSessionName(), dialog.getPass() );
-                    frame.setTitle( frame.getTitle() + ": " + frame.session.getSessionName() );
+                    frame.setTitle( frame.getTitle() + ": " + frame.session.getName() );
                     frame.showInfos( "refactoring done.", INFOS_DISPLAY_TIME );
 
                 } catch( Exceptions.RefactorException ex ) {
@@ -256,7 +256,7 @@ public class ListenerFactory {
             public void actionPerformed( ActionEvent e ) {
 
                 if( JOptionPane.showConfirmDialog( null, "are you sure you want to permanently " +
-                        "delete session \"" + frame.session.getSessionName() + "\" ?",
+                        "delete session \"" + frame.session.getName() + "\" ?",
                         "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
 
                     frame.session.delete();

@@ -3,9 +3,11 @@ package main;
 import dialogs.OpenSessionDialog;
 import gui.PassFrame;
 import main.thread.PassLock;
-import manager.PassConfigManager;
+import manager.PassConfigContainer;
 import manager.SessionManager;
 import manager.SessionManager.Session;
+import models.AbstractConfigContainer;
+import models.ConfigFileManager;
 import models.Exceptions;
 
 import javax.swing.*;
@@ -19,7 +21,8 @@ import java.io.File;
 public class Main {
 
     public static final String APPLICATION_NAME = "easypass";
-    private PassConfigManager configManager;
+    private static final String configPath = "test_config";
+    private AbstractConfigContainer config;
     private SessionManager sessionManager;
     private int runningWindowsCount;
     private boolean running = true;
@@ -34,42 +37,38 @@ public class Main {
 
     public Main() {
         // get config
+
         try {
-
-            this.configManager = initConfigManager();
-            assert this.configManager != null;
-            checkConfig();
-            this.sessionManager = new SessionManager( this.configManager.getMap() );
-            this.runningWindowsCount = 0;
-            this.lock = new PassLock();
-
-            while( running ) {
-                PassFrame frame = new SessionWindow().launchGUI();
-                if( debug ) System.out.printf( "launchGUI returned." );
-                try {
-                    synchronized( lock ) {
-                        lock.wait();
-                    }
-                } catch( InterruptedException e ) {
-                    if( debug ) System.out.println( "main thread interrupted" );
-                    System.out.println( "interrupt" );
-                }
-
-                switch( lock.getMessage() ) {
-                    case DO_CLOSE:
-                        this.running = false;
-
-                    case DO_OPEN_SESSION:
-                        frame.dispose();
-
-                }
-            }
+            initConfig();
         } catch( Exceptions.ConfigFileNotFoundException e ) {
-            if( debug ) {
-                System.out.println( "config file not found" );
-                e.printStackTrace();
+            JOptionPane.showMessageDialog( null, "Default settings not found. Exiting...",
+                    "configuration error", JOptionPane.ERROR_MESSAGE );
+        }
+
+        this.sessionManager = new SessionManager( this.config );
+        this.runningWindowsCount = 0;
+        this.lock = new PassLock();
+
+        while( running ) {
+            PassFrame frame = new SessionWindow().launchGUI();
+            if( debug ) System.out.printf( "launchGUI returned." );
+            try {
+                synchronized( lock ) {
+                    lock.wait();
+                }
+            } catch( InterruptedException e ) {
+                if( debug ) System.out.println( "main thread interrupted" );
+                System.out.println( "interrupt" );
             }
-            // TODO
+
+            switch( lock.getMessage() ) {
+                case DO_CLOSE:
+                    this.running = false;
+
+                case DO_OPEN_SESSION:
+                    frame.dispose();
+
+            }
         }
 
     }
@@ -95,8 +94,8 @@ public class Main {
         public PassFrame launchGUI() {
 
             if( debug ) {
-                System.out.println( "\nsessions location : " + configManager.getProperty(
-                        "session path" ) );
+                System.out.println( "\nsessions location : " + config.getProperty( "session path"
+                ) );
             }
 
             Session session = handleSessionDialog();
@@ -179,40 +178,44 @@ public class Main {
      * ****************************************************************/
 
 
-    private PassConfigManager initConfigManager() throws Exceptions.ConfigFileNotFoundException {
-
-        PassConfigManager confmanager = null;
+    private void initConfig() throws Exceptions.ConfigFileNotFoundException {
 
         try {
-            confmanager = new PassConfigManager();
-        } catch( Exceptions.ConfigFileNotFoundException e ) {
-            JOptionPane.showMessageDialog( null, "Default settings not found. Exiting...",
-                    "configuration error", JOptionPane.ERROR_MESSAGE );
-            throw e;
+            //gets defaults settings
+            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File(
+                    configPath ), new PassConfigContainer() );
+
+            //updates the paths
+            this.config.updatePaths();
+            if( debug ) System.out.println( config );
+
+            File appfolder = new File( ( String ) config.getProperty( "application path" ) );
+            // if the session folder does not exist, creates it
+            if( !appfolder.exists() || !appfolder.isDirectory() || appfolder.mkdir() ) {
+                throw new Exception( "could not find/create session dir" );
+            }
+
+        } catch( Exception e ) {
+            if( debug ) e.printStackTrace();
+            throw new Exceptions.ConfigFileNotFoundException();
         }// end try
 
-        File appfolder = new File( confmanager.getProperty( "application path" ) );
-
-        // if the session folder does not exist, creates it
-        if( !appfolder.exists() || !appfolder.isDirectory() ) appfolder.mkdir();
-
-        return confmanager;
-    }// end initConfigManager
+    }// end initConfig
 
 
-    private void checkConfig() {
+    /*private void checkConfig() {
 
         try {
             // ---------- checks that the application folder exists, or creates
             // it
-            File appfolder = new File( this.configManager.getProperty( "application path" ) );
+            File appfolder = new File( this.config.getProperty( "application path" ) );
 
             if( ( !appfolder.exists() || !appfolder.isDirectory() ) && !appfolder.mkdir() ) {
                 throw new Exception( "application path could not be found" );
             }
 
             // ----------- checks the session path
-            File sessionfolder = new File( this.configManager.getProperty( "session path" ) );
+            File sessionfolder = new File( this.config.getProperty( "session path" ) );
 
             if( ( !sessionfolder.exists() || !sessionfolder.isDirectory() ) && !sessionfolder
                     .mkdir() ) {
@@ -220,7 +223,7 @@ public class Main {
             }
 
             // ----------- checks the logfile path
-            File logfile = new File( configManager.getProperty( "log filepath" ) );
+            File logfile = new File( config.getProperty( "log filepath" ) );
             // if file doesn't exists, creates it
             if( ( !logfile.exists() || !logfile.isFile() ) && !logfile.createNewFile() ) {
                 throw new Exception( "log filepath could not be found" );
@@ -228,8 +231,8 @@ public class Main {
 
             // ------------checks the window width and height
             try {
-                Integer.parseInt( configManager.getProperty( "window width" ) );
-                Integer.parseInt( configManager.getProperty( "window height" ) );
+                Integer.parseInt( config.getProperty( "window width" ) );
+                Integer.parseInt( config.getProperty( "window height" ) );
 
             } catch( Exception e ) {
                 throw new Exception( "error parsing 'window height' and 'window width' " +
@@ -239,13 +242,13 @@ public class Main {
             // ------------checks and trims the column names
             try {
                 String colnamesTrimmed = "";
-                String[] columnNames = configManager.getProperty( "column names" ).split( "," );
+                String[] columnNames = config.getProperty( "column names" ).split( "," );
                 for( int i = 0; i < columnNames.length; i++ ) {
 
                     colnamesTrimmed += ( i == 0 ? "" : "," ) + columnNames[ i ].trim();
                 }// end for
                 if( debug ) System.out.println( "col names trimmed : " + colnamesTrimmed );
-                configManager.setProperty( "column names", colnamesTrimmed );
+                config.setProperty( "column names", colnamesTrimmed );
             } catch( Exception e ) {
                 throw new Exception( "'column names' property could not be found" );
             }
@@ -253,11 +256,11 @@ public class Main {
         } catch( Exception e ) {
             if( debug ) e.printStackTrace();
             JOptionPane.showMessageDialog( null, "Error in configuration file : \n       " + e
-                    .getMessage() + "\nplease verify your settings or delete your custom configuration file", "configuration error", JOptionPane.ERROR_MESSAGE );
+                    .getMessage() + "\nplease verify your settings or delete your custom
+                    configuration file", "configuration error", JOptionPane.ERROR_MESSAGE );
             System.exit( 1 );
         }// end try
-    }// end checkConfig
-
+    }// end checkConfig */
 
 
 } // end class

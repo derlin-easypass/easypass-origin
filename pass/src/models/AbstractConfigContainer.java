@@ -1,8 +1,7 @@
 package models;
 
 import main.Main;
-import manager.ConfigContainer;
-import manager.PassConfigManager;
+import manager.PassConfigContainer;
 import passinterface.GsonContainable;
 import passinterface.PathToRefactor;
 
@@ -14,7 +13,7 @@ import java.lang.reflect.Field;
  * Date: 07/03/13
  * Version: 0.1
  */
-abstract public class AbstractGsonContainer implements GsonContainable {
+abstract public class AbstractConfigContainer implements GsonContainable {
 
     protected static boolean debug = false;
 
@@ -33,7 +32,7 @@ abstract public class AbstractGsonContainer implements GsonContainable {
      * @param overridingSettings the container of the settings to merge. Note : its declared
      *                           class must be the same as the class of the current object !
      */
-    public void mergeSettings( ConfigContainer overridingSettings ) {
+    public void mergeSettings( PassConfigContainer overridingSettings ) {
 
         long time = System.currentTimeMillis();
 
@@ -72,9 +71,9 @@ abstract public class AbstractGsonContainer implements GsonContainable {
      * Note : the fields marked with this annotation must be of type string. If not,
      * they will be skipped.
      */
-    protected void updatePaths() {
+    public void updatePaths() {
 
-        String jarDir = new File( PassConfigManager.class.getProtectionDomain().getCodeSource()
+        String jarDir = new File( AbstractConfigContainer.class.getProtectionDomain().getCodeSource()
                 .getLocation().getPath() ).getParentFile().getPath();
 
 

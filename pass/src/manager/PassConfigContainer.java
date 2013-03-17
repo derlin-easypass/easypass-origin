@@ -1,7 +1,7 @@
 package manager;
 
-import models.AbstractGsonContainer;
-import models.ConfigFileManager2;
+import models.AbstractConfigContainer;
+import models.ConfigFileManager;
 import passinterface.PathToRefactor;
 
 import java.io.File;
@@ -11,10 +11,12 @@ import java.io.File;
  * Date: 07/03/13
  * Version: 0.1
  */
-public class ConfigContainer extends AbstractGsonContainer {
+public class PassConfigContainer extends AbstractConfigContainer {
 
     @PathToRefactor
     public String application$path;
+    @PathToRefactor
+    public String logfile$path;
     @PathToRefactor
     public String session$path;
     public String[] column$names;
@@ -25,12 +27,12 @@ public class ConfigContainer extends AbstractGsonContainer {
 
     public static void main( String[] args ) {
         try {
-            ConfigContainer conf = ( ConfigContainer ) new ConfigFileManager2().getJsonFromFile(
-                    new File( "test_config" ), new ConfigContainer() );
+            PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(
+                    new File( "test_config" ), new PassConfigContainer() );
             System.out.println( conf );
 
-            ConfigContainer conf2 = ( ConfigContainer ) new ConfigFileManager2().getJsonFromFile(
-                    new File( "test_config2" ), new ConfigContainer() );
+            PassConfigContainer conf2 = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(
+                    new File( "test_config2" ), new PassConfigContainer() );
             System.out.println( conf2 );
 
             conf.mergeSettings( conf2 );
@@ -43,6 +45,7 @@ public class ConfigContainer extends AbstractGsonContainer {
             e.printStackTrace();
         }
     }//end main
+
 
 
     @Override
