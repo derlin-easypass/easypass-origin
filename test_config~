@@ -1,0 +1,13 @@
+{
+  "appPath": "%APPDIR%",
+  "sessionPath": "%PARENTOFJAR%/sessions",
+  "colDimensions": [
+    250,
+    "string",
+    150,
+    100,
+    450
+  ],
+  "windowHeight": 300,
+  "windowWidth": 200
+}

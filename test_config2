@@ -1,0 +1,13 @@
+{
+
+  "sessionPath": "%PARENTOFJAR%/prout",
+  "colDimensions": [
+    250,
+    250,
+    150,
+    100,
+    450
+  ],
+  "windowHeight": 300000,
+  "windowWidth": 2000000
+}
