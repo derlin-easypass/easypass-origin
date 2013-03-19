@@ -26,8 +26,7 @@ public class OpenSessionDialog extends JDialog {
     private String pass = "", session = "";
     private boolean imported = false; // set to true if a session file was
     // imported
-    private boolean status = true; // set to false if window closed or cancel
-    // button pressed
+
 
 
     /**
@@ -275,7 +274,6 @@ public class OpenSessionDialog extends JDialog {
 
 
     private void cancelButtonActionPerformed( ActionEvent evt ) {
-        this.status = false;
         this.setVisible( false );
     }
 

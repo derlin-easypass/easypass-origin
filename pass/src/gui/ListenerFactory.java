@@ -38,9 +38,7 @@ public class ListenerFactory {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
 
                 ( ( PassTableModel ) frame.table.getModel() ).cut( frame.table
                         .getSelectedRowsConvertedToModel(),
@@ -56,9 +54,8 @@ public class ListenerFactory {
             public void actionPerformed( ActionEvent e ) {
 
                 System.out.println( "paste" );
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
+
                 try {
                     // gets the content of the clipboard
                     String clipboardContent = ( String ) ( Toolkit.getDefaultToolkit()
@@ -83,9 +80,7 @@ public class ListenerFactory {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
 
                 ( ( PassTableModel ) frame.table.getModel() ).copy( frame.table
                         .getSelectedRowsConvertedToModel(),
@@ -98,9 +93,8 @@ public class ListenerFactory {
     public ActionListener createDelRowListener() {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
+
                 int[] selectedRows = frame.table.getSelectedRows();
                 for( int i = 0; i < selectedRows.length; i++ ) {
                     // row index minus i since the frame.table size shrinks by 1
@@ -117,14 +111,13 @@ public class ListenerFactory {
     public ActionListener createAddRowListener() {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                ( ( PassTableModel ) frame.table.getModel() ).addRow();
 
+                frame.table.stopEditing();
                 // resets the filters --> shows all rows (global view)
-                //TODO filterText.setText( "" );  + clearselection/editing
-
+                frame.clearFilterText();
+                ( ( PassTableModel ) frame.table.getModel() ).addRow();
                 // sets focus on the new row
                 int lastRow = frame.table.getModel().getRowCount() - 1;
-
                 // scrolls to the bottom of the frame.table
                 frame.table.getSelectionModel().setSelectionInterval( lastRow, lastRow );
                 frame.table.scrollRectToVisible( new Rectangle( frame.table.getCellRect( lastRow,
@@ -138,9 +131,7 @@ public class ListenerFactory {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
 
                 if( frame.table.getSelectedRowCount() > 0 ) {
                     frame.table.clearSelection();
@@ -224,9 +215,7 @@ public class ListenerFactory {
             public void actionPerformed( ActionEvent e ) {
 
                 // stops current editing
-                if( frame.table.isEditing() ) {
-                    frame.table.getCellEditor().stopCellEditing();
-                }
+                frame.table.stopEditing();
 
                 // if no modification to save, returns
                 if( !frame.session.getModel().isModified() ) {
@@ -277,7 +266,7 @@ public class ListenerFactory {
                 RefactorSessionDialog dialog = new RefactorSessionDialog( null );
                 // if the user closed the dialog or clicked cancel, simply
                 // returns
-                if( dialog.getStatus() == false ) {
+                if( !dialog.getStatus() ) {
                     return;
                 }
 

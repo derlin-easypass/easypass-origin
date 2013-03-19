@@ -166,6 +166,13 @@ public class PassTable extends JTable {
      * ******************************************************************
      */
 
+
+    public void stopEditing() {
+        if( this.isEditing() ) {
+            this.getCellEditor().stopCellEditing();
+        }
+    }//end stopEditing
+
     public int getViewRowCount() {
         return sorter.getViewRowCount();
     }//end getViewRowCount

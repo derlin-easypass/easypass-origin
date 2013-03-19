@@ -231,6 +231,10 @@ public class PassFrame extends JFrame {
     }
 
 
+    public void clearFilterText() {
+        filterText.setText( "" );
+        updateDisplayedRowCount();
+    }//end clearFilterText
 
     /********************************************************************
      * sets the closing operation and the keyboard shortcuts /
@@ -281,7 +285,7 @@ public class PassFrame extends JFrame {
                 // if the click was outside the table, clear selection
                 if( !( event.getSource() instanceof JTable ) || table.rowAtPoint( event.getPoint
                         () ) == -1 ) {
-                    if( table.isEditing() ) table.getCellEditor().stopCellEditing();
+                    table.stopEditing();
                     table.clearSelection();
                 }
             }
@@ -309,9 +313,7 @@ public class PassFrame extends JFrame {
             public void actionPerformed( ActionEvent e ) {
 
                 // stops editing
-                if( table.isEditing() ) {
-                    table.getCellEditor().stopCellEditing();
-                }
+                table.stopEditing();
 
                 // if everything was saved, quits
                 if( !session.getModel().isModified() ) {

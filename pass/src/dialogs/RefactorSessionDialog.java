@@ -7,15 +7,18 @@ package dialogs;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 /**
  *
  * @author lucy
  */
-public class RefactorSessionDialog extends javax.swing.JDialog {
+public class RefactorSessionDialog extends JDialog {
 
     private String pass, newSessionName;
-    private boolean status = true; //set to false if cancel or close pressed
     private static final int PASS_MIN_LENGTH = 3, SESSION_NAME_MIN_LENGTH = 5;
 
     public static void main(String[] args) {
@@ -24,7 +27,7 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
         JFrame window = new JFrame("accounts and passwords");
         window.setPreferredSize(new Dimension(200, 300));
         //sets the listener to save data on quit
-        RefactorSessionDialog d = new RefactorSessionDialog(window);
+        new RefactorSessionDialog(window);
         System.exit(0);
     }
 
@@ -47,15 +50,15 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
     private void initComponents() {
 
-        newSessionL = new javax.swing.JLabel();
-        newPassL = new javax.swing.JLabel();
-        okButton = new javax.swing.JButton();
-        cancelButton = new javax.swing.JButton();
-        newPassPF = new javax.swing.JPasswordField();
-        newSessionTF = new javax.swing.JTextField();
-        introTextL = new javax.swing.JTextField();
+        newSessionL = new JLabel();
+        newPassL = new JLabel();
+        okButton = new JButton();
+        cancelButton = new JButton();
+        newPassPF = new JPasswordField();
+        newSessionTF = new JTextField();
+        introTextL = new JTextField();
 
-        setMinimumSize(new java.awt.Dimension(320, 150));
+        setMinimumSize(new Dimension(320, 150));
         setModal(true);
         setResizable(false);
 
@@ -65,29 +68,29 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
 
         okButton.setText("OK");
         okButton.setEnabled(false);
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        okButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
         cancelButton.setText("Cancel");
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
         newPassPF.setToolTipText("minimum " + PASS_MIN_LENGTH + " characters");
-        newPassPF.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
+        newPassPF.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent evt) {
                 newPassPFKeyTyped(evt);
             }
         });
 
         newSessionTF.setToolTipText("must start with a letter have min 5 characters; contains only letters and digits; Delimiters accepted : _.-");
-        newSessionTF.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
+        newSessionTF.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent evt) {
                 newSessionTFKeyTyped(evt);
             }
         });
@@ -98,48 +101,48 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
         introTextL.setBorder(null);
         introTextL.setRequestFocusEnabled(false);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            layout.createParallelGroup( GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup( GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap(129, Short.MAX_VALUE)
                         .addComponent(okButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap( LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(cancelButton))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(9, 9, 9)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup( GroupLayout.Alignment.LEADING)
                             .addComponent(newSessionL)
                             .addComponent(newPassL))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addPreferredGap( LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup( GroupLayout.Alignment.LEADING)
                             .addComponent(newPassPF)
                             .addComponent(newSessionTF)))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(introTextL, javax.swing.GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)))
+                        .addComponent(introTextL, GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            layout.createParallelGroup( GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(3, 3, 3)
-                .addComponent(introTextL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(introTextL, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap( LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup( GroupLayout.Alignment.BASELINE)
                     .addComponent(newSessionL)
-                    .addComponent(newSessionTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(newSessionTF, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap( LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup( GroupLayout.Alignment.LEADING)
                     .addComponent(newPassL)
-                    .addComponent(newPassPF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(newPassPF, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap( LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup( GroupLayout.Alignment.LEADING)
                     .addComponent(cancelButton)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup( GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(okButton)
                         .addContainerGap())))
         );
@@ -147,12 +150,11 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
         newSessionTF.getAccessibleContext().setAccessibleDescription("");
     }// </editor-fold>
 
-    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {                                             
-        this.status = false;
+    private void cancelButtonActionPerformed(ActionEvent evt) {
         this.dispose();
     }                                            
 
-    private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {                                         
+    private void okButtonActionPerformed(ActionEvent evt) {
         this.pass = new String(this.newPassPF.getPassword());
         this.newSessionName = this.newSessionTF.getText();
         if (this.pass.length() < PASS_MIN_LENGTH) {
@@ -170,11 +172,11 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
         this.dispose();
     }                                        
 
-    private void newSessionTFKeyTyped(java.awt.event.KeyEvent evt) {
+    private void newSessionTFKeyTyped(KeyEvent evt) {
        setOkButtonState();
     }
 
-    private void newPassPFKeyTyped(java.awt.event.KeyEvent evt) {
+    private void newPassPFKeyTyped(KeyEvent evt) {
         setOkButtonState();
     }
 
@@ -209,20 +211,13 @@ public class RefactorSessionDialog extends javax.swing.JDialog {
         return this.newSessionName;
     }
 
-    public Boolean getStatus() {
-        return this.status;
-    }
-
-    public void setStatus(boolean status) {
-        this.status = status;
-    }
     // Variables declaration - do not modify
-    private javax.swing.JButton cancelButton;
-    private javax.swing.JTextField introTextL;
-    private javax.swing.JLabel newPassL;
-    private javax.swing.JPasswordField newPassPF;
-    private javax.swing.JLabel newSessionL;
-    private javax.swing.JTextField newSessionTF;
-    private javax.swing.JButton okButton;
+    private JButton cancelButton;
+    private JTextField introTextL;
+    private JLabel newPassL;
+    private JPasswordField newPassPF;
+    private JLabel newSessionL;
+    private JTextField newSessionTF;
+    private JButton okButton;
     // End of variables declaration
 }
