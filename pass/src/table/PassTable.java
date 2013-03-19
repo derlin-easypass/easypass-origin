@@ -10,7 +10,6 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This class is an extension of the basic JTable, adapted in order to use a
@@ -59,37 +58,6 @@ public class PassTable extends JTable {
         setRowSorter( sorter );
     }// end constructor
 
-
-    public PassTable( String[] columnNames, List<Object[]> data ) {
-        this( new PassTableModel( columnNames, data ) );
-    }
-
-
-    /**
-     * replaces the current PassTableModel by a new one passed as a parameter
-     *
-     * @param colname an array containing the headers
-     * @param data
-     */
-    public void update( String[] colname, List<Object[]> data ) {
-        this.setModel( new PassTableModel( colname, data ) );
-        this.updateUI();
-    }// end update
-
-
-//    @Override
-//    public void setRowHeight( int rowHeight ) {
-//        super.setRowHeight( rowHeight + 4 );    //To change body of overridden methods use
-//        // File |
-//        // Settings | File Templates.
-//    }
-//
-//
-//    @Override
-//    public int getRowHeight() {
-//        return super.getRowHeight() - 4;    //To change body of overridden methods use File |
-//        // Settings | File Templates.
-//    }
 
     /**
      * Implements the search bar logic :updates the row filter regular
@@ -145,12 +113,6 @@ public class PassTable extends JTable {
 
         PasswordMultiCellRenderer renderer;
 
-        //        if( this.getColumn( PASS_COLUMN_NAME ) != null && this.getColumn(
-        // PASS_COLUMN_NAME )
-        //                .getCellRenderer() instanceof PasswordMultiCellRenderer ) {
-        //            renderer = ( PasswordMultiCellRenderer ) this.getColumn( PASS_COLUMN_NAME )
-        //                    .getCellRenderer();
-        //        } else {
         renderer = new PasswordMultiCellRenderer();
         //        }
         for( String name : names ) {
@@ -166,24 +128,8 @@ public class PassTable extends JTable {
      * this method customizes the global appearance of the jtable.
      */
     public void setStyle() {
-        // TODO
-        // try {
-        // for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-        // if ("Nimbus".equals(info.getName())) {
-        // UIManager.setLookAndFeel(info.getClassName());
-        // break;
-        // }
-        // }
-        // } catch (Exception e) {
-        // // If Nimbus is not available, you can set the GUI to another look
-        // and feel.
-        // }
-
-        // this.setSelectionBackground(new Color(115, 164, 209));
         JTableHeader header = this.getTableHeader();
-
         header.setBorder( UIManager.getBorder( "TableHeader.cellBorder" ) );
-
     }
 
 
@@ -199,14 +145,14 @@ public class PassTable extends JTable {
     public Component prepareRenderer( TableCellRenderer renderer, int row, int column ) {
         JComponent c = ( JComponent ) super.prepareRenderer( renderer, row, column );
 
-        // sets a light gray background to every non-selected odd row
-        if( !isCellSelected( row, column ) ) {
-            c.setBackground( row % 2 == 0 ? Color.WHITE : new Color( 240, 240, 240 ) );
-            c.setForeground( Color.BLACK );
-        } else {
-            c.setFont( getFont().deriveFont( Font.BOLD ) );
+        if( isCellSelected( row, column ) ) {
             c.setBackground( UIManager.getColor( "Table.selectionBackground" ) );
             c.setForeground( UIManager.getColor( "Table.selectionForeground" ) );
+        } else {
+            // sets a light gray background to every non-selected odd row
+            c.setBackground( row % 2 == 0 ? Color.WHITE : new Color( 240, 240, 240 ) );
+            c.setForeground( Color.BLACK );
+            c.setFont( getFont().deriveFont( isRowSelected( row ) ? Font.BOLD : Font.PLAIN ) );
         }
 
         return c;

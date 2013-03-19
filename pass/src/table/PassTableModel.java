@@ -93,16 +93,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    /**
-     * sets the headers of the table
-     * 
-     * @param columnNames
-     */
-    public void setColumnNames( String[] columnNames ) {
-        this.columnNames = columnNames;
-    }
-    
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Class getColumnClass( int col ) {
         // if (col == 0)
@@ -149,16 +140,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
     }
     
     
-    /**
-     * sets the data contained in the table
-     * 
-     * @param data
-     */
-    public void setData( ArrayList<Object[]> data ) {
-        this.data = data;
-    }
-    
-    
+
     public Object getValueAt( int row, int col ) {
         return data.get( row )[ col ];
     }
@@ -187,7 +169,7 @@ public class PassTableModel extends AbstractTableModel implements Serializable {
         Object oldValue = getValueAt( row, col );
         
         // if no change at all, return
-        if( ( (String) oldValue ).equals( (String) value ) ){
+        if( oldValue.equals( value ) ){
             return;
         }
 

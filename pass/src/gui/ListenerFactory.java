@@ -120,7 +120,7 @@ public class ListenerFactory {
                 ( ( PassTableModel ) frame.table.getModel() ).addRow();
 
                 // resets the filters --> shows all rows (global view)
-                //TODO filterText.setText( "" );
+                //TODO filterText.setText( "" );  + clearselection/editing
 
                 // sets focus on the new row
                 int lastRow = frame.table.getModel().getRowCount() - 1;
