@@ -7,7 +7,9 @@ import multiline.PasswordMultiCellRenderer;
 import javax.swing.*;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,6 +27,10 @@ public class PassTable extends JTable {
     private static final long serialVersionUID = -5878840678754267165L;
     private static final String PASS_COLUMN_NAME = "password";
     public final static int DEFAULT_HEIGHT = 30;
+
+
+    private TableRowSorter<PassTableModel> sorter; // used for the search bar
+    // ("find")
 
     /**
      * *****************************************************************
@@ -49,7 +55,8 @@ public class PassTable extends JTable {
             setPasswordColumns( PASS_COLUMN_NAME );
         }
 
-
+        sorter = new TableRowSorter<PassTableModel>( model );
+        setRowSorter( sorter );
     }// end constructor
 
 
@@ -84,6 +91,29 @@ public class PassTable extends JTable {
 //        // Settings | File Templates.
 //    }
 
+    /**
+     * Implements the search bar logic :updates the row filter regular
+     * expression from the expression in the text box.
+     */
+    public void setTableFilter(String text) {
+        RowFilter<PassTableModel, Object> rf = null;
+        ArrayList<RowFilter<Object, Object>> rfs = new ArrayList<RowFilter<Object, Object>>();
+
+        try {
+            String[] textArray = text.split( " " );
+
+            for( String aTextArray : textArray ) {
+                rfs.add( RowFilter.regexFilter( "(?i)" + aTextArray, 0, 1, 2, 3, 4 ) );
+            }//end for
+
+            rf = RowFilter.andFilter( rfs );
+
+        } catch( java.util.regex.PatternSyntaxException e ) {
+            return;
+        }
+
+        sorter.setRowFilter( rf );
+    }
     /********************************************************************
      * styles and appearances management methods /
      ********************************************************************/
@@ -183,40 +213,16 @@ public class PassTable extends JTable {
     }//end prepareRenderer
 
 
-    /**
-     * this method sets a special renderer for the password column, so its
-     * content is replaced by asterisks when the cell is not in edition mode
-     */
-    //    @Override
-    //    public TableCellRenderer getCellRenderer( int row, int column ) {
-    //        if( this.getColumnName( column ).equals( PASS_COLUMN_NAME ) ) {
-    //            return new PasswordCellRenderer();
-    //        }
-    //        //		return super.getCellRenderer(row, column);
-    //        return new MultiLineCellRenderer();
-    //        return new TextAreaRenderer();
-    //    }
-
-    /**
-     * this method customs the rendering of currently edited cells. It mainly
-     * sets the text in bold and draws a blue border around it
-     */
-    // @Override
-    // public Component prepareEditor( TableCellEditor editor, int row, int
-    // column ) {
-    // JComponent c = (JComponent) super.prepareEditor( editor, row, column );
-    // c.setFont( c.getFont().deriveFont( Font.BOLD ) );
-    // c.setBorder( BorderFactory.createLineBorder( new Color( 52, 153, 255 ),
-    // 1 ) );
-    // return c;
-    // }
-
 
     /**
      * *****************************************************************
      * utilities
      * ******************************************************************
      */
+
+    public int getViewRowCount() {
+        return sorter.getViewRowCount();
+    }//end getViewRowCount
 
     /**
      * returns an array of int representing the model indexes corresponding to the given tablerow

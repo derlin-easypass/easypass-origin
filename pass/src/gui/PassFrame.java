@@ -1,25 +1,20 @@
 package gui;
 
 import main.thread.PassLock;
-import manager.UndoManager;
 import manager.SessionManager.Session;
+import manager.UndoManager;
 import table.PassTable;
-import table.PassTableModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 
 public class PassFrame extends JFrame {
@@ -34,8 +29,6 @@ public class PassFrame extends JFrame {
     private JPanel mainContainer; // main container (BorderLayout)
     UndoManager undoManager;
 
-    TableRowSorter<PassTableModel> sorter; // used for the search bar
-    // ("find")
     JTextField filterText; // text entered by the user, used to filter
     // the table cells
     private JTextField rowCount;
@@ -238,43 +231,6 @@ public class PassFrame extends JFrame {
     }
 
 
-    /**
-     * opens a filechooser window to let the user choose a txt file. Used mainly
-     * for saving the table data in clear json format ( see writeIlFile method
-     * from JsonManager and the "save as json" option in the upper menu )
-     *
-     * @return
-     */
-    public File showTxtFileChooser() {
-
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter( new FileFilter() {
-
-            @Override
-            public boolean accept( File file ) {
-                return file.isDirectory() || file.getName().endsWith( ".txt" );
-            }
-
-
-            @Override
-            public String getDescription() {
-                return "Plain text document (*.txt)";
-            }
-        } );
-
-        chooser.setCurrentDirectory( new File( "." ) );
-        chooser.setDialogTitle( "select folder" );
-        chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
-
-        if( chooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION ) {
-            return chooser.getSelectedFile();
-        } else {
-            System.out.println( "No Selection " );
-            return null;
-        }
-
-    }// end showTxtfilechooser
-
 
     /********************************************************************
      * sets the closing operation and the keyboard shortcuts /
@@ -391,41 +347,6 @@ public class PassFrame extends JFrame {
      ********************************************************************/
 
 
-    /**
-     * creates and return the upper panel, which contains the buttons "add row"
-     * and "delete rows"
-     *
-     * @return
-     */
-    public JPanel getRowsManipulationMenu() {
-
-        JPanel upperMenu = new JPanel( new FlowLayout() );
-
-        // creates the add row button
-        JButton addJB = new JButton( "add row" );
-        addJB.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                session.getModel().addRow();
-            }
-        } );
-
-        upperMenu.add( addJB );
-
-        // creates the delete button
-        JButton delJB = new JButton( "delete selected rows" );
-        delJB.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ) {
-                int[] selectedRows = table.getSelectedRows();
-                for( int i = 0; i < selectedRows.length; i++ ) {
-                    // row index minus i since the table size shrinks by 1
-                    // everytime
-                    session.getModel().deleteRow( selectedRows[ i ] - i );
-                }
-            }
-        } );
-        upperMenu.add( delJB );
-        return upperMenu;
-    }// end getUpperMenu
 
 
     /**
@@ -438,8 +359,6 @@ public class PassFrame extends JFrame {
      */
     public JPanel getDownMenu() {
 
-        sorter = new TableRowSorter<PassTableModel>( session.getModel() );
-        table.setRowSorter( sorter );
         // Create a separate form for filterText and statusText
         JPanel form = new JPanel();
         JLabel l1 = new JLabel( "Find :" );
@@ -448,19 +367,19 @@ public class PassFrame extends JFrame {
         // Whenever filterText changes, invokes newFilter.
         filterText.getDocument().addDocumentListener( new DocumentListener() {
             public void changedUpdate( DocumentEvent e ) {
-                setTableFilter();
+                table.setTableFilter(filterText.getText());
                 updateDisplayedRowCount();
             }
 
 
             public void insertUpdate( DocumentEvent e ) {
-                setTableFilter();
+                table.setTableFilter(filterText.getText());
                 updateDisplayedRowCount();
             }
 
 
             public void removeUpdate( DocumentEvent e ) {
-                setTableFilter();
+                table.setTableFilter(filterText.getText());
                 updateDisplayedRowCount();
             }
         } );
@@ -496,41 +415,12 @@ public class PassFrame extends JFrame {
      */
 
     public void updateDisplayedRowCount() {
-        rowCount.setText( "rows: " + sorter.getViewRowCount() + "/" + session.getModel()
+        rowCount.setText( "rows: " + table.getViewRowCount() + "/" + session.getModel()
                 .getRowCount() + "  " );
     }
 
-
-    /**
-     * Implements the search bar logic :updates the row filter regular
-     * expression from the expression in the text box.
-     */
-    public void setTableFilter() {
-        RowFilter<PassTableModel, Object> rf = null;
-        ArrayList<RowFilter<Object, Object>> rfs = new ArrayList<RowFilter<Object, Object>>();
-
-        try {
-            String text = filterText.getText();
-            String[] textArray = text.split( " " );
-
-            for( String aTextArray : textArray ) {
-                rfs.add( RowFilter.regexFilter( "(?i)" + aTextArray, 0, 1, 2, 3, 4 ) );
-            }//end for
-
-            rf = RowFilter.andFilter( rfs );
-
-        } catch( java.util.regex.PatternSyntaxException e ) {
-            return;
-        }
-
-        sorter.setRowFilter( rf );
-        updateDisplayedRowCount();
-    }
-
-
     /**
      * appends a message to a [log] file.
-     *
      * @param message the message to write
      */
 

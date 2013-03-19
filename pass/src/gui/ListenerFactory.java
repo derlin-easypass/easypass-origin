@@ -6,6 +6,7 @@ import models.Exceptions;
 import table.PassTableModel;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.event.ActionEvent;
@@ -54,7 +55,7 @@ public class ListenerFactory {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
-                System.out.println("paste");
+                System.out.println( "paste" );
                 if( frame.table.isEditing() ) {
                     frame.table.getCellEditor().stopCellEditing();
                 }
@@ -144,22 +145,65 @@ public class ListenerFactory {
                 if( frame.table.getSelectedRowCount() > 0 ) {
                     frame.table.clearSelection();
                 }
-                File file = frame.showTxtFileChooser();
 
-                if( file != null ) {
-                    try {
-                        frame.session.writeAsJson( file );
-                        JOptionPane.showMessageDialog( null, "data saved to " + file.getName(),
-                                "export complete", JOptionPane.PLAIN_MESSAGE );
-                    } catch( IOException ee ) {
-                        ee.printStackTrace();
-                        JOptionPane.showMessageDialog( null, "an error occurred during export",
-                                "export error", JOptionPane.ERROR_MESSAGE );
+                //shows a filechooser for the user to select the file in which to save the datas
+                JFileChooser chooser = new JFileChooser();
+                //adds a filter for txt doc
+                chooser.addChoosableFileFilter( new FileFilter() {
+
+                    @Override
+                    public boolean accept( File file ) {
+                        return file.isDirectory() || file.getName().endsWith( ".txt" );
                     }
-                }// end if
+
+
+                    @Override
+                    public String getDescription() {
+                        return "Plain text document (*.txt)";
+                    }
+                } );
+
+                //creates a filter for .json docs and sets it to default filter
+                FileFilter defaultFF =  new FileFilter() {
+
+                    @Override
+                    public boolean accept( File file ) {
+                        return file.isDirectory() || file.getName().endsWith( ".json" );
+                    }
+
+
+                    @Override
+                    public String getDescription() {
+                        return "Json file (*.json)";
+                    }
+                } ;
+
+                chooser.addChoosableFileFilter( defaultFF );
+                chooser.setFileFilter( defaultFF );
+                chooser.setCurrentDirectory( new File( System.getProperty( "user.home" )) );
+                chooser.setDialogTitle( "select folder" );
+                chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
+
+                //shows filefilter. If the user cancels or does not choose a file, exists.
+                if( chooser.showSaveDialog( frame ) != JFileChooser.APPROVE_OPTION || chooser.getSelectedFile() == null ) {
+                    return;
+                }
+
+                //performs export
+                File file = chooser.getSelectedFile();
+                try {
+                    frame.session.writeAsJson( file );
+                    JOptionPane.showMessageDialog( null, "data saved to " + file.getName(),
+                            "export complete", JOptionPane.PLAIN_MESSAGE );
+                } catch( IOException ee ) {
+                    ee.printStackTrace();
+                    JOptionPane.showMessageDialog( null, "an error occurred during export",
+                            "export error", JOptionPane.ERROR_MESSAGE );
+                }
             }
         };
-    }//end createSaveAsJsonListener
+
+        }//end createSaveAsJsonListener
 
 
     public ActionListener createPrintListener() {
@@ -215,7 +259,7 @@ public class ListenerFactory {
     public ActionListener createNewSessionListener() {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                 //TODO
+                //TODO
                 synchronized( frame.lock ) {
                     frame.setVisible( false );
                     frame.lock.setMessage( PassLock.Message.DO_OPEN_SESSION );
@@ -251,13 +295,12 @@ public class ListenerFactory {
     }//end createRefactorSessionListener
 
 
-    public ActionListener createDelSessionListener(  ) {
+    public ActionListener createDelSessionListener() {
         return new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
 
                 if( JOptionPane.showConfirmDialog( null, "are you sure you want to permanently " +
-                        "delete session \"" + frame.session.getName() + "\" ?",
-                        "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
+                        "delete session \"" + frame.session.getName() + "\" ?", "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
 
                     frame.session.delete();
 
