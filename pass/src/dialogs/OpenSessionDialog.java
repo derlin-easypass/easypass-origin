@@ -8,7 +8,7 @@ import manager.SessionManager;
 import passinterface.AbstractSessionChecker;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
+import javax.swing.event.*;
 import javax.swing.filechooser.FileFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -33,8 +33,8 @@ public class OpenSessionDialog extends JDialog {
     /**
      * Creates new form SessionAndPassFrame
      */
-    public OpenSessionDialog( javax.swing.JFrame parent, AbstractSessionChecker sessionChecker )
-            throws ClassNotFoundException, IllegalAccessException, InstantiationException,
+    public OpenSessionDialog( JFrame parent, AbstractSessionChecker sessionChecker ) throws
+            ClassNotFoundException, IllegalAccessException, InstantiationException,
             UnsupportedLookAndFeelException, FileNotFoundException {
         super( parent, "session and credentials", true );
 
@@ -83,12 +83,11 @@ public class OpenSessionDialog extends JDialog {
     private void initComponents() {
 
         buttonGroupImportOrSelect = new ButtonGroup();
-        mainPanel = new javax.swing.JPanel();
         sessionL = new JLabel();
         if( sessionList == null ) {
-            sessionCombo = new javax.swing.JComboBox<String>( new String[]{ "choose..." } );
+            sessionCombo = new JComboBox<String>( new String[]{ "choose..." } );
         } else {
-            sessionCombo = new javax.swing.JComboBox<String>( sessionList );
+            sessionCombo = new JComboBox<String>( sessionList );
             sessionCombo.insertItemAt( "choose...", 0 );
             sessionCombo.setSelectedIndex( 0 );
         }
@@ -97,7 +96,7 @@ public class OpenSessionDialog extends JDialog {
         cancelButton = new JButton();
         passTF = new JPasswordField();
         newSessionButton = new JButton();
-        importTF = new javax.swing.JTextField();
+        importTF = new JTextField();
         browseButton = new JButton();
         importRB = new JRadioButton();
         selectSessionRB = new JRadioButton();
@@ -166,7 +165,7 @@ public class OpenSessionDialog extends JDialog {
         buttonGroupImportOrSelect.add( importRB );
         importRB.setFont( new java.awt.Font( "Tahoma", 0, 12 ) ); // NOI18N
         importRB.setText( "Import" );
-        importRB.addChangeListener( new javax.swing.event.ChangeListener() {
+        importRB.addChangeListener( new ChangeListener() {
             public void stateChanged( ChangeEvent evt ) {
                 importRBStateChanged( evt );
             }
@@ -177,100 +176,65 @@ public class OpenSessionDialog extends JDialog {
         selectSessionRB.setSelected( true );
         selectSessionRB.setText( "Open" );
 
-        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout( mainPanel );
+        GroupLayout mainPanelLayout = new GroupLayout( mainPanel );
         mainPanel.setLayout( mainPanelLayout );
-        mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup( javax.swing
-                .GroupLayout.Alignment.LEADING ).addGroup( javax.swing.GroupLayout.Alignment
-                .TRAILING, mainPanelLayout.createSequentialGroup().addContainerGap().addGroup(
-                mainPanelLayout.createParallelGroup( javax.swing.GroupLayout.Alignment.TRAILING )
-                        .addGroup( mainPanelLayout.createSequentialGroup().addGap( 0, 0,
-                                Short.MAX_VALUE ).addComponent( okButton ).addPreferredGap( javax
-                                .swing.LayoutStyle.ComponentPlacement.RELATED ).addComponent(
-                                cancelButton ).addGap( 20, 20, 20 ) ).addGroup( javax.swing
-                        .GroupLayout.Alignment.LEADING, mainPanelLayout.createSequentialGroup()
-                        .addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
-                                .Alignment.TRAILING ).addGroup( javax.swing.GroupLayout.Alignment
-                                .LEADING, mainPanelLayout.createSequentialGroup().addComponent(
-                                passL ).addPreferredGap( javax.swing.LayoutStyle
-                                .ComponentPlacement.UNRELATED ).addComponent( passTF,
-                                javax.swing.GroupLayout.PREFERRED_SIZE, 249,
-                                javax.swing.GroupLayout.PREFERRED_SIZE ) ).addComponent(
-                                sessionL, javax.swing.GroupLayout.Alignment.LEADING ).addGroup(
-                                javax.swing.GroupLayout.Alignment.LEADING,
-                                mainPanelLayout.createSequentialGroup().addGroup( mainPanelLayout
-                                        .createParallelGroup( javax.swing.GroupLayout.Alignment
-                                                .LEADING ).addComponent( importRB ).addComponent(
-                                                selectSessionRB ) ).addGroup( mainPanelLayout
-                                        .createParallelGroup( javax.swing.GroupLayout.Alignment
-                                                .TRAILING ).addGroup( javax.swing.GroupLayout
-                                                .Alignment.LEADING,
-                                                mainPanelLayout.createSequentialGroup()
-                                                        .addPreferredGap( javax.swing.LayoutStyle
-                                                                .ComponentPlacement.RELATED )
-                                                        .addComponent( sessionCombo,
-                                                                javax.swing.GroupLayout
-                                                                        .PREFERRED_SIZE, 170,
-                                                                javax.swing.GroupLayout
-                                                                        .PREFERRED_SIZE )
-                                                        .addPreferredGap( javax.swing.LayoutStyle
-                                                                .ComponentPlacement.RELATED )
-                                                        .addComponent( newSessionButton,
-                                                                javax.swing.GroupLayout
-                                                                        .PREFERRED_SIZE, 73,
-                                                                javax.swing.GroupLayout
-                                                                        .PREFERRED_SIZE ) )
-                                        .addGroup( javax.swing.GroupLayout.Alignment.LEADING,
-                                                mainPanelLayout.createSequentialGroup().addGap(
-                                                        2, 2, 2 ).addComponent( importTF,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        170,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE )
-                                                        .addPreferredGap( javax.swing.LayoutStyle
-                                                                .ComponentPlacement.RELATED )
-                                                        .addComponent( browseButton ) ) ) ) )
-                        .addGap( 0, 20, Short.MAX_VALUE ) ) ) ) );
-        mainPanelLayout.setVerticalGroup( mainPanelLayout.createParallelGroup( javax.swing
-                .GroupLayout.Alignment.LEADING ).addGroup( mainPanelLayout.createSequentialGroup
-                ().addContainerGap().addComponent( sessionL ).addPreferredGap( javax.swing
-                .LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE ).addGroup(
-                mainPanelLayout.createParallelGroup( javax.swing.GroupLayout.Alignment.BASELINE )
-                        .addComponent( importRB ).addComponent( importTF,
-                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                        javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( browseButton,
-                        javax.swing.GroupLayout.PREFERRED_SIZE, 23,
-                        javax.swing.GroupLayout.PREFERRED_SIZE ) ).addPreferredGap( javax.swing
-                .LayoutStyle.ComponentPlacement.UNRELATED ).addGroup( mainPanelLayout
-                .createParallelGroup( javax.swing.GroupLayout.Alignment.BASELINE ).addComponent(
-                        selectSessionRB ).addComponent( sessionCombo,
-                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                        javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( newSessionButton,
-                        javax.swing.GroupLayout.PREFERRED_SIZE, 23,
-                        javax.swing.GroupLayout.PREFERRED_SIZE ) ).addGap( 18, 18,
-                18 ).addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
-                .Alignment.BASELINE ).addComponent( passTF,
-                javax.swing.GroupLayout.PREFERRED_SIZE, 20,
-                javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( passL ) ).addGap( 18, 18,
-                18 ).addGroup( mainPanelLayout.createParallelGroup( javax.swing.GroupLayout
-                .Alignment.BASELINE ).addComponent( okButton,
-                javax.swing.GroupLayout.PREFERRED_SIZE, 34,
-                javax.swing.GroupLayout.PREFERRED_SIZE ).addComponent( cancelButton,
-                javax.swing.GroupLayout.PREFERRED_SIZE, 34,
-                javax.swing.GroupLayout.PREFERRED_SIZE ) ).addContainerGap() ) );
+        mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup( GroupLayout
+                .Alignment.LEADING ).addGroup( GroupLayout.Alignment.TRAILING, mainPanelLayout
+                .createParallelGroup( GroupLayout.Alignment.TRAILING ).addGroup( mainPanelLayout
+                        .createSequentialGroup().addGap( 0, 0, Short.MAX_VALUE ).addComponent(
+                                okButton ).addPreferredGap( LayoutStyle.ComponentPlacement
+                                .RELATED ).addComponent( cancelButton ).addGap( 20, 20,
+                                20 ) ).addGroup( GroupLayout.Alignment.LEADING,
+                        mainPanelLayout.createSequentialGroup().addGroup( mainPanelLayout
+                                .createParallelGroup( GroupLayout.Alignment.TRAILING ).addGroup(
+                                        GroupLayout.Alignment.LEADING,
+                                        mainPanelLayout.createSequentialGroup().addComponent(
+                                                passL ).addPreferredGap( LayoutStyle
+                                                .ComponentPlacement.UNRELATED ).addComponent(
+                                                passTF, GroupLayout.PREFERRED_SIZE, 249,
+                                                GroupLayout.PREFERRED_SIZE ) ).addComponent(
+                                        sessionL, GroupLayout.Alignment.LEADING ).addGroup(
+                                        GroupLayout.Alignment.LEADING,
+                                        mainPanelLayout.createSequentialGroup().addGroup(
+                                                mainPanelLayout.createParallelGroup( GroupLayout
+                                                        .Alignment.LEADING ).addComponent(
+                                                        importRB ).addComponent( selectSessionRB
+                                                ) ).addGroup( mainPanelLayout.createParallelGroup( GroupLayout.Alignment.TRAILING ).addGroup( GroupLayout.Alignment.LEADING, mainPanelLayout.createSequentialGroup().addPreferredGap( LayoutStyle.ComponentPlacement.RELATED ).addComponent( sessionCombo, GroupLayout.PREFERRED_SIZE, 170, GroupLayout.PREFERRED_SIZE ).addPreferredGap( LayoutStyle.ComponentPlacement.RELATED ).addComponent( newSessionButton, GroupLayout.PREFERRED_SIZE, 73, GroupLayout.PREFERRED_SIZE ) ).addGroup( GroupLayout.Alignment.LEADING, mainPanelLayout.createSequentialGroup().addGap( 2, 2, 2 ).addComponent( importTF, GroupLayout.PREFERRED_SIZE, 170, GroupLayout.PREFERRED_SIZE ).addPreferredGap( LayoutStyle.ComponentPlacement.RELATED ).addComponent( browseButton ) ) ) ) ).addGap( 0, 20, Short.MAX_VALUE ) ).addGroup( mainPanelLayout.createSequentialGroup().addContainerGap() ) ) );
+        mainPanelLayout.setVerticalGroup( mainPanelLayout.createParallelGroup( GroupLayout
+                .Alignment.LEADING ).addGroup( mainPanelLayout.createSequentialGroup()
+                .addContainerGap().addComponent( sessionL ).addPreferredGap( LayoutStyle
+                        .ComponentPlacement.RELATED, 9, Short.MAX_VALUE ).addGroup(
+                        mainPanelLayout.createParallelGroup( GroupLayout.Alignment.BASELINE )
+                                .addComponent( importRB ).addComponent( importTF,
+                                GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                                GroupLayout.PREFERRED_SIZE ).addComponent( browseButton,
+                                GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE ) )
+                .addPreferredGap( LayoutStyle.ComponentPlacement.UNRELATED ).addGroup(
+                        mainPanelLayout.createParallelGroup( GroupLayout.Alignment.BASELINE )
+                                .addComponent( selectSessionRB ).addComponent( sessionCombo,
+                                GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                                GroupLayout.PREFERRED_SIZE ).addComponent( newSessionButton,
+                                GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE ) )
+                .addGap( 18, 18, 18 ).addGroup( mainPanelLayout.createParallelGroup( GroupLayout
+                        .Alignment.BASELINE ).addComponent( passTF, GroupLayout.PREFERRED_SIZE,
+                        20, GroupLayout.PREFERRED_SIZE ).addComponent( passL ) ).addGap( 18, 18,
+                        18 ).addGroup( mainPanelLayout.createParallelGroup( GroupLayout.Alignment
+                        .BASELINE ).addComponent( okButton, GroupLayout.PREFERRED_SIZE, 34,
+                        GroupLayout.PREFERRED_SIZE ).addComponent( cancelButton,
+                        GroupLayout.PREFERRED_SIZE, 34, GroupLayout.PREFERRED_SIZE ) )
+                .addContainerGap() ) );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout( getContentPane() );
+        GroupLayout layout = new GroupLayout( getContentPane() );
         getContentPane().setLayout( layout );
-        layout.setHorizontalGroup( layout.createParallelGroup( javax.swing.GroupLayout.Alignment
-                .LEADING ).addGroup( javax.swing.GroupLayout.Alignment.TRAILING,
-                layout.createSequentialGroup().addGap( 0, 4, Short.MAX_VALUE ).addComponent(
-                        mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE,
-                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                        javax.swing.GroupLayout.PREFERRED_SIZE ) ) );
-        layout.setVerticalGroup( layout.createParallelGroup( javax.swing.GroupLayout.Alignment
-                .LEADING ).addGroup( layout.createSequentialGroup().addComponent( mainPanel,
-                javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-                javax.swing.GroupLayout.PREFERRED_SIZE ).addGap( 0, 1, Short.MAX_VALUE ) ) );
+        layout.setHorizontalGroup( layout.createParallelGroup( GroupLayout.Alignment.LEADING )
+                .addGroup( GroupLayout.Alignment.TRAILING, layout.createSequentialGroup().addGap(
+                        0, 4, Short.MAX_VALUE ).addComponent( mainPanel,
+                        GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                        GroupLayout.PREFERRED_SIZE ) ) );
+        layout.setVerticalGroup( layout.createParallelGroup( GroupLayout.Alignment.LEADING )
+                .addGroup( layout.createSequentialGroup().addComponent( mainPanel,
+                        GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                        GroupLayout.PREFERRED_SIZE ).addGap( 0, 1, Short.MAX_VALUE ) ) );
 
         pack();
     }// </editor-fold>
@@ -450,7 +414,7 @@ public class OpenSessionDialog extends JDialog {
             Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
         } catch( IllegalAccessException ex ) {
             Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
-        } catch( javax.swing.UnsupportedLookAndFeelException ex ) {
+        } catch( UnsupportedLookAndFeelException ex ) {
             Logger.getLogger( OpenSessionDialog.class.getName() ).log( java.util.logging.Level.SEVERE, null, ex );
         }
         // </editor-fold>
@@ -473,8 +437,8 @@ public class OpenSessionDialog extends JDialog {
     private ButtonGroup buttonGroupImportOrSelect;
     private JButton cancelButton;
     private JRadioButton importRB;
-    private javax.swing.JTextField importTF;
-    private javax.swing.JPanel mainPanel;
+    private JTextField importTF;
+    private javax.swing.JPanel mainPanel = new JPanel();
     private JButton newSessionButton;
     private JButton okButton;
     private JLabel passL;

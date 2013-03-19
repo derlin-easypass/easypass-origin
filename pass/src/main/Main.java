@@ -182,6 +182,7 @@ public class Main {
 
         try {
             //gets defaults settings
+            System.out.println(new File( configPath ).getAbsolutePath());
             config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File(
                     configPath ), new PassConfigContainer() );
 
