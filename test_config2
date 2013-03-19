@@ -1,13 +1,25 @@
 {
+<<<<<<< HEAD
 
   "sessionPath": "%PARENTOFJAR%/prout",
   "colDimensions": [
+=======
+  "application$path": "%APPDIR%",
+  "session$path": "%PARENTOFJAR%/sessions",
+  "column$dimensions": [
+>>>>>>> d25f5922232e9a7eed9b8be26a6d08adafb38a9e
     250,
     250,
     150,
     100,
     450
   ],
+<<<<<<< HEAD
   "windowHeight": 300000,
   "windowWidth": 2000000
 }
+=======
+  "window$height": 700,
+  "window$width": 1200
+}
+>>>>>>> d25f5922232e9a7eed9b8be26a6d08adafb38a9e

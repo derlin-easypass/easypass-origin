@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "appPath": "%APPDIR%",
   "sessionPath": "%PARENTOFJAR%/sessions",
   "colDimensions": [
@@ -11,3 +12,25 @@
   "windowHeight": 300,
   "windowWidth": 200
 }
+=======
+  "application$path": "%APPDIR%",
+  "session$path": "%APPDIR%/sessions",
+  "logfile$path": "%APPDIR%/easypass.log",
+  "column$names":[
+    "account",
+    "pseudo",
+    "email",
+    "password",
+    "notes"
+  ],
+  "column$dimensions": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "window$height": 300,
+  "window$width": 200
+}
+>>>>>>> d25f5922232e9a7eed9b8be26a6d08adafb38a9e

@@ -1,15 +1,15 @@
 package manager;
 
+import gui.PassFileFilter;
+import models.AbstractConfigContainer;
 import models.Exceptions;
 import models.Exceptions.ImportException;
-import models.Exceptions.SessionFileNotFoundException;
 import models.Exceptions.WrongCredentialsException;
 import passinterface.AbstractSessionChecker;
 import table.PassTableModel;
 
 import javax.swing.*;
 import java.io.*;
-import java.util.Map;
 
 /**
  * This class manages the manipulation of session files. It returns the name of
@@ -38,9 +38,8 @@ public class SessionManager implements AbstractSessionChecker {
     public static String CRYPTO_ALGORITHM = "aes-128-cbc";
     public static String DATA_EXTENSION = ".data_ser";
 
-    private Map<String, String> config;
+    private AbstractConfigContainer config;
     private String directoryPath;
-    private int nbrOfActiveSessions = 0;
 
 
     public static void main( String[] args ) {
@@ -62,16 +61,16 @@ public class SessionManager implements AbstractSessionChecker {
      * ********************************************************
      */
 
-    public SessionManager( Map<String, String> config ) {
+    public SessionManager( AbstractConfigContainer config ) {
 
         this.config = config;
-        File file = new File( config.get( "session path" ) );
+        File file = new File( ( String ) config.getProperty( "session path" ) );
         if( !file.exists() || !file.isDirectory() ) {
             throw new Exceptions.NotInitializedException( file.getPath() + "is not a valid " +
                     "directory" );
         }
 
-        this.directoryPath = config.get( "session path" );
+        this.directoryPath = ( String ) config.getProperty( "session path" );
 
     }// end constructor
 
@@ -80,32 +79,21 @@ public class SessionManager implements AbstractSessionChecker {
      * get available sessions, check if a sessions exists
      ************************************************************/
 
+
     /**
      * returns an array of strings with all the existing sessions
      *
-     * @return
+     * @return   the existing sessions
      * @throws java.io.FileNotFoundException
      */
     public String[] availableSessions() throws FileNotFoundException {
-        return this.availableSessions( ".*\\" + DATA_EXTENSION + "$" );
-    }// end available sessions
-
-
-    /**
-     * returns an array of strings with all the existing sessions
-     *
-     * @param pattern the regex to recognize the sessions
-     * @return
-     * @throws java.io.FileNotFoundException
-     */
-    public String[] availableSessions( String pattern ) throws FileNotFoundException {
 
         File folder = new File( this.directoryPath );
         if( !folder.exists() || !folder.isDirectory() ) {
             throw new FileNotFoundException( this.directoryPath + " is not a valid directory" );
         }
 
-        File[] listOfFiles = folder.listFiles( new Filter( pattern ) );
+        File[] listOfFiles = folder.listFiles( new PassFileFilter( DATA_EXTENSION ) );
         String[] sessions = new String[ listOfFiles.length ];
 
         int counter = 0;
@@ -131,8 +119,8 @@ public class SessionManager implements AbstractSessionChecker {
 
         File folder = new File( pathToFolder );
         // only if folder exists and is actually a directory
-        return folder.exists() && folder.isDirectory() && folder.listFiles( new Filter( name +
-                "\\.*" + DATA_EXTENSION + "$" ) ).length > 0;
+        return folder.exists() && folder.isDirectory() && folder.listFiles( new PassFileFilter(
+                DATA_EXTENSION ) ).length > 0;
 
     }// end sessionExists
 
@@ -207,29 +195,26 @@ public class SessionManager implements AbstractSessionChecker {
 
 
     /**
-     * imports a session by copying the ginven file to the sessions folder
+     * imports a session by copying the given file to the sessions folder
      *
-     * @param sessionPath
-     * @param password
-     * @return
+     * @param sessionPath the path to the file to import
+     * @param password    the password
+     * @return a session object
      * @throws models.Exceptions.WrongCredentialsException
-     *
-     * @throws java.io.IOException
-     * @throws models.Exceptions.SessionFileNotFoundException
      *
      * @throws models.Exceptions.ImportException
      *
      */
     public Session importSession( String sessionPath, String password ) throws Exceptions
-            .WrongCredentialsException, IOException, SessionFileNotFoundException, ImportException {
+            .WrongCredentialsException, ImportException {
 
         String name;
-
         File fileIn = new File( sessionPath );
 
+        //checks that the file to import exists and has the correct extension
         if( fileIn.getName().isEmpty() || !fileIn.getName().endsWith( DATA_EXTENSION ) ) {
             throw new ImportException( "Session " + sessionPath + " not found. The file does not " +
-                    "exist or does not end with " + DATA_EXTENSION + "." );
+                    "exist or does not have the correct extension (" + DATA_EXTENSION + ")." );
         }
 
         name = fileIn.getName().substring( 0, fileIn.getName().lastIndexOf( '.' ) );
@@ -243,12 +228,16 @@ public class SessionManager implements AbstractSessionChecker {
             }
         }
 
+        //copies the file to the session directory and creates a new session object to return
         try {
 
             copyFile( sessionPath, this.getSessionFilePath( name ) );
-            return new Session( sessionPath, password );
+            Session session = new Session( sessionPath, password );
+            session.loadModel();
+            return session;
 
         } catch( Exception e ) {
+            //deletes the copied file
             new File( this.getSessionFilePath( name ) ).delete();
             throw new Exceptions.WrongCredentialsException( name + " : file couldn't be copied " );
         }
@@ -262,19 +251,9 @@ public class SessionManager implements AbstractSessionChecker {
      */
 
     /**
-     * returns the path to the sessions folder
-     *
-     * @return
-     */
-    public String getDirectoryPath() {
-        return directoryPath;
-    }
-
-
-    /**
      * returns the complete path to the current session file
      *
-     * @return
+     * @return the path to the given session  file
      */
     public String getSessionFilePath( String name ) {
         return this.directoryPath + File.separator + name + DATA_EXTENSION;
@@ -286,10 +265,10 @@ public class SessionManager implements AbstractSessionChecker {
      ************************************************************/
 
     /**
-     * copies a file.
+     * copies a file. If a file with the same name already exists, it will be replaced !
      *
-     * @param srcFilepath
-     * @param destFilepath
+     * @param srcFilepath  the file to copy
+     * @param destFilepath the target of the copy
      * @throws java.io.IOException
      */
     public static void copyFile( String srcFilepath, String destFilepath ) throws IOException {
@@ -309,33 +288,8 @@ public class SessionManager implements AbstractSessionChecker {
     }
 
 
-    /**
-     * private class used to get files in a folder that match a pattern
-     *
-     * @author lucy
-     */
-    public static class Filter implements FilenameFilter {
-
-        protected String pattern;
-
-
-        public Filter( String str ) {
-            pattern = str;
-        }
-
-
-        public String getDescription() {
-            return "Easypass session file (*." + SessionManager.DATA_EXTENSION + ")";
-        }
-
-
-        public boolean accept( File dir, String name ) {
-            return name.toLowerCase().matches( pattern );
-        }
-    }// end class filter
-
     /********************************************************************
-     *
+     *  the session class
      ********************************************************************/
 
     /**
@@ -370,11 +324,17 @@ public class SessionManager implements AbstractSessionChecker {
         private boolean isActive = false;
 
 
-        /**
-         * ******************************************************* constructor
-         * ********************************************************
-         */
+        /* *****************************************************************
+         * constructor
+         * ****************************************************************/
 
+
+        /**
+         * creates a session object, but does not initialize the model !
+         *
+         * @param path     the path to the session file
+         * @param password the password
+         */
         private Session( String path, String password ) {
             this.path = path;
             this.name = path.substring( path.lastIndexOf( File.separator ) + 1,
@@ -385,9 +345,11 @@ public class SessionManager implements AbstractSessionChecker {
         }// end constructor
 
 
-        /**************************************************************
-         * manages sessions
-         ************************************************************/
+        /* *****************************************************************
+         * session management
+         * ****************************************************************/
+
+
         /**
          * returns true if a name is currently opened
          *
@@ -395,13 +357,20 @@ public class SessionManager implements AbstractSessionChecker {
          */
         public boolean isActive() {
             return isActive;
-        }
+        }//end isActive
 
 
+        /**
+         * decrypts the data stored into the session file and loads them into the {@link
+         * PassTableModel} attached to the session object
+         * object.
+         *
+         * @throws WrongCredentialsException
+         */
         private void loadModel() throws WrongCredentialsException {
             try {
-                this.model = new PassTableModel( config.get( "column names" ).split( "," ),
-                        this.jsonManager.deserialize( CRYPTO_ALGORITHM, path, password ) );
+                this.model = new PassTableModel( ( String[] ) config.getProperty( "column names"
+                ), this.jsonManager.deserialize( CRYPTO_ALGORITHM, path, password ) );
                 this.isActive = true;
             } catch( Exception e ) {
                 throw new Exceptions.WrongCredentialsException( "session \"" + path + "\" : wrong" +
@@ -412,17 +381,25 @@ public class SessionManager implements AbstractSessionChecker {
         }// end loadModel
 
 
+        /**
+         * creates an empty {@link PassTableModel} for the session object
+         */
         private void createModel() {
-            this.model = new PassTableModel( config.get( "column names" ).split( "," ) );
+            this.model = new PassTableModel( ( String[] ) config.getProperty( "column names" ) );
             this.isActive = true;
         }// end createModel
 
 
+        /**
+         * saves the data of the tableModel into the session file, using AES
+         *
+         * @return true if the saving went well, false if a problem occurred
+         */
         public boolean save() {
 
             if( !this.isActive() ) {
                 throw new Exceptions.NotInitializedException( "no name opened" );
-            }
+            }//end if
 
             try {
 
@@ -433,21 +410,24 @@ public class SessionManager implements AbstractSessionChecker {
             } catch( IOException e ) {
                 e.printStackTrace();
                 return false;
-            }
+            } //end try
         }// end save
 
 
         /**
-         * closes the current name
+         * closes the current nsession object
          */
-        public void closeSession() {
+        public void close() {
             this.password = null;
             this.name = null;
             this.jsonManager = null;
             this.isActive = false;
-        }
+        }//end close
 
 
+        /**
+         * deletes the current session object, i.e. the file used to serialize its data
+         */
         public void delete() {
             if( !this.isActive() ) {
                 return;
@@ -455,16 +435,16 @@ public class SessionManager implements AbstractSessionChecker {
 
             File file = new File( this.path );
             file.delete();
-            this.closeSession();
-        }
+            this.close();
+        }//end delete
 
 
         /**
          * changes the session name and the password of the currently opened
          * session
          *
-         * @param newName
-         * @param newPass
+         * @param newName the new name
+         * @param newPass the new password
          * @throws models.Exceptions.RefactorException
          *
          */
@@ -476,29 +456,34 @@ public class SessionManager implements AbstractSessionChecker {
 
             if( !this.isActive ) {
                 return;
-            }
+            }//end if
 
+            //updates the session attributes
             this.name = newName;
             this.password = newPass;
             this.path = getSessionFilePath( newName );
 
             try {
+                //deserializes the data using the old credentials and serializes them with the
+                // new ones
                 this.jsonManager.serialize( this.jsonManager.deserialize( CRYPTO_ALGORITHM,
                         oldPath, oldPass ), CRYPTO_ALGORITHM, this.path, this.password );
 
-                new File( oldPath ).delete();
+                //if the filename has changed, deletes the old file
+                if( !this.path.equals( oldPath ) ) new File( oldPath ).delete();
 
             } catch( Exception e ) {
-
+                //in case an error occurs, sets the session attributes back to the pre-refactor
+                // state
                 this.name = oldSessionName;
                 this.password = oldPass;
                 this.path = oldPath;
 
                 throw new Exceptions.RefactorException( this.name + " : file couldn't be " +
                         "refactored " );
-            }
+            } //end try
 
-        }
+        }//end refactor
 
 
         /**
@@ -513,28 +498,34 @@ public class SessionManager implements AbstractSessionChecker {
 
 
         /**
-         * returns the path to the sessions folder
+         * returns the {@link PassTableModel} attached to this session object
          *
-         * @return the path to the [serialized] session data file
+         * @return the tablemodel
          */
-        public String getPath() {
-            return path;
-        }
-
-
         public PassTableModel getModel() {
             return this.model;
-        }
+        }//end getModel
 
 
-        public String getConfigProperty( String key ) {
-            return config.get( key );
-        }
+        /**
+         * returns the given configuration property
+         *
+         * @param key the name of the property to return
+         * @return the property
+         */
+        public Object getConfigProperty( String key ) {
+            return config.getProperty( key );
+        }//end getConfigProperty
 
 
-        public String getSessionName() {
+        /**
+         * gets the name of the current session
+         *
+         * @return
+         */
+        public String getName() {
             return name;
-        }
+        }//end getName
 
     }// end class
 }// end class

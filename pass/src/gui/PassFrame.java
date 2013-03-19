@@ -11,6 +11,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
@@ -57,8 +58,7 @@ public class PassFrame extends JFrame {
 
     public PassFrame( Session session, PassLock lock ) {
         // initializes the main Frame
-        super( "Easypass / " + System.getProperty( "user.name" ) + " / " + session
-                .getSessionName()  );
+        super( "Easypass / " + System.getProperty( "user.name" ) + " / " + session.getName() );
         this.session = session;
         this.lock = lock;
 
@@ -67,8 +67,8 @@ public class PassFrame extends JFrame {
         this.setWindowClosingListener();
 
         // sets position, size, etc
-        int winWidth = Integer.parseInt( session.getConfigProperty( "window width" ) );
-        int winHeight = Integer.parseInt( session.getConfigProperty( "window height" ) );
+        int winWidth = ( Integer ) session.getConfigProperty( "window width" );
+        int winHeight = ( Integer ) session.getConfigProperty( "window height" );
 
         this.setSize( new Dimension( winWidth, winHeight ) );
         Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -92,10 +92,11 @@ public class PassFrame extends JFrame {
 
         //table.setRowHeight( 30 );
         table.setStyle();
-        settableColSizes();
+        table.setColSizes( ( int[] ) session.getConfigProperty( "column dimensions" ) );
+        //settableColSizes();
 
         // sets the undo manager for CTRL Z
-        undoManager = new UndoManager(table);
+        undoManager = new UndoManager( table );
         this.session.getModel().addUndoableEditListener( undoManager );
         this.session.getModel().addTableModelListener( new TableModelListener() {
 
@@ -150,7 +151,7 @@ public class PassFrame extends JFrame {
     }// end constructor
 
 
-    private void settableColSizes() {
+   /* private void settableColSizes() {
 
         try {
             String[] dims = session.getConfigProperty( "dimensions" ).split( "," );
@@ -164,7 +165,7 @@ public class PassFrame extends JFrame {
             return;
         }// end try
 
-    }// end proper
+    }// end proper */
 
 
     /********************************************************************
@@ -180,7 +181,7 @@ public class PassFrame extends JFrame {
      * it prompts the user to enter them again - or the problem is somewhere
      * else and the program exits (after logging the cause of the exception)
      */
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     /**
      * creates a JDialog asking the user if he wants to save before quit. The
      * method will return false only if the user clicked cancel.
@@ -247,7 +248,20 @@ public class PassFrame extends JFrame {
     public File showTxtFileChooser() {
 
         JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter( new PassFrame.TextFilter() );
+        chooser.setFileFilter( new FileFilter() {
+
+            @Override
+            public boolean accept( File file ) {
+                return file.isDirectory() || file.getName().endsWith( ".txt" );
+            }
+
+
+            @Override
+            public String getDescription() {
+                return "Plain text document (*.txt)";
+            }
+        } );
+
         chooser.setCurrentDirectory( new File( "." ) );
         chooser.setDialogTitle( "select folder" );
         chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
@@ -326,7 +340,7 @@ public class PassFrame extends JFrame {
      * Shortcuts : ESC - to close the application; CTRL+F - focus on the search
      * bar; CTRL+N - new row; DEL - delete selected rows;
      */
-    @SuppressWarnings( "serial" )
+    @SuppressWarnings("serial")
     public void setKeyboardShortcuts() {
 
         // escape event closes window
@@ -373,7 +387,7 @@ public class PassFrame extends JFrame {
 
 
     /********************************************************************
-     * getters (menus, sessionPath) /
+     * getters (menus, session$path) /
      ********************************************************************/
 
 
@@ -499,9 +513,9 @@ public class PassFrame extends JFrame {
             String text = filterText.getText();
             String[] textArray = text.split( " " );
 
-            for( int i = 0; i < textArray.length; i++ ) {
-                rfs.add( RowFilter.regexFilter( "(?i)" + textArray[ i ], 0, 1, 2, 3, 4 ) );
-            }
+            for( String aTextArray : textArray ) {
+                rfs.add( RowFilter.regexFilter( "(?i)" + aTextArray, 0, 1, 2, 3, 4 ) );
+            }//end for
 
             rf = RowFilter.andFilter( rfs );
 
@@ -524,8 +538,8 @@ public class PassFrame extends JFrame {
         try {
 
             // true = append to file
-            BufferedWriter writer = new BufferedWriter( new FileWriter( session.getConfigProperty
-                    ( "log filepath" ), true ) );
+            BufferedWriter writer = new BufferedWriter( new FileWriter( ( String ) session
+                    .getConfigProperty( "logfile path" ), true ) );
 
             // adds the date and the message at the end of the file
             writer.newLine();
@@ -541,24 +555,5 @@ public class PassFrame extends JFrame {
     }// end writeLog
 
 
-    /**
-     * class used to filter the files selectables in the filechooser window.
-     *
-     * @author lucy
-     */
-    class TextFilter extends javax.swing.filechooser.FileFilter {
-
-        public String getDescription() {
-            return "Plain text document (*.txt)";
-        }
-
-
-        public boolean accept( File file ) {
-            if( file.isDirectory() ) {
-                return true;
-            }
-            return file.getName().endsWith( ".txt" );
-        }
-    }// end private class
 
 }// end class
