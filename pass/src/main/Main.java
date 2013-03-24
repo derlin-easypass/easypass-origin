@@ -21,7 +21,7 @@ import java.io.File;
 public class Main {
 
     public static final String APPLICATION_NAME = "easypass";
-    private static final String configPath = "test_config";
+    public static final String CONFIG_PATH = "test_config";
     private AbstractConfigContainer config;
     private SessionManager sessionManager;
     private int runningWindowsCount;
@@ -182,9 +182,8 @@ public class Main {
 
         try {
             //gets defaults settings
-            System.out.println(new File( configPath ).getAbsolutePath());
-            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File(
-                    configPath ), new PassConfigContainer() );
+            System.out.println(new File( CONFIG_PATH ).getAbsolutePath());
+            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File( CONFIG_PATH ), new PassConfigContainer() );
 
             //updates the paths
             this.config.updatePaths();

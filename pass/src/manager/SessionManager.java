@@ -527,5 +527,9 @@ public class SessionManager implements AbstractSessionChecker {
             return name;
         }//end getName
 
+        public AbstractConfigContainer getConfigContainer(){
+            return config;
+        }// end getConfigContainer
+
     }// end class
 }// end class

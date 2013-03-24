@@ -135,7 +135,7 @@ public class PassFrame extends JFrame {
 
         // PassExcelAdapter adapter = new PassExcelAdapter( table );
         this.pack();
-        this.setMinimumSize( new Dimension( winWidth, winHeight ) );
+        this.setMinimumSize( new Dimension( 400, 300 ) );
         //this.setJMenuBar( this.getJFrameMenu() );
         this.setJMenuBar( new PassMenuBar( this ) );
         this.setKeyboardShortcuts();
@@ -212,16 +212,12 @@ public class PassFrame extends JFrame {
      *
      * @param info
      */
-    public void showInfos( String info, int ms ) {
+    public void showInfos( String info ) {
         infos.setText( info );
-
-        if( ms <= 0 ) {
-            return;
-        }
 
         if( infosTimer != null && infosTimer.isRunning() ) infosTimer.stop();
 
-        infosTimer = new Timer( ms, new ActionListener() {
+        infosTimer = new Timer( INFOS_DISPLAY_TIME, new ActionListener() {
             public void actionPerformed( ActionEvent evt ) {
                 infos.setText( "" );
             }

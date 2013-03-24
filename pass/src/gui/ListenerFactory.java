@@ -1,7 +1,10 @@
 package gui;
 
 import dialogs.RefactorSessionDialog;
+import main.Main;
 import main.thread.PassLock;
+import manager.PassConfigContainer;
+import models.ConfigFileManager;
 import models.Exceptions;
 import table.PassTableModel;
 
@@ -14,8 +17,6 @@ import java.awt.event.ActionListener;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
-
-import static gui.PassFrame.INFOS_DISPLAY_TIME;
 
 /**
  * User: lucy
@@ -155,7 +156,7 @@ public class ListenerFactory {
                 } );
 
                 //creates a filter for .json docs and sets it to default filter
-                FileFilter defaultFF =  new FileFilter() {
+                FileFilter defaultFF = new FileFilter() {
 
                     @Override
                     public boolean accept( File file ) {
@@ -167,16 +168,17 @@ public class ListenerFactory {
                     public String getDescription() {
                         return "Json file (*.json)";
                     }
-                } ;
+                };
 
                 chooser.addChoosableFileFilter( defaultFF );
                 chooser.setFileFilter( defaultFF );
-                chooser.setCurrentDirectory( new File( System.getProperty( "user.home" )) );
+                chooser.setCurrentDirectory( new File( System.getProperty( "user.home" ) ) );
                 chooser.setDialogTitle( "select folder" );
                 chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
 
                 //shows filefilter. If the user cancels or does not choose a file, exists.
-                if( chooser.showSaveDialog( frame ) != JFileChooser.APPROVE_OPTION || chooser.getSelectedFile() == null ) {
+                if( chooser.showSaveDialog( frame ) != JFileChooser.APPROVE_OPTION || chooser
+                        .getSelectedFile() == null ) {
                     return;
                 }
 
@@ -194,7 +196,7 @@ public class ListenerFactory {
             }
         };
 
-        }//end createSaveAsJsonListener
+    }//end createSaveAsJsonListener
 
 
     public ActionListener createPrintListener() {
@@ -219,7 +221,7 @@ public class ListenerFactory {
 
                 // if no modification to save, returns
                 if( !frame.session.getModel().isModified() ) {
-                    frame.showInfos( "everything up to date.", INFOS_DISPLAY_TIME );
+                    frame.showInfos( "everything up to date." );
                     return;
                 }
 
@@ -227,17 +229,16 @@ public class ListenerFactory {
                     // saves data
                     if( frame.session.save() ) {
                         System.out.println( "datas serialized" );
-                        frame.showInfos( "data saved.", INFOS_DISPLAY_TIME );
+                        frame.showInfos( "data saved." );
                         frame.session.getModel().resetModified();
 
                     } else {
                         System.out.println( "data not saved" );
-                        frame.showInfos( "an error occurred! Data not saved...",
-                                INFOS_DISPLAY_TIME );
+                        frame.showInfos( "an error occurred! Data not saved..." );
                     }
                 } catch( Exception ee ) {
                     System.out.println( "error in serialization. Possible data loss" );
-                    frame.showInfos( "an error occurred! Data not saved...", INFOS_DISPLAY_TIME );
+                    frame.showInfos( "an error occurred! Data not saved..." );
                     ee.printStackTrace();
                 }// end try
             }
@@ -266,17 +267,15 @@ public class ListenerFactory {
                 RefactorSessionDialog dialog = new RefactorSessionDialog( null );
                 // if the user closed the dialog or clicked cancel, simply
                 // returns
-                if( !dialog.getStatus() ) {
-                    return;
-                }
+                if( dialog.isCanceled() ) return;
 
                 try {
                     frame.session.refactor( dialog.getSessionName(), dialog.getPass() );
                     frame.setTitle( frame.getTitle() + ": " + frame.session.getName() );
-                    frame.showInfos( "refactoring done.", INFOS_DISPLAY_TIME );
+                    frame.showInfos( "refactoring done." );
 
                 } catch( Exceptions.RefactorException ex ) {
-                    frame.showInfos( ex.getMessage(), INFOS_DISPLAY_TIME );
+                    frame.showInfos( ex.getMessage() );
                 }
 
             }
@@ -289,7 +288,8 @@ public class ListenerFactory {
             public void actionPerformed( ActionEvent e ) {
 
                 if( JOptionPane.showConfirmDialog( null, "are you sure you want to permanently " +
-                        "delete session \"" + frame.session.getName() + "\" ?", "delete session", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
+                        "delete session \"" + frame.session.getName() + "\" ?", "delete session",
+                        JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION ) {
 
                     frame.session.delete();
 
@@ -300,4 +300,30 @@ public class ListenerFactory {
             }
         };
     }//end createDelSessionListener
+
+
+    public ActionListener createSaveConfigListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed( ActionEvent e ) {
+                PassConfigContainer config;
+                config = ( PassConfigContainer ) frame.session.getConfigContainer();
+                //get columnWidth
+                int[] widths = new int[ frame.table.getColumnCount() ];
+                int index = 0;
+                for( String name : frame.session.getModel().getColumnNames() ) {
+                    widths[ index++ ] = frame.table.getColumn( name ).getWidth();
+                }//end for
+                config.setProperty( "column dimensions", widths );
+
+                //window size
+                config.setProperty( "window width", frame.getWidth() );
+                config.setProperty( "window height", frame.getHeight() );
+                new ConfigFileManager().writeJsonFile( Main.CONFIG_PATH, config );
+
+                // tells the user everything went fine
+                frame.showInfos( "preferences saved." );
+            }
+        };
+    }//end createSaveConfigListener
 }//end class

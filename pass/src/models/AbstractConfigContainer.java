@@ -25,6 +25,13 @@ abstract public class AbstractConfigContainer implements GsonContainable {
         }
     }//end getProperty
 
+    public void setProperty( String key, Object newValue ) {
+        try {
+            this.getClass().getField( key ).set( this, newValue );
+        } catch( Exception e ) {
+            throw new Exceptions.NoSuchSettingException();
+        }
+    }//end setProperty
     /**
      * merges the settings given in parameter with the settings of the current object. <br />
      * In case of conflict, the settings of the current object will be overridden !

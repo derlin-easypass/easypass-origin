@@ -15,42 +15,43 @@ public class ConfigFileManager {
 
     public static void main( String[] args ) throws ConfigFileNotFoundException,
             ConfigFileWrongSyntaxException, NoSuchSettingException {
-//
-//                Gson gson = new Gson();
-//
-//                PassConfigContainer conf = new PassConfigContainer();
-//                conf.window$height = 300;
-//                conf.window$width = 200;
-//                conf.application$path = "%APPDIR%";
-//                conf.session$path = "%PARENTOFJAR%/sessions";
-//                conf.column$dimensions = new int[]{ 250, 250, 150, 100, 450 };
-//
-//                String str = new GsonBuilder().setPrettyPrinting().create().toJson( conf,
-//                        PassConfigContainer.class );
-//
-//                FileOutputStream fos = null;
-//
-//
-//                try {
-//
-//                    fos = new FileOutputStream( "test_config" );
-//
-//
-//                    fos.write( str.getBytes() );
-//
-//
-//                } catch( Exception e ) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//        try {
-//            PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new
-//                    File( "test_config" ), new PassConfigContainer() );
-//            System.out.println( conf );
-//        } catch( FileNotFoundException e ) {
-//            e.printStackTrace();
-//        }
+        //
+        //                Gson gson = new Gson();
+        //
+        //                PassConfigContainer conf = new PassConfigContainer();
+        //                conf.window$height = 300;
+        //                conf.window$width = 200;
+        //                conf.application$path = "%APPDIR%";
+        //                conf.session$path = "%PARENTOFJAR%/sessions";
+        //                conf.column$dimensions = new int[]{ 250, 250, 150, 100, 450 };
+        //
+        //                String str = new GsonBuilder().setPrettyPrinting().create().toJson( conf,
+        //                        PassConfigContainer.class );
+        //
+        //                FileOutputStream fos = null;
+        //
+        //
+        //                try {
+        //
+        //                    fos = new FileOutputStream( "test_config" );
+        //
+        //
+        //                    fos.write( str.getBytes() );
+        //
+        //
+        //                } catch( Exception e ) {
+        //                    e.printStackTrace();
+        //                }
+        //
+        //
+        //        try {
+        //            PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager()
+        // .getJsonFromFile( new
+        //                    File( "test_config" ), new PassConfigContainer() );
+        //            System.out.println( conf );
+        //        } catch( FileNotFoundException e ) {
+        //            e.printStackTrace();
+        //        }
 
     }
 
@@ -67,8 +68,8 @@ public class ConfigFileManager {
      * @throws models.Exceptions.ConfigFileWrongSyntaxException
      *
      */
-    public GsonContainable getJsonFromFile( File file, GsonContainable container )
-            throws FileNotFoundException, ConfigFileWrongSyntaxException {
+    public GsonContainable getJsonFromFile( File file, GsonContainable container ) throws
+            FileNotFoundException, ConfigFileWrongSyntaxException {
 
         FileInputStream fin = new FileInputStream( file );
         return getJsonFromFile( fin, container );
@@ -86,9 +87,8 @@ public class ConfigFileManager {
      * @throws models.Exceptions.ConfigFileWrongSyntaxException
      *
      */
-    public GsonContainable getJsonFromFile( InputStream stream,
-                                                     GsonContainable container ) throws
-            FileNotFoundException, ConfigFileWrongSyntaxException {
+    public GsonContainable getJsonFromFile( InputStream stream, GsonContainable container )
+            throws FileNotFoundException, ConfigFileWrongSyntaxException {
 
         try {
             return new GsonBuilder().create().fromJson( new InputStreamReader( stream ),
@@ -100,5 +100,29 @@ public class ConfigFileManager {
         return null;
 
     }// end getJsonFromFile
+
+
+    public boolean writeJsonFile( File file, GsonContainable container ) {
+        try {
+
+            FileOutputStream fos;
+            String str = new GsonBuilder().setPrettyPrinting().create().toJson( container,
+                    container.getClass() );
+
+            fos = new FileOutputStream( file );
+            fos.write( str.getBytes() );
+            fos.close();
+            return true;
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }//end writeJsonFile
+
+
+    public boolean writeJsonFile( String filepath, GsonContainable container ) {
+        return this.writeJsonFile( new File( filepath ), container );
+    }//end writeJsonFile
 
 }// end class

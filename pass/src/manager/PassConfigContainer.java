@@ -53,6 +53,10 @@ public class PassConfigContainer extends AbstractConfigContainer {
         return super.getProperty( key.trim().replace( ' ', '$' ) );
     }//end getProperty
 
+    @Override
+    public void setProperty( String key, Object newValue ) {
+        super.setProperty( key.trim().replace( ' ', '$' ), newValue );
+    }//end getProperty
 
     public String toString() {
         StringBuilder builder = new StringBuilder();

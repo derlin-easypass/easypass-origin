@@ -29,7 +29,7 @@ public class PassMenuBar extends JMenuBar {
     private JMenu getEditMenu() {
         // --------------------------- Build edit menu in the menu bar.
         JMenu editMenu;
-        JMenuItem undoSubMenu, redoSubMenu, addRowSubMenu, deleteRowSubMenu;
+        JMenuItem undoSubMenu, redoSubMenu, addRowSubMenu, deleteRowSubMenu, prefsubMenu;
         JMenuItem copySubMenu, cutSubMenu, pasteSubMenu;
 
         editMenu = new JMenu( "edit" );
@@ -100,6 +100,10 @@ public class PassMenuBar extends JMenuBar {
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ) );
 
 
+        // add preferences submenu
+        prefsubMenu = new JMenuItem( "save preferences" );
+        prefsubMenu.addActionListener( listfactory.createSaveConfigListener() );
+
         //adds submenus to the edit menu
         editMenu.add( cutSubMenu );
         editMenu.add( copySubMenu );
@@ -110,6 +114,8 @@ public class PassMenuBar extends JMenuBar {
         editMenu.addSeparator();
         editMenu.add( undoSubMenu );
         editMenu.add( redoSubMenu );
+        editMenu.addSeparator();
+        editMenu.add( prefsubMenu );
 
         return editMenu;
     }//end getEditMenu

@@ -20,6 +20,7 @@ public class RefactorSessionDialog extends JDialog {
 
     private String pass, newSessionName;
     private static final int PASS_MIN_LENGTH = 3, SESSION_NAME_MIN_LENGTH = 5;
+    private boolean isCanceled = false;
 
     public static void main(String[] args) {
 
@@ -27,7 +28,7 @@ public class RefactorSessionDialog extends JDialog {
         JFrame window = new JFrame("accounts and passwords");
         window.setPreferredSize(new Dimension(200, 300));
         //sets the listener to save data on quit
-        new RefactorSessionDialog(window);
+        RefactorSessionDialog d = new RefactorSessionDialog(window);
         System.exit(0);
     }
 
@@ -151,6 +152,7 @@ public class RefactorSessionDialog extends JDialog {
     }// </editor-fold>
 
     private void cancelButtonActionPerformed(ActionEvent evt) {
+        this.isCanceled = true;
         this.dispose();
     }                                            
 
@@ -199,13 +201,10 @@ public class RefactorSessionDialog extends JDialog {
         return pass;
     }
 
-    public void setPass(String pass) {
-        this.pass = pass;
-    }
 
-    public void setSessionName(String sessionName) {
-        this.newSessionName = sessionName;
-    }
+    public boolean isCanceled(  ) {
+        return isCanceled;
+    }//end isCanceled
 
     public String getSessionName() {
         return this.newSessionName;
