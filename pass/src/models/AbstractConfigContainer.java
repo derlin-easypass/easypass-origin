@@ -52,12 +52,7 @@ abstract public class AbstractConfigContainer implements GsonContainable {
             try {
                 field.setAccessible( true );
                 Object val1 = field.get( this ), val2 = field.get( overridingSettings );
-
                 if( val2 != null && !val2.equals( val1 ) ) field.set( this, val2 );
-                //                if( !field.get( this ).equals( field.get( overridingSettings )
-                // ) ) {
-                //                    field.set( this, field.get( overridingSettings ) );
-                //                }
             } catch( Exception e ) {
                 e.printStackTrace();
             }

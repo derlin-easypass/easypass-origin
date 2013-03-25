@@ -18,6 +18,8 @@ public class PassConfigContainer extends AbstractConfigContainer {
     @PathToRefactor
     public String logfile$path;
     @PathToRefactor
+    public String userconfig$path;
+    @PathToRefactor
     public String session$path;
     public String[] column$names;
     public int[] column$dimensions;
@@ -28,7 +30,7 @@ public class PassConfigContainer extends AbstractConfigContainer {
     public static void main( String[] args ) {
         try {
             PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(
-                    new File( "test_config" ), new PassConfigContainer() );
+                    new File( "config.json" ), new PassConfigContainer() );
             System.out.println( conf );
 
             PassConfigContainer conf2 = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(
@@ -57,6 +59,7 @@ public class PassConfigContainer extends AbstractConfigContainer {
     public void setProperty( String key, Object newValue ) {
         super.setProperty( key.trim().replace( ' ', '$' ), newValue );
     }//end getProperty
+
 
     public String toString() {
         StringBuilder builder = new StringBuilder();

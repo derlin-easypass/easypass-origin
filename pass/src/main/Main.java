@@ -21,7 +21,7 @@ import java.io.File;
 public class Main {
 
     public static final String APPLICATION_NAME = "easypass";
-    public static final String CONFIG_PATH = "test_config";
+    public static final String CONFIG_PATH = "config.json";
     private AbstractConfigContainer config;
     private SessionManager sessionManager;
     private int runningWindowsCount;
@@ -181,16 +181,26 @@ public class Main {
     private void initConfig() throws Exceptions.ConfigFileNotFoundException {
 
         try {
-            //gets defaults settings
-            System.out.println(new File( CONFIG_PATH ).getAbsolutePath());
-            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File( CONFIG_PATH ), new PassConfigContainer() );
+            if( debug ) {
+                System.out.println( Main.class.getClassLoader().getResource( CONFIG_PATH )
+                        .getPath() );
+            }
+            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( Main.class
+                    .getClassLoader().getResourceAsStream( CONFIG_PATH ),
+                    new PassConfigContainer() );
 
             //updates the paths
             this.config.updatePaths();
             if( debug ) System.out.println( config );
 
+            PassConfigContainer userconfig;
+            userconfig = ( PassConfigContainer ) new ConfigFileManager()
+                    .getJsonFromFile( new File( ( String ) config.getProperty( "userconfig path"
+                    ) ), new PassConfigContainer() );
+            if( userconfig != null ) this.config.mergeSettings( userconfig );
+
+
             File appfolder = new File( ( String ) config.getProperty( "application path" ) );
-            // if the session folder does not exist, creates it
             if( !appfolder.exists() || !appfolder.isDirectory() || appfolder.mkdir() ) {
                 throw new Exception( "could not find/create session dir" );
             }

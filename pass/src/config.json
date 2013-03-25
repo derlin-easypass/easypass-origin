@@ -1,0 +1,22 @@
+{
+    "application$path": "%APPDIR%",
+    "logfile$path": "%APPDIR%/easypass.log",
+    "userconfig$path": "%APPDIR%/usersettings.json",
+    "session$path": "%APPDIR%/sessions",
+    "column$names": [
+        "account",
+        "pseudo",
+        "email",
+        "password",
+        "notes"
+    ],
+    "column$dimensions": [
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "window$height": 300,
+    "window$width": 500
+}

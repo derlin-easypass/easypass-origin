@@ -1,7 +1,6 @@
 package gui;
 
 import dialogs.RefactorSessionDialog;
-import main.Main;
 import main.thread.PassLock;
 import manager.PassConfigContainer;
 import models.ConfigFileManager;
@@ -302,13 +301,17 @@ public class ListenerFactory {
     }//end createDelSessionListener
 
 
-    public ActionListener createSaveConfigListener() {
+    public ActionListener createSavePrefsListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed( ActionEvent e ) {
                 PassConfigContainer config;
-                config = ( PassConfigContainer ) frame.session.getConfigContainer();
-                //get columnWidth
+                config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new
+                        File( ( String ) frame.session.getConfigProperty( "userconfig path" ) ),
+                        new PassConfigContainer() );
+                if( config == null ) config = new PassConfigContainer();
+
+                //columnWidth
                 int[] widths = new int[ frame.table.getColumnCount() ];
                 int index = 0;
                 for( String name : frame.session.getModel().getColumnNames() ) {
@@ -319,11 +322,49 @@ public class ListenerFactory {
                 //window size
                 config.setProperty( "window width", frame.getWidth() );
                 config.setProperty( "window height", frame.getHeight() );
-                new ConfigFileManager().writeJsonFile( Main.CONFIG_PATH, config );
+
+                new ConfigFileManager().writeJsonFile( new File( ( String ) frame.session
+                        .getConfigProperty( "userconfig path" ) ), config );
+
 
                 // tells the user everything went fine
                 frame.showInfos( "preferences saved." );
             }
         };
-    }//end createSaveConfigListener
+    }//end createSavePrefsListener
+
+
+    public ActionListener createSaveSessionPathListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed( ActionEvent e ) {
+                PassConfigContainer config;
+                config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new
+                        File( ( String ) frame.session.getConfigProperty( "userconfig path" ) ),
+                        new PassConfigContainer() );
+                if( config == null ) config = new PassConfigContainer();
+
+                //shows a filechooser for the user to select the session directory
+                JFileChooser chooser = new JFileChooser();
+                chooser.setCurrentDirectory( new File( System.getProperty( "user.home" ) ) );
+                chooser.setDialogTitle( "select folder" );
+                chooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+
+                //shows filefilter. If the user cancels or does not choose a file, exits.
+                if( chooser.showSaveDialog( frame ) != JFileChooser.APPROVE_OPTION || chooser.getSelectedFile() == null ) {
+                    return;
+                }
+
+                //performs change by writing new userconfig file
+                config.setProperty( "session path", chooser.getSelectedFile().getAbsolutePath() );
+
+                new ConfigFileManager().writeJsonFile( new File( ( String ) frame.session
+                        .getConfigProperty( "userconfig path" ) ), config );
+
+
+                // tells the user everything went fine
+                frame.showInfos( "preferences saved." );
+            }
+        };
+    }//end createSavePrefsListener
 }//end class

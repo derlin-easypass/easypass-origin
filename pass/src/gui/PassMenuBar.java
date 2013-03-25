@@ -102,7 +102,7 @@ public class PassMenuBar extends JMenuBar {
 
         // add preferences submenu
         prefsubMenu = new JMenuItem( "save preferences" );
-        prefsubMenu.addActionListener( listfactory.createSaveConfigListener() );
+        prefsubMenu.addActionListener( listfactory.createSavePrefsListener() );
 
         //adds submenus to the edit menu
         editMenu.add( cutSubMenu );
@@ -163,7 +163,7 @@ public class PassMenuBar extends JMenuBar {
         // -------------------------build menu to manage session
 
         JMenu sessionMenu;
-        JMenuItem newSessionSubMenu, deleteSessionSubMenu, editSessionSubmenu;
+        JMenuItem newSessionSubMenu, deleteSessionSubMenu, editSessionSubmenu, changeSessionPathSubMenu;
 
         sessionMenu = new JMenu( "session" );
         sessionMenu.setMargin( inset );
@@ -181,9 +181,12 @@ public class PassMenuBar extends JMenuBar {
         deleteSessionSubMenu = new JMenuItem( "delete..." );
         deleteSessionSubMenu.addActionListener( listfactory.createDelSessionListener() );
 
+        changeSessionPathSubMenu = new JMenuItem( "set default session path" );
+        changeSessionPathSubMenu.addActionListener( listfactory.createSaveSessionPathListener() );
         sessionMenu.add( newSessionSubMenu );
         sessionMenu.add( editSessionSubmenu );
         sessionMenu.add( deleteSessionSubMenu );
+        sessionMenu.add( changeSessionPathSubMenu );
 
         return sessionMenu;
     }//end getSessionMenu

@@ -33,7 +33,7 @@ public class ConfigFileManager {
         //
         //                try {
         //
-        //                    fos = new FileOutputStream( "test_config" );
+        //                    fos = new FileOutputStream( "config.json" );
         //
         //
         //                    fos.write( str.getBytes() );
@@ -47,7 +47,7 @@ public class ConfigFileManager {
         //        try {
         //            PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager()
         // .getJsonFromFile( new
-        //                    File( "test_config" ), new PassConfigContainer() );
+        //                    File( "config.json" ), new PassConfigContainer() );
         //            System.out.println( conf );
         //        } catch( FileNotFoundException e ) {
         //            e.printStackTrace();
@@ -64,16 +64,18 @@ public class ConfigFileManager {
      * non-existent json entries ,
      *
      * @param file the json file to read from
-     * @throws java.io.FileNotFoundException
-     * @throws models.Exceptions.ConfigFileWrongSyntaxException
      *
      */
-    public GsonContainable getJsonFromFile( File file, GsonContainable container ) throws
-            FileNotFoundException, ConfigFileWrongSyntaxException {
+    public GsonContainable getJsonFromFile( File file, GsonContainable container ) {
 
-        FileInputStream fin = new FileInputStream( file );
-        return getJsonFromFile( fin, container );
-
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream( file );
+            return getJsonFromFile( fin, container );
+        } catch( FileNotFoundException e ) {
+            e.printStackTrace();
+        }
+        return null;
     }// end getJsonFromFile
 
 
@@ -82,20 +84,16 @@ public class ConfigFileManager {
      * pairs.
      *
      * @param stream the filestream to a json file
-     * @return the map holding the key/value pairs
-     * @throws java.io.FileNotFoundException
-     * @throws models.Exceptions.ConfigFileWrongSyntaxException
-     *
+     * @return the map holding the key/value pairs or null
      */
-    public GsonContainable getJsonFromFile( InputStream stream, GsonContainable container )
-            throws FileNotFoundException, ConfigFileWrongSyntaxException {
+    public GsonContainable getJsonFromFile( InputStream stream, GsonContainable container ) {
 
         try {
             return new GsonBuilder().create().fromJson( new InputStreamReader( stream ),
                     container.getClass() );
 
         } catch( Exception e ) {
-            e.printStackTrace();
+            System.out.println( e.getMessage() );
         }
         return null;
 
@@ -104,7 +102,6 @@ public class ConfigFileManager {
 
     public boolean writeJsonFile( File file, GsonContainable container ) {
         try {
-
             FileOutputStream fos;
             String str = new GsonBuilder().setPrettyPrinting().create().toJson( container,
                     container.getClass() );
@@ -114,7 +111,7 @@ public class ConfigFileManager {
             fos.close();
             return true;
         } catch( Exception e ) {
-            e.printStackTrace();
+            System.out.println( e.getMessage() );
         }
 
         return false;
