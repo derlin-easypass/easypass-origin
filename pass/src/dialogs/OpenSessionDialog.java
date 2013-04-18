@@ -46,19 +46,12 @@ public class OpenSessionDialog extends JDialog {
 
         // sets close operation
         this.setDefaultCloseOperation( JDialog.DO_NOTHING_ON_CLOSE );
-
         UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         initComponents();
 
         // press ENTER to activate the ok button
-        this.getRootPane().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke
-                .getKeyStroke( KeyEvent.VK_ENTER, 0 ), "OK" );
+        this.getRootPane().setDefaultButton( okButton );
 
-        this.getRootPane().getActionMap().put( "OK", new AbstractAction() {
-            public void actionPerformed( ActionEvent e ) {
-                okButton.doClick();
-            }
-        } );
 
         // removes the new button from the togglePolicy (ignored when using tabs
         // to navigate through inputs)
