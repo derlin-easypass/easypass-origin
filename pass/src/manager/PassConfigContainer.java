@@ -30,7 +30,7 @@ public class PassConfigContainer extends AbstractConfigContainer {
     public static void main( String[] args ) {
         try {
             PassConfigContainer conf = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(
-                    new File( "config.json" ), new PassConfigContainer() );
+                    new File( "resources/config.json" ), new PassConfigContainer() );
             System.out.println( conf );
 
             PassConfigContainer conf2 = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile(

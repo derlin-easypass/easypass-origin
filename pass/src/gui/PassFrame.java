@@ -69,6 +69,10 @@ public class PassFrame extends JFrame {
         int winY = ( screensize.height - winHeight ) / 2;
         this.setLocation( winX, winY );
 
+        java.net.URL url = ClassLoader.getSystemResource( "resources/easypass_icon.png" );
+        Image img = Toolkit.getDefaultToolkit().createImage(url);
+        setIconImage( img );
+
         // creates the main container
         mainContainer = new JPanel( new BorderLayout() );
 

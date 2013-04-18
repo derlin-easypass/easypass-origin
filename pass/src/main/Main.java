@@ -21,7 +21,7 @@ import java.io.File;
 public class Main {
 
     public static final String APPLICATION_NAME = "easypass";
-    public static final String CONFIG_PATH = "config.json";
+    public static final String CONFIG_PATH = "resources/config.json";
     private AbstractConfigContainer config;
     private SessionManager sessionManager;
     private int runningWindowsCount;
@@ -37,7 +37,6 @@ public class Main {
 
     public Main() {
         // get config
-
         try {
             initConfig();
         } catch( Exceptions.ConfigFileNotFoundException e ) {
@@ -191,19 +190,31 @@ public class Main {
 
             //updates the paths
             this.config.updatePaths();
+            File defaultSessionPath = new File( ( String ) config.getProperty( "session path" ) );
             if( debug ) System.out.println( config );
 
+            //try to load the usersettings
             PassConfigContainer userconfig;
-            userconfig = ( PassConfigContainer ) new ConfigFileManager()
-                    .getJsonFromFile( new File( ( String ) config.getProperty( "userconfig path"
-                    ) ), new PassConfigContainer() );
+            userconfig = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new
+                    File( ( String ) config.getProperty( "userconfig path" ) ),
+                    new PassConfigContainer() );
             if( userconfig != null ) this.config.mergeSettings( userconfig );
 
-
+            //checks that application dir exists or creates it
             File appfolder = new File( ( String ) config.getProperty( "application path" ) );
             if( !appfolder.exists() || !appfolder.isDirectory() || appfolder.mkdir() ) {
-                throw new Exception( "could not find/create session dir" );
-            }
+                throw new Exception( "could not find/create application dir" );
+            }//end if
+
+            //checks that session dir exists or creates it
+            if( !( new File( ( String ) config.getProperty( "session path" ) ).exists() ) ) {
+                //try to use the default setting
+                if( !( defaultSessionPath.exists() || defaultSessionPath.mkdir() ) ) {
+                    throw new Exceptions.ConfigFileWrongSyntaxException( "session folder could " +
+                            "not " + "be found" );
+                }
+                config.setProperty( "session path", defaultSessionPath );
+            }//end if
 
         } catch( Exception e ) {
             if( debug ) e.printStackTrace();

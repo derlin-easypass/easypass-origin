@@ -16,19 +16,19 @@ public class PasswordMultiCellRenderer extends MultiLineCellRenderer {
         //        super.getTableCellRendererComponent( table, data, isSelected, hasFocus,
         //                row, column );
 
-        int length = 0;
-
-        if( data instanceof String ) {
-            length = ( ( String ) data ).length();
-        } else if( data instanceof char[] ) {
-            length = ( ( char[] ) data ).length;
-        }
+        //        int length = 0;
+        //
+        //        if( data instanceof String ) {
+        //            length = ( ( String ) data ).length();
+        //        } else if( data instanceof char[] ) {
+        //            length = ( ( char[] ) data ).length;
+        //        }
 
         if( isSelected ) {
             System.out.println( super.getBackground() );
         }
-        setText( ASTERISKS.substring( 0, length ) );
-
+        //setText( ASTERISKS.substring( 0, length ) );
+        setText( data.toString().length() > 0 ? "***" : "" );
         return this;
     }
 
