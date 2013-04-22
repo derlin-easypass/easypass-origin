@@ -37,6 +37,7 @@ public class RefactorSessionDialog extends JDialog {
      */
     public RefactorSessionDialog(JFrame parent) {
         super(parent, "informations", true);
+        this.setLocationRelativeTo( parent );
         this.setPreferredSize(new Dimension(250, 300));
         initComponents();
         this.setVisible(true);
@@ -57,7 +58,7 @@ public class RefactorSessionDialog extends JDialog {
         cancelButton = new JButton();
         newPassPF = new JPasswordField();
         newSessionTF = new JTextField();
-        introTextL = new JTextField();
+        introTextL = new JLabel();
 
         setMinimumSize(new Dimension(320, 150));
         setModal(true);
@@ -96,9 +97,8 @@ public class RefactorSessionDialog extends JDialog {
             }
         });
 
-        introTextL.setEditable(false);
-        introTextL.setText("Be careful, there is no way to undo these changes.");
-        introTextL.setOpaque( false );
+        introTextL.setText("<HTML><p style=\"text-align:center\">Be careful, " +
+                "there is no way to undo these changes!</p>");
         introTextL.setBorder(null);
         introTextL.setRequestFocusEnabled(false);
 
@@ -212,7 +212,7 @@ public class RefactorSessionDialog extends JDialog {
 
     // Variables declaration - do not modify
     private JButton cancelButton;
-    private JTextField introTextL;
+    private JLabel introTextL;
     private JLabel newPassL;
     private JPasswordField newPassPF;
     private JLabel newSessionL;
