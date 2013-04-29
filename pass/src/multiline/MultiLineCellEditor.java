@@ -1,7 +1,8 @@
 package multiline;
 
+
 import javax.swing.*;
-import javax.swing.table.TableCellEditor;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -11,15 +12,17 @@ import java.awt.event.KeyEvent;
  * Date: 06/03/13
  * Version: 0.1
  */
-public class MultiLineCellEditor extends DefaultCellEditor implements TableCellEditor {
+public class MultiLineCellEditor extends DefaultCellEditor {
+
+    JTextArea textArea;
+    JScrollPane scrollPane;
+
 
     public MultiLineCellEditor( final JTable table ) {
         super( new JTextField() );
+        getComponent().setName( "Table.editor" );
 
-        JScrollPane scrollPane;
-        final JTextArea textArea;
 
-        System.out.println( "clicks: " + getClickCountToStart() );
         textArea = new JTextArea();
         textArea.setWrapStyleWord( true );
         textArea.setLineWrap( true );
@@ -56,20 +59,26 @@ public class MultiLineCellEditor extends DefaultCellEditor implements TableCellE
         scrollPane = new JScrollPane( textArea );
         scrollPane.setBorder( null );
 
-        editorComponent = scrollPane;
-        delegate = new DefaultCellEditor.EditorDelegate() {
-
-            public void setValue( Object value ) {
-                textArea.setText( ( value != null ) ? value.toString() : "" );
-            }
-
-
-            public Object getCellEditorValue() {
-                return textArea.getText();
-            }
-        };
 
     }//end MultiLineCellEditor
+
+
+    public Component getTableCellEditorComponent( JTable table, Object value, boolean isSelected,
+                                                  int row, int column ) {
+        this.setValue( value );
+        scrollPane.setBorder( new LineBorder( Color.black ) );
+        return this.scrollPane;
+    }
+
+
+    public void setValue( Object value ) {
+        textArea.setText( ( value != null ) ? value.toString() : "" );
+    }
+
+
+    public Object getCellEditorValue() {
+        return this.textArea.getText();
+    }
 }//end class
 
 
