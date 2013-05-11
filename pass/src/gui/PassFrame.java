@@ -31,8 +31,8 @@ public class PassFrame extends JFrame {
 
     JTextField filterText; // text entered by the user, used to filter
     // the table cells
-    private JTextField rowCount;
-    JTextField infos; // informations bar (data have been saved, for
+    private JLabel rowCount;
+    JLabel infos; // informations bar (data have been saved, for
     // example)
     private Timer infosTimer; // used to hide infos after x seconds
     final static int INFOS_DISPLAY_TIME = 6000; // in milliseconds,
@@ -69,7 +69,8 @@ public class PassFrame extends JFrame {
         int winY = ( screensize.height - winHeight ) / 2;
         this.setLocation( winX, winY );
 
-        java.net.URL url = ClassLoader.getSystemResource( "resources/easypass_icon.png" );
+
+        java.net.URL url = ClassLoader.getSystemResource( "resources/easypass_favicon.ico" );
         Image img = Toolkit.getDefaultToolkit().createImage(url);
         setIconImage( img );
 
@@ -362,9 +363,10 @@ public class PassFrame extends JFrame {
     public JPanel getDownMenu() {
 
         // Create a separate form for filterText and statusText
-        JPanel form = new JPanel();
+        JPanel panel = new JPanel(new BorderLayout(  ));
+        JPanel findPanel = new JPanel(  );
         JLabel l1 = new JLabel( "Find :" );
-        form.add( l1 );
+
         filterText = new JTextField( 30 );
         // Whenever filterText changes, invokes newFilter.
         filterText.getDocument().addDocumentListener( new DocumentListener() {
@@ -386,27 +388,22 @@ public class PassFrame extends JFrame {
             }
         } );
         l1.setLabelFor( filterText );
-        form.add( l1 );
-        form.add( filterText );
+        findPanel.add( l1 );
+        findPanel.add( filterText );
 
-        infos = new JTextField( 15 );
-        infos.setBorder( null );
-        infos.setOpaque( false );
-        infos.setEditable( false );
-        infos.setFocusable( false );
-        form.add( infos );
+        panel.add( findPanel, BorderLayout.WEST  );
+
+        infos = new JLabel(  );
+        infos.setPreferredSize( new Dimension( 200, infos.getHeight() ) );
+        panel.add( infos, BorderLayout.CENTER );
 
         // to display the row count at the bottom of the frame
-        rowCount = new JTextField( 12 );
-        rowCount.setHorizontalAlignment( JTextField.RIGHT );
-        rowCount.setBorder( null );
-        rowCount.setOpaque( true );
-        rowCount.setEditable( false );
-        rowCount.setFocusable( false );
+        rowCount = new JLabel(  );
+        //rowCount.setHorizontalAlignment( JTextField.RIGHT );
         updateDisplayedRowCount();
-        form.add( rowCount );
+        panel.add( rowCount, BorderLayout.EAST );
 
-        return form;
+        return panel;
     }// end getFilterMenu
 
 
