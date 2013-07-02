@@ -45,6 +45,12 @@ public class Main {
                     "configuration error", JOptionPane.ERROR_MESSAGE );
         }
 
+        try {
+            UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+        } catch( Exception e ) {
+
+        }
+
         this.sessionManager = new SessionManager( this.config );
         this.runningWindowsCount = 0;
         this.lock = new PassLock();

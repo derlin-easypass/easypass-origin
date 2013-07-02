@@ -132,11 +132,6 @@ public class PassFrame extends JFrame {
 
         // updates the GUI and show the window
         mainContainer.updateUI();
-        try {
-            UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
-        } catch( Exception e ) {
-            writeLog( "problem loading default UIManager" );
-        }
 
         // PassExcelAdapter adapter = new PassExcelAdapter( table );
         this.pack();

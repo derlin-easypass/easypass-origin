@@ -21,7 +21,7 @@ public class MultiLineCellEditor extends DefaultCellEditor {
     public MultiLineCellEditor( final JTable table ) {
         super( new JTextField() );
         getComponent().setName( "Table.editor" );
-
+        setClickCountToStart( 2 );
 
         textArea = new JTextArea();
         textArea.setWrapStyleWord( true );

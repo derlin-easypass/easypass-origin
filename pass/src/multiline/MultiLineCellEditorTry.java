@@ -8,6 +8,7 @@ import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.util.EventObject;
 import java.util.Vector;
 
@@ -23,6 +24,7 @@ public class MultiLineCellEditorTry extends JScrollPane implements TableCellEdit
 
     private boolean editing;
     private Vector<CellEditorListener> listeners;
+    private static final int CLICK_COUNT_TO_START = 2;
 
 
     public MultiLineCellEditorTry( final JTable table ) {
@@ -94,7 +96,8 @@ public class MultiLineCellEditorTry extends JScrollPane implements TableCellEdit
 
     @Override
     public boolean isCellEditable( EventObject anEvent ) {
-        return true;
+        return !( anEvent instanceof MouseEvent ) || ( ( MouseEvent ) anEvent ).getClickCount()
+                >= CLICK_COUNT_TO_START;
     }
 
 
@@ -119,10 +122,8 @@ public class MultiLineCellEditorTry extends JScrollPane implements TableCellEdit
     }
 
 
-
-
     public void addCellEditorListener( CellEditorListener cel ) {
-        if(listeners == null) listeners = new Vector<CellEditorListener>(  );
+        if( listeners == null ) listeners = new Vector<CellEditorListener>();
         listeners.addElement( cel );
     }
 
@@ -134,7 +135,7 @@ public class MultiLineCellEditorTry extends JScrollPane implements TableCellEdit
 
     protected void fireEditingCanceled() {
         setValue( originalValue );
-        if(listeners == null) return;
+        if( listeners == null ) return;
         ChangeEvent ce = new ChangeEvent( this );
         for( int i = listeners.size() - 1; i >= 0; i-- ) {
             ( ( CellEditorListener ) listeners.elementAt( i ) ).editingCanceled( ce );
@@ -143,7 +144,7 @@ public class MultiLineCellEditorTry extends JScrollPane implements TableCellEdit
 
 
     protected void fireEditingStopped() {
-        if(listeners == null) return;
+        if( listeners == null ) return;
         ChangeEvent ce = new ChangeEvent( this );
         for( int i = listeners.size() - 1; i >= 0; i-- ) {
             ( ( CellEditorListener ) listeners.elementAt( i ) ).editingStopped( ce );
