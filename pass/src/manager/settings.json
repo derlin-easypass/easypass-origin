@@ -1,10 +1,10 @@
 {
   "application path": "%APPDIR%",
-  "session path": "%APPDIR%/sessions",
-  "user configfile":"%APPDIR%/settings.json, /home/lucy/git/test_json",
+  "session path": "%PARENTOFJAR%/sessions",
+  "user configfile":"%PARENTOFJAR%/settings.json",
   "column names":"account, pseudo,   email,   password,   notes",
   "dimensions": "0, 0, 0, 0, 0",
   "window width":"500",
   "window height":"300",
-  "log filepath":"%APPDIR%/easypass.log"
+  "log filepath":"%PARENTOFJAR%/easypass.log"
 }

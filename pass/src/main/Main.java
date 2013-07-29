@@ -133,6 +133,10 @@ public class Main {
             String pass = modal.getPass();
             String name = modal.getSession();
 
+            //TODO
+            if(modal.isCanceled()){
+                System.exit( 0 );
+            }
 
             if( modal.isImported() ) {
                 session = sessionManager.importSession( name, pass );
@@ -181,12 +185,14 @@ public class Main {
 
         try {
             if( debug ) {
-                System.out.println( Main.class.getClassLoader().getResource( CONFIG_PATH )
-                        .getPath() );
+                System.out.println( new File( Main.class.getProtectionDomain().getCodeSource()
+                        .getLocation().getPath() ) );
             }
-            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( Main.class
+            config = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( this.getClass()
                     .getClassLoader().getResourceAsStream( CONFIG_PATH ),
                     new PassConfigContainer() );
+
+            System.out.println("default config loaded");
 
             //updates the paths
             this.config.updatePaths();
@@ -195,21 +201,20 @@ public class Main {
 
             //try to load the usersettings
             PassConfigContainer userconfig;
-            userconfig = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new
-                    File( ( String ) config.getProperty( "userconfig path" ) ),
-                    new PassConfigContainer() );
+            userconfig = ( PassConfigContainer ) new ConfigFileManager().getJsonFromFile( new File( ( String ) config.getProperty( "userconfig path" ) ), new PassConfigContainer() );
             if( userconfig != null ) this.config.mergeSettings( userconfig );
 
             //checks that application dir exists or creates it
             File appfolder = new File( ( String ) config.getProperty( "application path" ) );
-            if( !appfolder.exists() || !appfolder.isDirectory() || appfolder.mkdir() ) {
+
+            if( !appfolder.exists() && !appfolder.isDirectory() && !appfolder.mkdir() ) {
                 throw new Exception( "could not find/create application dir" );
             }//end if
 
             //checks that session dir exists or creates it
             if( !( new File( ( String ) config.getProperty( "session path" ) ).exists() ) ) {
                 //try to use the default setting
-                if( !( defaultSessionPath.exists() || defaultSessionPath.mkdir() ) ) {
+                if( !defaultSessionPath.exists() && !defaultSessionPath.mkdir()  ) {
                     throw new Exceptions.ConfigFileWrongSyntaxException( "session folder could " +
                             "not " + "be found" );
                 }

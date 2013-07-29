@@ -43,13 +43,21 @@ public class JsonManager {
 
 
     /**
-     * encrypts the arraylist of objects with the cipher given in parameter and
-     * serializes it in json format. Careful : the cipher must be correctly
+ Careful : the cipher must be correctly
      * initialized for encryption
      *
-     * @param data
-     * @param filepath
-     * @return
+     * @param data the data
+     * @param filepath the output filepath
+     * @throws IOException
+     */
+
+    /**
+     * encrypts the arraylist of objects with the cipher given in parameter and
+     * serializes it in json format.
+     * @param data the data
+     * @param algo the algorithm (aes-128-cbc for example, see the openssl conventions)
+     * @param filepath the output filepath
+     * @param password the password
      * @throws IOException
      */
     public void serialize( List<?> data, String algo, String filepath,
@@ -81,19 +89,19 @@ public class JsonManager {
     }// end serialize
 
 
-    /**
-     * deserializes and returns the arrayList<Object[]> contained in the
+     /**
+     * deserializes and returns the object of type "Type" contained in the
      * specified file. the decryption of the data is performed with the cipher
-     * given in parameter.
+     * given in parameter.<br />
+     * The object in the file must have been encrypted after a json serialisation.
      *
-     * @param cipher   initialized for decryption and with the correct key
-     * @param filepath
-     * @return
-     * @throws CryptoException           If the cipher is not correctly initilialized (wrong
-     *                                   algorithm
-     *                                   for example)
-     * @throws WrongCredentialsException If the key used by the cipher is not the correct one
-     * @throws IOException               If a problem occurs while opening/reading the file
+     * @param algo the algorithm (aes-128-cbc for example, see the openssl conventions)
+     * @param filepath the filepath
+     * @param password the password
+     * @param type the type of the data serialized
+     * @return the decrypted data ( a list of ? )
+     * @throws WrongCredentialsException if the password or the magic number is incorrect
+     * @throws IOException
      */
     public List<?> deserialize( String algo, String filepath, String password,
                                 Type type ) throws WrongCredentialsException, IOException {

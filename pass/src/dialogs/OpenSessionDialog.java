@@ -316,12 +316,14 @@ public class OpenSessionDialog extends javax.swing.JDialog {
     private void newSessionButtonActionPerformed( java.awt.event.ActionEvent evt ) {
         String s = JOptionPane.showInputDialog( this, "New session name : ", "" );
         // the (?i) makes everything on the right case-insensitive
-        if( s != null && s.matches( "^(?i)[a-z][a-z1-9\\._-]{4,}$" ) ) {
+        if( s != null && s.matches( "^(?i)[a-z][a-z1-9\\._-]{3,}$" ) ) {
             sessionCombo.addItem( s );
             sessionCombo.setSelectedIndex( sessionCombo.getItemCount() - 1 );
         } else {
             JOptionPane.showMessageDialog( this, "A session name must start with a letter \n and " +
-                    "" + "contain only letters and digits. \nDelimiters accepted : _.-", "error",
+                    "" + "contain only letters and digits (minimum 3). \nDelimiters accepted : _" +
+                    ".-",
+                    "error",
                     JOptionPane.WARNING_MESSAGE );
         }
     }

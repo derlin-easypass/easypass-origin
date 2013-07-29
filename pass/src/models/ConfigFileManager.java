@@ -72,8 +72,10 @@ public class ConfigFileManager {
         try {
             fin = new FileInputStream( file );
             return getJsonFromFile( fin, container );
-        } catch( FileNotFoundException e ) {
+        } catch( Exception e ) {
             e.printStackTrace();
+            System.out.println("exception while getting json from file " + file.getPath() + " " +
+                    "catched.");
         }
         return null;
     }// end getJsonFromFile

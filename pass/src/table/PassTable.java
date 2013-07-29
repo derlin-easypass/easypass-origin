@@ -140,6 +140,7 @@ public class PassTable extends JTable {
      * blue border around the cell which has the focus.
      * <p/>
      * For currently edited cell rendering, see the prepareEditor method
+     *
      */
     @Override
     public Component prepareRenderer( TableCellRenderer renderer, int row, int column ) {

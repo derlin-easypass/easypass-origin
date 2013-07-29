@@ -33,6 +33,11 @@ public class PassJsonManager extends JsonManager {
     }//end PassJsonManager
 
 
+    /**
+     * adds a magic number at the beginning of the encrypted files. Careful,
+     * this magic number must be provided each time you want to decrypt the file ( logic )
+     * @param magicNumber the magic number
+     */
     public PassJsonManager( byte[] magicNumber ) {
         super( magicNumber );
     }//end PassJsonManager
@@ -97,6 +102,15 @@ public class PassJsonManager extends JsonManager {
     }
 
 
+    /**
+     * deserializes a file
+     * @param algo the encryption algorithm
+     * @param filepath the file
+     * @param password the password
+     * @return a list of Objects
+     * @throws WrongCredentialsException
+     * @throws IOException
+     */
     public List<Object[]> deserialize( String algo, String filepath,
                                        String password ) throws WrongCredentialsException,
             IOException {
@@ -111,8 +125,8 @@ public class PassJsonManager extends JsonManager {
     /**
      * writes the data in proper json in the specified file
      *
-     * @param data
-     * @param file
+     * @param data the data to write
+     * @param file the file in which to write
      * @throws IOException
      */
     public void writeToFile( List<Object[]> data, File file ) throws IOException {
@@ -138,15 +152,10 @@ public class PassJsonManager extends JsonManager {
     }
 
 
-    /**
-     * *****************************************************
+    /* *****************************************************************
      * container used for clean printing in json, i.e. adds the correct "labels"
      * to each value and writes a "pretty" file.
-     *
-     * @author me
-     *         <p/>
-     *         ****************************************************
-     */
+     * ****************************************************************/
     private static class GsonContainer {
         String account;
         String pseudo;

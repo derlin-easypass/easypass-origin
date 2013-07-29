@@ -21,7 +21,7 @@ abstract public class AbstractConfigContainer implements GsonContainable {
         try {
             return this.getClass().getField( key ).get( this );
         } catch( Exception e ) {
-            throw new Exceptions.NoSuchSettingException();
+            throw new Exceptions.NoSuchSettingException( key );
         }
     }//end getProperty
 
@@ -29,7 +29,7 @@ abstract public class AbstractConfigContainer implements GsonContainable {
         try {
             this.getClass().getField( key ).set( this, newValue );
         } catch( Exception e ) {
-            throw new Exceptions.NoSuchSettingException();
+            throw new Exceptions.NoSuchSettingException( key );
         }
     }//end setProperty
     /**
