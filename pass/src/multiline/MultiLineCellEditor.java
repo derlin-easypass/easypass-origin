@@ -56,18 +56,12 @@ public class MultiLineCellEditor extends DefaultCellEditor {
             }
         } );
 
-        scrollPane = new JScrollPane(  );
+        scrollPane = new JScrollPane();
         scrollPane.setViewportView( textArea );
         scrollPane.setBorder( null );
         editorComponent = scrollPane;
-//        delegate = new DefaultCellEditor.EditorDelegate() {
-//
-//            public void setValue( Object value ) {
-//                this.setValue( value );
-//            }
-//        };
 
-        }//end MultiLineCellEditor
+    }//end MultiLineCellEditor
 
 
     public Component getTableCellEditorComponent( JTable table, Object value, boolean isSelected,

@@ -1,8 +1,6 @@
 package table;
 
-import multiline.MultiLineCellEditorTry;
-import multiline.MultiLineCellRenderer;
-import multiline.PasswordMultiCellRenderer;
+import multiline.*;
 
 import javax.swing.*;
 import javax.swing.table.JTableHeader;
@@ -50,7 +48,8 @@ public class PassTable extends JTable {
         setRowHeight( DEFAULT_HEIGHT );
         setSurrendersFocusOnKeystroke(true);
         setDefaultRenderer( Object.class, new MultiLineCellRenderer() );
-        setDefaultEditor( Object.class, new MultiLineCellEditorTry(this) );
+        setDefaultEditor( Object.class, new TextAreaCellEditor( this ));//MultiLineCellEditorTry
+        // (this) );
         if( this.getColumn( PASS_COLUMN_NAME ) != null ) {
             setPasswordColumns( PASS_COLUMN_NAME );
         }
