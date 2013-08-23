@@ -70,15 +70,13 @@ public class TextAreaCellEditor implements TableCellEditor {
     @Override
     public Component getTableCellEditorComponent( JTable table, Object value, boolean isSelected,
                                                   int row, int column ) {
-        System.out.println( "2. getTableCellEditorComponent" );
         textArea.setFont( table.getFont() );
         textArea.setText( ( value != null ) ? value.toString() : "" );
         EventQueue.invokeLater( new Runnable() {
             @Override
             public void run() {
-                textArea.setCaretPosition( textArea.getText().length() );
+                //textArea.setCaretPosition( textArea.getText().length() );
                 textArea.requestFocusInWindow();
-                System.out.println( "4. invokeLater: getTableCellEditorComponent" );
             }
         } );
         return scroll;
@@ -90,7 +88,6 @@ public class TextAreaCellEditor implements TableCellEditor {
         if( e instanceof MouseEvent ) {
             return ( ( MouseEvent ) e ).getClickCount() >= 2;
         }
-        System.out.println( "1. isCellEditable" );
         EventQueue.invokeLater( new Runnable() {
             @Override
             public void run() {
