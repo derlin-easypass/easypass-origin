@@ -43,15 +43,6 @@ public class JsonManager {
 
 
     /**
- Careful : the cipher must be correctly
-     * initialized for encryption
-     *
-     * @param data the data
-     * @param filepath the output filepath
-     * @throws IOException
-     */
-
-    /**
      * encrypts the arraylist of objects with the cipher given in parameter and
      * serializes it in json format.
      * @param data the data

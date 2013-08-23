@@ -38,10 +38,17 @@ public class Main {
     public Main() {
         // get config
         try {
+            System.out.println( CONFIG_PATH );
             initConfig();
         } catch( Exceptions.ConfigFileNotFoundException e ) {
-            JOptionPane.showMessageDialog( null, "Default settings not found. Exiting...",
+            JOptionPane.showMessageDialog( null, "Default settings not found!",
                     "configuration error", JOptionPane.ERROR_MESSAGE );
+        }
+
+        try {
+            UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+        } catch( Exception e ) {
+
         }
 
         this.sessionManager = new SessionManager( this.config );
@@ -128,6 +135,9 @@ public class Main {
             // application
 
             modal.setVisible( true );
+
+            //TODO
+            if(modal.isCanceled()) System.exit( 0 );
 
             // get pass and salt
             String pass = modal.getPass();

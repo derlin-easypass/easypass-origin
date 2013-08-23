@@ -29,6 +29,15 @@ import java.io.*;
  * Notes : - no utility to delete a session yet - the password is stored in RAM
  * until the session is closed (unavoidable??)
  *
+ *
+ * to decrypt the file with the openssl command-line tool, use this command :
+ * <code>
+ *     openssl enc
+ *     -d -aes-128-cbc -a
+ *     -in "the file.data_ser"
+ *     -k "your password without quotes"
+ *     -out "the output file"
+ * </code>
  * @author Lucy Linder
  * @date Dec 21, 2012
  */

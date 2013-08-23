@@ -36,7 +36,7 @@ public class RefactorSessionDialog extends JDialog {
      * Creates new form SimpleDialog
      */
     public RefactorSessionDialog(JFrame parent) {
-        super(parent, "informations", true);
+        super(parent, "change session details", true);
         this.setLocationRelativeTo( parent );
         this.setPreferredSize(new Dimension(250, 300));
         initComponents();

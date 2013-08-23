@@ -22,6 +22,16 @@ import java.util.List;
  * it is also possible to write the content of a list in a cleartext "pretty"
  * valid json format.
  *
+ *
+ * Note
+ * to decrypt the file with the openssl command-line tool, use this command :
+ * <code>
+ *     openssl enc
+ *     -d -aes-128-cbc -a
+ *     -in "the file.data_ser"
+ *     -k "your password without quotes"
+ *     -out "the output file"
+ * </code>
  * @author Lucy Linder
  * @date Dec 21, 2012
  */
