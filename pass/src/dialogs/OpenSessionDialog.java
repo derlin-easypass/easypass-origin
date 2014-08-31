@@ -302,6 +302,7 @@ public class OpenSessionDialog extends javax.swing.JDialog {
             this.setVisible( false );
         } else {
             passTF.setText( "" );
+            JOptionPane.showMessageDialog( this, "Could not decypher session. Please, check your credentials and that the file is not corrupted. ", "Decrypt error", JOptionPane.ERROR_MESSAGE );
             setOkButtonState();
         }
     }
@@ -394,7 +395,7 @@ public class OpenSessionDialog extends javax.swing.JDialog {
 
 
     private void setOkButtonState() {
-        if( passTF.getPassword().length > 3 && ( ( this.isImported && !this.importTF.getText().isEmpty() ) || ( !this.isImported && sessionCombo.getSelectedIndex() != 0 ) ) ) {
+        if( passTF.getPassword().length > 0 && ( ( this.isImported && !this.importTF.getText().isEmpty() ) || ( !this.isImported && sessionCombo.getSelectedIndex() != 0 ) ) ) {
             this.okButton.setEnabled( true );
         } else {
             this.okButton.setEnabled( false );
