@@ -4,6 +4,7 @@ import table.PassTableModel;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
+import java.util.Map;
 
 /**
  * this class is used to implement the undoManager. It stores the index and the
@@ -21,11 +22,11 @@ public class JvRowsDelete extends AbstractUndoableEdit {
     private static final long serialVersionUID = 5470678378853711947L;
     
     protected PassTableModel tableModel;
-    protected Object[] deletedRow;
+    protected Map<String,String> deletedRow;
     protected int rowIndex;
     
     
-    public JvRowsDelete(PassTableModel tableModel, Object[] deletedRow, int index) {
+    public JvRowsDelete(PassTableModel tableModel, Map<String,String> deletedRow, int index) {
         this.tableModel = tableModel;
         this.deletedRow = deletedRow;
         this.rowIndex = index;

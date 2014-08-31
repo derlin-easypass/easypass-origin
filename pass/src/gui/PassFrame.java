@@ -26,21 +26,18 @@ public class PassFrame extends JFrame {
     Session session;
     PassLock lock;
 
-    private JPanel mainContainer; // main container (BorderLayout)
     UndoManager undoManager;
 
     JTextField filterText; // text entered by the user, used to filter
     // the table cells
     private JLabel rowCount;
-    JLabel infos; // informations bar (data have been saved, for
-    // example)
-    private Timer infosTimer; // used to hide infos after x seconds
+    JLabel infos; // information bar (data have been saved, for example)
+    private Timer infosTimer; // used to hide info after x seconds
     final static int INFOS_DISPLAY_TIME = 6000; // in milliseconds,
     // delay before
     // resetting info text
 
     PassTable table; // the jtable
-    private JScrollPane scrollPane; // scrollPane for the JTable
 
 
     /**
@@ -75,7 +72,7 @@ public class PassFrame extends JFrame {
         setIconImage( img );
 
         // creates the main container
-        mainContainer = new JPanel( new BorderLayout() );
+        JPanel mainContainer = new JPanel( new BorderLayout() );
 
         // creates the jtable
         try {
@@ -106,7 +103,7 @@ public class PassFrame extends JFrame {
 
 
         // adds scrollpane and JTable
-        scrollPane = new JScrollPane( table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane scrollPane = new JScrollPane( table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
         scrollPane.setPreferredSize( new Dimension( winWidth, winHeight - 50 ) );
         mainContainer.add( scrollPane, BorderLayout.CENTER );
@@ -142,24 +139,6 @@ public class PassFrame extends JFrame {
         this.setVisible( true );
 
     }// end constructor
-
-
-   /* private void settableColSizes() {
-
-        try {
-            String[] dims = session.getConfigProperty( "dimensions" ).split( "," );
-            int[] dimensions = new int[ dims.length ];
-
-            for( int i = 0; i < dims.length; i++ ) {
-                dimensions[ i ] = Integer.parseInt( dims[ i ].trim() );
-            }// end for
-            table.setColSizes( dimensions );
-        } catch( Exception e ) {
-            return;
-        }// end try
-
-    }// end proper */
-
 
     /********************************************************************
      * interaction with the user (save data, load session, show infos)

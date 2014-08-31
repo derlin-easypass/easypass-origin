@@ -4,7 +4,7 @@
     "userconfig$path": "%APPDIR%/usersettings.json",
     "session$path": "%APPDIR%/sessions",
     "column$names": [
-        "account",
+        "name",
         "pseudo",
         "email",
         "password",
