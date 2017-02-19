@@ -1,10 +1,5 @@
-bin/*
-pass/bin/*
-pass/.classpath
-.metadata/*
-pass/.settings/*
-pass/src/META*
-out/*
-.idea/*
+out
+.idea
+target
 *.iml
-pass/*.iml
+libs
